@@ -1,0 +1,109 @@
+# Technical Appendix
+
+## Rebuild
+
+Install dependencies:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+Run tests:
+
+```powershell
+pytest -q
+```
+
+Rebuild all generated data and figures:
+
+```powershell
+python scripts/build_all.py
+```
+
+Run the dashboard:
+
+```powershell
+streamlit run app.py
+```
+
+## Main Source Files
+
+- `data/country_universe.csv`: country, ETF ticker, market group, and region.
+- `src/gprobs/data/market_data.py`: ETF price downloads and country universe
+  loading.
+- `src/gprobs/data/gpr_data.py`: daily GPR ingestion and shock flags.
+- `src/gprobs/data/market_controls.py`: public market-control construction.
+- `src/gprobs/data/analysis_panel.py`: merge returns, country metadata, and GPR.
+- `src/gprobs/data/diagnostics.py`: coverage and large-return checks.
+- `src/gprobs/analysis/event_study.py`: raw and abnormal event studies.
+- `src/gprobs/analysis/panel_regression.py`: mean panel regressions.
+- `src/gprobs/analysis/quantile_regression.py`: lower-tail regressions.
+- `src/gprobs/analysis/local_projection.py`: dynamic response paths.
+- `src/gprobs/analysis/drawdown_model.py`: drawdown-risk classifier.
+- `src/gprobs/analysis/rolling_sensitivity.py`: rolling GPR beta.
+- `app.py`: Streamlit dashboard.
+
+## Generated Outputs
+
+Generated files are intentionally ignored by Git and can be rebuilt:
+
+- `data/raw/etf_adjusted_prices.csv`
+- `data/raw/market_control_prices.csv`
+- `data/processed/returns_panel.csv`
+- `data/processed/gpr_daily.csv`
+- `data/processed/market_controls.csv`
+- `data/processed/analysis_panel.csv`
+- `data/processed/group_return_summary.csv`
+- `data/processed/country_coverage_summary.csv`
+- `data/processed/large_return_flags.csv`
+- `data/processed/event_windows.csv`
+- `data/processed/event_study_summary.csv`
+- `data/processed/event_windows_abnormal.csv`
+- `data/processed/event_study_abnormal_summary.csv`
+- `data/processed/panel_regression_baseline.csv`
+- `data/processed/panel_regression_controlled.csv`
+- `data/processed/quantile_regression_results.csv`
+- `data/processed/local_projection_results.csv`
+- `data/processed/drawdown_model_dataset.csv`
+- `data/processed/drawdown_model_metrics.csv`
+- `data/processed/drawdown_feature_importance.csv`
+- `data/processed/rolling_gpr_beta.csv`
+- `reports/figures/gpr_and_group_returns.png`
+
+## Variable Definitions
+
+- `return`: daily ETF log return.
+- `gpr`: daily geopolitical risk index.
+- `gpr_z`: standardized daily GPR.
+- `gpr_shock`: indicator for top-5-percent GPR days.
+- `gpr_act`: GPR act subindex.
+- `gpr_threat`: GPR threat subindex.
+- `global_market_return`: daily ACWI log return.
+- `vix_change`: daily VIX level change.
+- `oil_change`: daily WTI crude oil futures level change.
+- `dollar_return`: daily UUP log return.
+- `us10y_change`: daily US 10-year yield proxy level change.
+- `emerging_market`: indicator equal to 1 for emerging-market ETF proxies.
+
+## Model Notes
+
+Panel regressions use ETF fixed effects. The controlled panel regression adds
+global market, VIX, oil, dollar, and US 10-year yield controls.
+
+Quantile regressions use the same main GPR terms as the panel regression and
+estimate coefficients at the 10th, 25th, and 50th percentiles.
+
+Local projections estimate cumulative ETF return responses for horizons 0
+through 20 trading days after a GPR shock.
+
+The drawdown classifier uses logistic regression with standardized features and
+class balancing. Validation folds are chronological. No random time-series split
+is used.
+
+## Known Caveats
+
+- Free market data can revise or contain errors.
+- ETF inception dates differ, so country coverage differs.
+- ETF returns are USD returns, not pure local-currency index returns.
+- GPR shocks can coincide with other macro-financial shocks.
+- Results are associations, not causal estimates.

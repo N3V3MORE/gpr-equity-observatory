@@ -48,6 +48,9 @@ pytest -q
 For a plain-English summary of what is currently implemented and what the
 results mean, see `docs/PROJECT_STATUS.md`.
 
+The current research-note draft is in `docs/RESEARCH_NOTE.md`, with technical
+details in `docs/TECHNICAL_APPENDIX.md`.
+
 ## Build the First Returns Panel
 
 ```powershell
