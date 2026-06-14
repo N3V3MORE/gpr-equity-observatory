@@ -58,6 +58,9 @@ details in `docs/TECHNICAL_APPENDIX.md`.
 The implementation checklist in `docs/IMPLEMENTATION_CHECKLIST.md` maps the
 original project plan to what is done, partial, and still needs a decision.
 
+Deployment and external-data choices are documented in `docs/DEPLOYMENT_GUIDE.md`
+and `docs/DATA_SOURCE_DECISIONS.md`.
+
 Profile and communication drafts are in `docs/PROFILE_PACKAGING.md` and
 `docs/BLOG_POST_DRAFT.md`.
 

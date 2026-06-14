@@ -41,6 +41,9 @@ It is written as a plain-English audit, not as a marketing summary.
 | Blog post is published | Drafted | `docs/BLOG_POST_DRAFT.md`; publishing is outside the repo |
 | Walkthrough video or demo script exists | Partial | Three-minute script exists; video is not recorded |
 
+Deployment details are documented in `docs/DEPLOYMENT_GUIDE.md`. External-data
+choices are documented in `docs/DATA_SOURCE_DECISIONS.md`.
+
 ## Current Evidence Summary
 
 The current evidence should be described cautiously:
