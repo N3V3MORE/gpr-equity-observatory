@@ -29,6 +29,7 @@ scripts/run_data_diagnostics.py   Builds coverage and large-return checks
 scripts/run_event_study.py        Runs the first GPR shock event study
 scripts/run_panel_regression.py   Runs the baseline panel regression
 scripts/run_rolling_sensitivity.py Builds rolling GPR sensitivity estimates
+scripts/build_all.py              Rebuilds the full MVP pipeline in order
 app.py                            Streamlit dashboard
 src/gprobs/                      Reusable project code
 tests/                           Checks for data and feature logic
@@ -42,6 +43,13 @@ pytest -q
 ```
 
 ## Build the First Returns Panel
+
+```powershell
+python scripts/build_all.py
+streamlit run app.py
+```
+
+Or run the pipeline step by step:
 
 ```powershell
 python scripts/build_returns_panel.py
