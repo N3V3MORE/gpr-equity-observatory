@@ -36,6 +36,7 @@ streamlit run app.py
 - `src/gprobs/data/analysis_panel.py`: merge returns, country metadata, and GPR.
 - `src/gprobs/data/diagnostics.py`: coverage and large-return checks.
 - `src/gprobs/analysis/event_study.py`: raw and abnormal event studies.
+- `src/gprobs/analysis/event_robustness.py`: event-study robustness checks.
 - `src/gprobs/analysis/panel_regression.py`: mean panel regressions.
 - `src/gprobs/analysis/quantile_regression.py`: lower-tail regressions.
 - `src/gprobs/analysis/local_projection.py`: dynamic response paths.
@@ -60,6 +61,7 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `data/processed/event_study_summary.csv`
 - `data/processed/event_windows_abnormal.csv`
 - `data/processed/event_study_abnormal_summary.csv`
+- `data/processed/event_robustness_summary.csv`
 - `data/processed/panel_regression_baseline.csv`
 - `data/processed/panel_regression_controlled.csv`
 - `data/processed/quantile_regression_results.csv`
@@ -95,6 +97,10 @@ estimate coefficients at the 10th, 25th, and 50th percentiles.
 
 Local projections estimate cumulative ETF return responses for horizons 0
 through 20 trading days after a GPR shock.
+
+Event-study robustness compares end-of-window cumulative abnormal returns across
+90th- and 95th-percentile GPR shock definitions and 3-, 5-, and 10-trading-day
+post-shock windows.
 
 The drawdown classifier uses logistic regression with standardized features and
 class balancing. Validation folds are chronological. No random time-series split

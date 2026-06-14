@@ -17,6 +17,7 @@ PIPELINE_STEPS = [
     PipelineStep("Build combined analysis panel", "build_analysis_panel.py"),
     PipelineStep("Run data diagnostics", "run_data_diagnostics.py"),
     PipelineStep("Run event studies", "run_event_study.py"),
+    PipelineStep("Run event robustness checks", "run_event_robustness.py"),
     PipelineStep("Run panel regressions", "run_panel_regression.py"),
     PipelineStep("Run quantile regressions", "run_quantile_regression.py"),
     PipelineStep("Run local projections", "run_local_projections.py"),

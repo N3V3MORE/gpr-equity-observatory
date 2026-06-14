@@ -27,6 +27,7 @@ scripts/build_market_controls.py  Builds no-key public market controls
 scripts/plot_initial_trends.py    Creates the first GPR/returns figure
 scripts/run_data_diagnostics.py   Builds coverage and large-return checks
 scripts/run_event_study.py        Runs the first GPR shock event study
+scripts/run_event_robustness.py   Checks event-study thresholds and windows
 scripts/run_panel_regression.py   Runs the baseline panel regression
 scripts/run_quantile_regression.py Estimates tail-risk quantile regressions
 scripts/run_local_projections.py  Estimates dynamic GPR shock response paths
@@ -68,14 +69,15 @@ python scripts/build_returns_panel.py
 python scripts/build_gpr_dataset.py
 python scripts/build_market_controls.py
 python scripts/build_analysis_panel.py
-python scripts/plot_initial_trends.py
 python scripts/run_data_diagnostics.py
 python scripts/run_event_study.py
+python scripts/run_event_robustness.py
 python scripts/run_panel_regression.py
 python scripts/run_quantile_regression.py
 python scripts/run_local_projections.py
 python scripts/run_drawdown_model.py
 python scripts/run_rolling_sensitivity.py
+python scripts/plot_initial_trends.py
 streamlit run app.py
 ```
 
@@ -94,6 +96,7 @@ These commands download adjusted ETF prices, download daily GPR data, and write:
 - `data/processed/event_study_summary.csv`
 - `data/processed/event_windows_abnormal.csv`
 - `data/processed/event_study_abnormal_summary.csv`
+- `data/processed/event_robustness_summary.csv`
 - `data/processed/panel_regression_baseline.csv`
 - `data/processed/panel_regression_summary.txt`
 - `data/processed/panel_regression_controlled.csv`
@@ -121,6 +124,9 @@ change, not a log return, because WTI futures traded below zero in April 2020.
 The abnormal-return event study estimates a simple pre-event market model for
 each ETF using ACWI as the market proxy, then subtracts the expected return from
 the observed ETF return inside the event window.
+
+The event-study robustness output compares the final cumulative abnormal return
+across alternative GPR shock thresholds and event-window lengths.
 
 The local projection output estimates cumulative ETF return responses at several
 daily horizons after GPR shock days. It is an association model, not a causal

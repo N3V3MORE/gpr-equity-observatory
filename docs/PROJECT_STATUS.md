@@ -16,6 +16,7 @@ separates what is implemented from what the evidence currently says.
 - Data diagnostics: coverage and large-return flags.
 - Event study using raw returns.
 - Market-model abnormal-return event study.
+- Event-study robustness checks across GPR shock thresholds and event windows.
 - Baseline and market-controlled panel regressions.
 - Quantile regressions for tail-risk analysis.
 - Local projections for dynamic response paths.
@@ -68,6 +69,6 @@ The next step should improve interpretation rather than add complexity. Good
 options are:
 
 - Write a compact research note from the current outputs.
-- Add robustness checks for event-study windows and GPR shock thresholds.
+- Add a short robustness interpretation section to the research note.
 - Add FRED controls if an API key is available.
 - Add GDELT only after the research note and robustness checks are clearer.

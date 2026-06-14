@@ -22,6 +22,7 @@ REQUIRED_FILES = {
     "group_returns": DATA_DIR / "group_return_summary.csv",
     "event_study": DATA_DIR / "event_study_summary.csv",
     "abnormal_event_study": DATA_DIR / "event_study_abnormal_summary.csv",
+    "event_robustness": DATA_DIR / "event_robustness_summary.csv",
     "regression": DATA_DIR / "panel_regression_baseline.csv",
     "controlled_regression": DATA_DIR / "panel_regression_controlled.csv",
     "quantile_regression": DATA_DIR / "quantile_regression_results.csv",
@@ -45,6 +46,7 @@ def load_outputs():
         "group_returns": pd.read_csv(REQUIRED_FILES["group_returns"], parse_dates=["date"]),
         "event_study": pd.read_csv(REQUIRED_FILES["event_study"]),
         "abnormal_event_study": pd.read_csv(REQUIRED_FILES["abnormal_event_study"]),
+        "event_robustness": pd.read_csv(REQUIRED_FILES["event_robustness"]),
         "regression": pd.read_csv(REQUIRED_FILES["regression"]),
         "controlled_regression": pd.read_csv(REQUIRED_FILES["controlled_regression"]),
         "quantile_regression": pd.read_csv(REQUIRED_FILES["quantile_regression"]),
@@ -79,6 +81,7 @@ def main():
                     "python scripts/build_analysis_panel.py",
                     "python scripts/run_data_diagnostics.py",
                     "python scripts/run_event_study.py",
+                    "python scripts/run_event_robustness.py",
                     "python scripts/run_panel_regression.py",
                     "python scripts/run_quantile_regression.py",
                     "python scripts/run_local_projections.py",
@@ -97,6 +100,7 @@ def main():
     group_returns = outputs["group_returns"]
     event_study = outputs["event_study"]
     abnormal_event_study = outputs["abnormal_event_study"]
+    event_robustness = outputs["event_robustness"]
     regression = outputs["regression"]
     controlled_regression = outputs["controlled_regression"]
     quantile_regression = outputs["quantile_regression"]
@@ -106,11 +110,12 @@ def main():
     rolling_beta = outputs["rolling_beta"]
     large_returns = outputs["large_returns"]
 
-    tab_overview, tab_shocks, tab_event, tab_regression, tab_tail, tab_local, tab_ml, tab_rolling, tab_coverage = st.tabs(
+    tab_overview, tab_shocks, tab_event, tab_robustness, tab_regression, tab_tail, tab_local, tab_ml, tab_rolling, tab_coverage = st.tabs(
         [
             "Overview",
             "GPR Shocks",
             "Event Study",
+            "Robustness",
             "Panel Regression",
             "Tail Risk",
             "Local Projections",
@@ -181,6 +186,28 @@ def main():
         fig.add_vline(x=0, line_dash="dash", line_color="black")
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(event_study, use_container_width=True, hide_index=True)
+
+    with tab_robustness:
+        robustness_chart = event_robustness.copy()
+        robustness_chart["shock_quantile"] = robustness_chart["shock_quantile"].map(
+            lambda value: f"{value:.0%}"
+        )
+        fig = px.bar(
+            robustness_chart,
+            x="window",
+            y="cumulative_average_abnormal_return",
+            color="market_group",
+            facet_col="shock_quantile",
+            barmode="group",
+            title="Event-Study Robustness: End-of-Window Abnormal Return",
+        )
+        fig.add_hline(y=0, line_dash="dash", line_color="gray")
+        st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(event_robustness, use_container_width=True, hide_index=True)
+        st.caption(
+            "This compares whether the event-study conclusion changes when the GPR "
+            "shock threshold or post-shock window is changed."
+        )
 
     with tab_regression:
         col1, col2 = st.columns(2)
