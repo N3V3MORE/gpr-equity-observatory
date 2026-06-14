@@ -22,6 +22,7 @@ REQUIRED_FILES = {
     "group_returns": DATA_DIR / "group_return_summary.csv",
     "event_study": DATA_DIR / "event_study_summary.csv",
     "regression": DATA_DIR / "panel_regression_baseline.csv",
+    "controlled_regression": DATA_DIR / "panel_regression_controlled.csv",
     "rolling_beta": DATA_DIR / "rolling_gpr_beta.csv",
     "large_returns": DATA_DIR / "large_return_flags.csv",
 }
@@ -39,6 +40,7 @@ def load_outputs():
         "group_returns": pd.read_csv(REQUIRED_FILES["group_returns"], parse_dates=["date"]),
         "event_study": pd.read_csv(REQUIRED_FILES["event_study"]),
         "regression": pd.read_csv(REQUIRED_FILES["regression"]),
+        "controlled_regression": pd.read_csv(REQUIRED_FILES["controlled_regression"]),
         "rolling_beta": pd.read_csv(REQUIRED_FILES["rolling_beta"], parse_dates=["date"]),
         "large_returns": pd.read_csv(REQUIRED_FILES["large_returns"], parse_dates=["date"]),
     }
@@ -60,6 +62,7 @@ def main():
                 [
                     "python scripts/build_returns_panel.py",
                     "python scripts/build_gpr_dataset.py",
+                    "python scripts/build_market_controls.py",
                     "python scripts/build_analysis_panel.py",
                     "python scripts/run_data_diagnostics.py",
                     "python scripts/run_event_study.py",
@@ -78,6 +81,7 @@ def main():
     group_returns = outputs["group_returns"]
     event_study = outputs["event_study"]
     regression = outputs["regression"]
+    controlled_regression = outputs["controlled_regression"]
     rolling_beta = outputs["rolling_beta"]
     large_returns = outputs["large_returns"]
 
@@ -143,11 +147,20 @@ def main():
         st.dataframe(event_study, use_container_width=True, hide_index=True)
 
     with tab_regression:
-        key_terms = select_key_regression_terms(regression)
-        st.dataframe(key_terms, use_container_width=True, hide_index=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("Baseline")
+            key_terms = select_key_regression_terms(regression)
+            st.dataframe(key_terms, use_container_width=True, hide_index=True)
+        with col2:
+            st.subheader("With Market Controls")
+            controlled_terms = select_key_regression_terms(controlled_regression)
+            st.dataframe(controlled_terms, use_container_width=True, hide_index=True)
         st.caption(
             "The interaction term is the extra association between standardized GPR "
-            "and returns for emerging market ETFs relative to developed market ETFs."
+            "and returns for emerging market ETFs relative to developed market ETFs. "
+            "The controlled model also includes global equity, VIX, oil, dollar, "
+            "and US 10-year yield controls."
         )
 
     with tab_rolling:

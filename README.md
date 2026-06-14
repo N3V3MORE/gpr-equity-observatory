@@ -23,6 +23,7 @@ data/processed/                  Built research datasets, not committed
 scripts/build_returns_panel.py   Builds the first ETF returns panel
 scripts/build_gpr_dataset.py      Builds the daily GPR dataset
 scripts/build_analysis_panel.py   Combines returns, country metadata, and GPR
+scripts/build_market_controls.py  Builds no-key public market controls
 scripts/plot_initial_trends.py    Creates the first GPR/returns figure
 scripts/run_data_diagnostics.py   Builds coverage and large-return checks
 scripts/run_event_study.py        Runs the first GPR shock event study
@@ -45,6 +46,7 @@ pytest -q
 ```powershell
 python scripts/build_returns_panel.py
 python scripts/build_gpr_dataset.py
+python scripts/build_market_controls.py
 python scripts/build_analysis_panel.py
 python scripts/plot_initial_trends.py
 python scripts/run_data_diagnostics.py
@@ -59,6 +61,7 @@ These commands download adjusted ETF prices, download daily GPR data, and write:
 - `data/raw/etf_adjusted_prices.csv`
 - `data/processed/returns_panel.csv`
 - `data/processed/gpr_daily.csv`
+- `data/processed/market_controls.csv`
 - `data/processed/analysis_panel.csv`
 - `data/processed/group_return_summary.csv`
 - `reports/figures/gpr_and_group_returns.png`
@@ -68,6 +71,8 @@ These commands download adjusted ETF prices, download daily GPR data, and write:
 - `data/processed/event_study_summary.csv`
 - `data/processed/panel_regression_baseline.csv`
 - `data/processed/panel_regression_summary.txt`
+- `data/processed/panel_regression_controlled.csv`
+- `data/processed/panel_regression_controlled_summary.txt`
 - `data/processed/rolling_gpr_beta.csv`
 
 ## Data Note
@@ -76,3 +81,9 @@ ETF returns are USD returns. That means they include both local equity-market
 movement and exchange-rate exposure against the US dollar. This is useful for
 studying global investor exposure, but it is not the same as a pure local market
 index return.
+
+The controlled regression uses no-key public market proxies from Yahoo Finance:
+ACWI for global equities, `^VIX` for risk aversion, `CL=F` for WTI crude oil,
+UUP for the US dollar, and `^TNX` for the US 10-year yield index. The controlled
+sample starts later because ACWI begins in 2008. Oil is used as a daily level
+change, not a log return, because WTI futures traded below zero in April 2020.
