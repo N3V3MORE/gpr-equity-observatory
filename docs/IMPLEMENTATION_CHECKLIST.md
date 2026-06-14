@@ -1,0 +1,77 @@
+# Implementation Checklist
+
+This checklist compares the original project plan with the current repository.
+It is written as a plain-English audit, not as a marketing summary.
+
+## MVP Success
+
+| Requirement | Status | Evidence |
+| --- | --- | --- |
+| Clean GitHub repo exists | Done | README, source package, tests, scripts, CI workflow |
+| Base data pipeline works | Done | `python scripts/build_all.py` rebuilds all generated outputs |
+| 20-country return panel exists | Done | `data/country_universe.csv` and generated returns panel |
+| GPR shock series exists | Done | `scripts/build_gpr_dataset.py` and generated `gpr_daily.csv` |
+| Event-study results exist | Done | Raw, abnormal-return, and robustness event-study scripts |
+| Panel regression results exist | Done | Baseline, controlled, and sample-robustness panel scripts |
+| Dashboard runs locally | Done | `streamlit run app.py` |
+| README explains the project clearly | Done | `README.md` |
+| Limitations are documented | Done | Research note, technical appendix, status note, results brief |
+
+## Strong Profile Success
+
+| Requirement | Status | Evidence |
+| --- | --- | --- |
+| Research note exists | Done | `docs/RESEARCH_NOTE.md` |
+| Dashboard has screenshots or public deployment | Done | `reports/screenshots/` |
+| Robustness checks exist | Done | Event-window/threshold checks and panel sample checks |
+| Local projections or quantile analysis exists | Done | Both local projections and quantile regressions are implemented |
+| ML drawdown model exists with time-aware validation | Done | Drawdown classifier with chronological validation folds |
+| Project can be explained in interviews | Done | `docs/PROFILE_PACKAGING.md` and `reports/RESULTS_BRIEF.md` |
+| CV bullet sounds credible and specific | Done | `docs/PROFILE_PACKAGING.md` |
+
+## Excellent-Version Items
+
+| Requirement | Status | Next step |
+| --- | --- | --- |
+| GDELT extension is integrated | Not started | Add only after choosing a narrow country/event scope |
+| Country-specific GPR is integrated | Needs decision | Official pages exist, but data access is not a simple workbook link |
+| Dashboard includes data quality, model diagnostics, and downloads | Mostly done | Data quality and model diagnostics exist; explicit download buttons are not custom-built |
+| Tests and linting are present | Partial | Tests exist; no separate lint tool is configured |
+| GitHub Actions run tests | Done | `.github/workflows/tests.yml` |
+| Blog post is published | Drafted | `docs/BLOG_POST_DRAFT.md`; publishing is outside the repo |
+| Walkthrough video or demo script exists | Partial | Three-minute script exists; video is not recorded |
+
+## Current Evidence Summary
+
+The current evidence should be described cautiously:
+
+- The controlled panel regression finds a negative GPR-return association.
+- The emerging-market interaction is not statistically strong after controls.
+- Event robustness is mixed: the 90th-percentile shock definition is more
+  supportive of emerging-market downside than the 95th-percentile definition.
+- Sample robustness keeps the controlled GPR coefficient negative, but weakens
+  the emerging-market interaction.
+- The ML drawdown classifier has modest ranking signal, not a trading-grade
+  forecast.
+
+## Roadblocks That Need User Input
+
+These are the main choices that require a human decision:
+
+- Whether to use a FRED API key for richer macro controls.
+- Whether to scrape or manually structure country-specific GPR data from the
+  official country pages.
+- Whether to deploy the Streamlit app publicly, and where.
+- Whether to publish the blog post as-is or adapt it for a specific platform.
+- Whether to record a walkthrough video.
+
+## Recommended Next Move
+
+The project is already strong as a reproducible local research product. The next
+best technical step is richer external data only if the data source is chosen
+deliberately. Without that choice, the better path is public packaging:
+
+1. Decide whether the dashboard should be deployed publicly.
+2. If yes, choose Streamlit Community Cloud or another host.
+3. If no, keep the repository local-first and use the screenshots plus results
+   brief for profile presentation.

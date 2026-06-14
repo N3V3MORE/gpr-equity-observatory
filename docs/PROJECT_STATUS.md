@@ -5,6 +5,9 @@ Last updated: 2026-06-14
 This document is a plain-English status note for the current project state. It
 separates what is implemented from what the evidence currently says.
 
+For a requirement-by-requirement audit against the original project plan, see
+`docs/IMPLEMENTATION_CHECKLIST.md`.
+
 ## Implemented
 
 - 20-country ETF universe: 10 developed market proxies and 10 emerging market
