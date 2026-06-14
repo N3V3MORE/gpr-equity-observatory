@@ -45,6 +45,9 @@ python -m pip install -r requirements.txt
 pytest -q
 ```
 
+For a plain-English summary of what is currently implemented and what the
+results mean, see `docs/PROJECT_STATUS.md`.
+
 ## Build the First Returns Panel
 
 ```powershell
