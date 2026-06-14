@@ -18,6 +18,7 @@ separates what is implemented from what the evidence currently says.
 - Market-model abnormal-return event study.
 - Event-study robustness checks across GPR shock thresholds and event windows.
 - Baseline and market-controlled panel regressions.
+- Panel sample-robustness checks excluding major crisis windows.
 - Quantile regressions for tail-risk analysis.
 - Local projections for dynamic response paths.
 - Rolling GPR sensitivity by country.
@@ -38,6 +39,11 @@ at about `-0.000064`, with a p-value near `0.006`. The emerging-market
 interaction is positive, about `0.000090`, but its p-value is about `0.127`.
 That means the current model does not give strong statistical evidence that
 emerging ETFs have a different average GPR response after controls.
+
+The sample-robustness checks keep the controlled GPR coefficient negative after
+excluding COVID and Russia-Ukraine windows. The emerging-market interaction
+becomes smaller and less precise when the Russia-Ukraine window is excluded,
+which argues against a strong emerging-market asymmetry claim.
 
 The quantile regressions are directionally interesting but not decisive. The
 10th-percentile GPR coefficient is more negative than the median coefficient,

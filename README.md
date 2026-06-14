@@ -29,6 +29,7 @@ scripts/run_data_diagnostics.py   Builds coverage and large-return checks
 scripts/run_event_study.py        Runs the first GPR shock event study
 scripts/run_event_robustness.py   Checks event-study thresholds and windows
 scripts/run_panel_regression.py   Runs the baseline panel regression
+scripts/run_panel_sample_robustness.py Checks crisis-window sensitivity
 scripts/run_quantile_regression.py Estimates tail-risk quantile regressions
 scripts/run_local_projections.py  Estimates dynamic GPR shock response paths
 scripts/run_drawdown_model.py     Trains a simple drawdown-risk classifier
@@ -74,6 +75,7 @@ python scripts/run_data_diagnostics.py
 python scripts/run_event_study.py
 python scripts/run_event_robustness.py
 python scripts/run_panel_regression.py
+python scripts/run_panel_sample_robustness.py
 python scripts/run_quantile_regression.py
 python scripts/run_local_projections.py
 python scripts/run_drawdown_model.py
@@ -103,6 +105,7 @@ These commands download adjusted ETF prices, download daily GPR data, and write:
 - `data/processed/panel_regression_summary.txt`
 - `data/processed/panel_regression_controlled.csv`
 - `data/processed/panel_regression_controlled_summary.txt`
+- `data/processed/panel_sample_robustness.csv`
 - `data/processed/quantile_regression_results.csv`
 - `data/processed/local_projection_results.csv`
 - `data/processed/drawdown_model_dataset.csv`
@@ -123,6 +126,9 @@ ACWI for global equities, `^VIX` for risk aversion, `CL=F` for WTI crude oil,
 UUP for the US dollar, and `^TNX` for the US 10-year yield index. The controlled
 sample starts later because ACWI begins in 2008. Oil is used as a daily level
 change, not a log return, because WTI futures traded below zero in April 2020.
+
+The panel sample-robustness output reruns the controlled model after excluding
+COVID-crash and Russia-Ukraine invasion windows.
 
 The abnormal-return event study estimates a simple pre-event market model for
 each ETF using ACWI as the market proxy, then subtracts the expected return from

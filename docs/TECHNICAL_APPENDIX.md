@@ -38,6 +38,7 @@ streamlit run app.py
 - `src/gprobs/analysis/event_study.py`: raw and abnormal event studies.
 - `src/gprobs/analysis/event_robustness.py`: event-study robustness checks.
 - `src/gprobs/analysis/panel_regression.py`: mean panel regressions.
+- `src/gprobs/analysis/panel_sample_robustness.py`: sample-exclusion checks.
 - `src/gprobs/analysis/quantile_regression.py`: lower-tail regressions.
 - `src/gprobs/analysis/local_projection.py`: dynamic response paths.
 - `src/gprobs/analysis/drawdown_model.py`: drawdown-risk classifier.
@@ -65,6 +66,7 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `data/processed/event_robustness_summary.csv`
 - `data/processed/panel_regression_baseline.csv`
 - `data/processed/panel_regression_controlled.csv`
+- `data/processed/panel_sample_robustness.csv`
 - `data/processed/quantile_regression_results.csv`
 - `data/processed/local_projection_results.csv`
 - `data/processed/drawdown_model_dataset.csv`
@@ -93,6 +95,10 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 
 Panel regressions use ETF fixed effects. The controlled panel regression adds
 global market, VIX, oil, dollar, and US 10-year yield controls.
+
+Panel sample robustness reruns the controlled model after excluding the
+COVID-crash window, the Russia-Ukraine invasion window, and both windows
+together. Date windows are removed inclusively.
 
 Quantile regressions use the same main GPR terms as the panel regression and
 estimate coefficients at the 10th, 25th, and 50th percentiles.

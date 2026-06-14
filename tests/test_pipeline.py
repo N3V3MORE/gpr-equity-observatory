@@ -13,6 +13,7 @@ def test_pipeline_steps_are_in_dependency_order():
         "run_event_study.py",
         "run_event_robustness.py",
         "run_panel_regression.py",
+        "run_panel_sample_robustness.py",
         "run_quantile_regression.py",
         "run_local_projections.py",
         "run_drawdown_model.py",

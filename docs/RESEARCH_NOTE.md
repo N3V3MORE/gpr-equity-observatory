@@ -86,6 +86,10 @@ dollar returns, and US 10-year yield changes.
 The coefficient on `gpr_z` is the developed-market association. The coefficient
 on `gpr_z:emerging_market` is the additional emerging-market association.
 
+The sample-robustness version reruns the controlled panel model after excluding
+major crisis windows. This checks whether the main coefficient is mostly driven
+by a short crisis episode.
+
 ### Quantile Regression
 
 Quantile regression estimates the GPR association at different points of the
@@ -121,6 +125,13 @@ interaction is positive at about `0.000090`, but the p-value is around `0.127`.
 This means the current model suggests a negative average GPR association for
 developed-market ETF returns, but it does not strongly support a differential
 average response for emerging markets after controls.
+
+The sample-robustness checks keep the developed-market controlled GPR
+coefficient negative after excluding the COVID-crash window, the Russia-Ukraine
+invasion window, or both. The emerging-market interaction becomes much smaller
+when the Russia-Ukraine window is excluded. This weakens, rather than
+strengthens, the claim that emerging ETFs have a reliably larger average GPR
+response in the current specification.
 
 The quantile regression results are more suggestive than conclusive. The
 10th-percentile GPR coefficient is more negative than the median coefficient,

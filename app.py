@@ -25,6 +25,7 @@ REQUIRED_FILES = {
     "event_robustness": DATA_DIR / "event_robustness_summary.csv",
     "regression": DATA_DIR / "panel_regression_baseline.csv",
     "controlled_regression": DATA_DIR / "panel_regression_controlled.csv",
+    "panel_sample_robustness": DATA_DIR / "panel_sample_robustness.csv",
     "quantile_regression": DATA_DIR / "quantile_regression_results.csv",
     "local_projections": DATA_DIR / "local_projection_results.csv",
     "drawdown_metrics": DATA_DIR / "drawdown_model_metrics.csv",
@@ -50,6 +51,9 @@ def load_outputs():
         "event_robustness": pd.read_csv(REQUIRED_FILES["event_robustness"]),
         "regression": pd.read_csv(REQUIRED_FILES["regression"]),
         "controlled_regression": pd.read_csv(REQUIRED_FILES["controlled_regression"]),
+        "panel_sample_robustness": pd.read_csv(
+            REQUIRED_FILES["panel_sample_robustness"]
+        ),
         "quantile_regression": pd.read_csv(REQUIRED_FILES["quantile_regression"]),
         "local_projections": pd.read_csv(REQUIRED_FILES["local_projections"]),
         "drawdown_metrics": pd.read_csv(
@@ -85,6 +89,7 @@ def main():
                     "python scripts/run_event_study.py",
                     "python scripts/run_event_robustness.py",
                     "python scripts/run_panel_regression.py",
+                    "python scripts/run_panel_sample_robustness.py",
                     "python scripts/run_quantile_regression.py",
                     "python scripts/run_local_projections.py",
                     "python scripts/run_drawdown_model.py",
@@ -106,6 +111,7 @@ def main():
     event_robustness = outputs["event_robustness"]
     regression = outputs["regression"]
     controlled_regression = outputs["controlled_regression"]
+    panel_sample_robustness = outputs["panel_sample_robustness"]
     quantile_regression = outputs["quantile_regression"]
     local_projections = outputs["local_projections"]
     drawdown_metrics = outputs["drawdown_metrics"]
@@ -236,6 +242,17 @@ def main():
             "and returns for emerging market ETFs relative to developed market ETFs. "
             "The controlled model also includes global equity, VIX, oil, dollar, "
             "and US 10-year yield controls."
+        )
+        st.subheader("Sample Robustness")
+        st.dataframe(
+            panel_sample_robustness,
+            use_container_width=True,
+            hide_index=True,
+        )
+        st.caption(
+            "These rows rerun the controlled model after excluding major crisis "
+            "windows. Large sign or p-value changes would warn that one episode "
+            "is driving the result."
         )
 
     with tab_tail:
