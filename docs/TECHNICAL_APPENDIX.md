@@ -41,6 +41,7 @@ streamlit run app.py
 - `src/gprobs/analysis/quantile_regression.py`: lower-tail regressions.
 - `src/gprobs/analysis/local_projection.py`: dynamic response paths.
 - `src/gprobs/analysis/drawdown_model.py`: drawdown-risk classifier.
+- `src/gprobs/analysis/evidence_summary.py`: compact model comparison table.
 - `src/gprobs/analysis/rolling_sensitivity.py`: rolling GPR beta.
 - `app.py`: Streamlit dashboard.
 
@@ -69,6 +70,7 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `data/processed/drawdown_model_dataset.csv`
 - `data/processed/drawdown_model_metrics.csv`
 - `data/processed/drawdown_feature_importance.csv`
+- `data/processed/evidence_summary.csv`
 - `data/processed/rolling_gpr_beta.csv`
 - `reports/figures/gpr_and_group_returns.png`
 
@@ -105,6 +107,10 @@ post-shock windows.
 The drawdown classifier uses logistic regression with standardized features and
 class balancing. Validation folds are chronological. No random time-series split
 is used.
+
+The evidence summary table is not a new model. It gathers headline rows from
+the existing event-study, regression, quantile, local-projection, and ML outputs
+so the dashboard can compare methods in one place.
 
 ## Known Caveats
 

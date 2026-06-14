@@ -29,6 +29,7 @@ REQUIRED_FILES = {
     "local_projections": DATA_DIR / "local_projection_results.csv",
     "drawdown_metrics": DATA_DIR / "drawdown_model_metrics.csv",
     "drawdown_importance": DATA_DIR / "drawdown_feature_importance.csv",
+    "evidence_summary": DATA_DIR / "evidence_summary.csv",
     "rolling_beta": DATA_DIR / "rolling_gpr_beta.csv",
     "large_returns": DATA_DIR / "large_return_flags.csv",
 }
@@ -56,6 +57,7 @@ def load_outputs():
             parse_dates=["train_start", "train_end", "test_start", "test_end"],
         ),
         "drawdown_importance": pd.read_csv(REQUIRED_FILES["drawdown_importance"]),
+        "evidence_summary": pd.read_csv(REQUIRED_FILES["evidence_summary"]),
         "rolling_beta": pd.read_csv(REQUIRED_FILES["rolling_beta"], parse_dates=["date"]),
         "large_returns": pd.read_csv(REQUIRED_FILES["large_returns"], parse_dates=["date"]),
     }
@@ -86,6 +88,7 @@ def main():
                     "python scripts/run_quantile_regression.py",
                     "python scripts/run_local_projections.py",
                     "python scripts/run_drawdown_model.py",
+                    "python scripts/run_evidence_summary.py",
                     "python scripts/run_rolling_sensitivity.py",
                 ]
             )
@@ -107,6 +110,7 @@ def main():
     local_projections = outputs["local_projections"]
     drawdown_metrics = outputs["drawdown_metrics"]
     drawdown_importance = outputs["drawdown_importance"]
+    evidence_summary = outputs["evidence_summary"]
     rolling_beta = outputs["rolling_beta"]
     large_returns = outputs["large_returns"]
 
@@ -153,6 +157,14 @@ def main():
             title="Cumulative Average ETF Log Returns",
         )
         st.plotly_chart(fig, use_container_width=True)
+
+        st.subheader("Evidence Summary")
+        st.dataframe(evidence_summary, use_container_width=True, hide_index=True)
+        st.caption(
+            "This table collects the main outputs in one place. Treat weak "
+            "p-values and exploratory ML metrics as signals to investigate, "
+            "not as proof."
+        )
 
     with tab_shocks:
         top_shocks = gpr.sort_values("gpr", ascending=False).head(25)

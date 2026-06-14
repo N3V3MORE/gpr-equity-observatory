@@ -22,6 +22,7 @@ separates what is implemented from what the evidence currently says.
 - Local projections for dynamic response paths.
 - Rolling GPR sensitivity by country.
 - Simple drawdown-risk classifier with chronological validation.
+- Compact evidence summary table for comparing methods.
 - Streamlit dashboard.
 - One-command pipeline rebuild: `python scripts/build_all.py`.
 - Automated test workflow for GitHub Actions.
@@ -52,6 +53,10 @@ precision is about `0.370`, and the mean drawdown event rate is about `28.5%`.
 Rolling volatility is the largest feature by standardized coefficient; GPR
 features are small in the current version.
 
+The overview evidence table is deliberately mixed. For example, the baseline
+panel coefficient is positive, while the controlled panel coefficient is
+negative. That is a warning not to overstate a single headline result.
+
 ## Interpretation Rules
 
 - This is not a trading system.
@@ -68,7 +73,6 @@ features are small in the current version.
 The next step should improve interpretation rather than add complexity. Good
 options are:
 
-- Write a compact research note from the current outputs.
-- Add a short robustness interpretation section to the research note.
 - Add FRED controls if an API key is available.
+- Add country-specific GPR data where coverage is reliable.
 - Add GDELT only after the research note and robustness checks are clearer.

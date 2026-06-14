@@ -106,6 +106,13 @@ uses chronological folds, so the model always trains on earlier dates and tests
 on later dates. This avoids the common mistake of randomly splitting time-series
 data.
 
+### Evidence Summary
+
+The pipeline also builds a compact evidence-summary table. This is not a new
+model. It is a communication layer that places the main event-study, regression,
+quantile, local-projection, and drawdown-classifier outputs in one table with
+plain-English interpretation.
+
 ## Current Results
 
 The controlled panel regression estimates the developed-market GPR coefficient
@@ -139,6 +146,11 @@ window around `-0.19%` for emerging markets versus about `-0.06%` for developed
 markets. The 95th-percentile shock definition is less stable: emerging markets
 look positive at shorter windows but negative by the 10-day window. This is
 useful evidence, but it is not a clean confirmation of the asymmetry hypothesis.
+
+The compact evidence table makes the mixed evidence especially clear. The
+baseline panel GPR coefficient is positive, while the controlled panel
+coefficient is negative. That sign change is an important warning: conclusions
+depend on whether global market controls are included.
 
 ## Interpretation
 
@@ -176,8 +188,6 @@ GPR could change the interpretation of country-level sensitivity.
 
 The most useful next steps are:
 
-- Add a compact table comparing baseline, controlled, quantile, and local
-  projection results.
 - Add FRED macro controls if an API key is available.
 - Add country-specific GPR data where coverage is reliable.
 - Delay GDELT until the core empirical story is clearer.
