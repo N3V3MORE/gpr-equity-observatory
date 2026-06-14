@@ -22,6 +22,7 @@ REQUIRED_FILES = {
     "group_returns": DATA_DIR / "group_return_summary.csv",
     "event_study": DATA_DIR / "event_study_summary.csv",
     "regression": DATA_DIR / "panel_regression_baseline.csv",
+    "rolling_beta": DATA_DIR / "rolling_gpr_beta.csv",
 }
 
 
@@ -37,6 +38,7 @@ def load_outputs():
         "group_returns": pd.read_csv(REQUIRED_FILES["group_returns"], parse_dates=["date"]),
         "event_study": pd.read_csv(REQUIRED_FILES["event_study"]),
         "regression": pd.read_csv(REQUIRED_FILES["regression"]),
+        "rolling_beta": pd.read_csv(REQUIRED_FILES["rolling_beta"], parse_dates=["date"]),
     }
 
 
@@ -59,6 +61,7 @@ def main():
                     "python scripts/build_analysis_panel.py",
                     "python scripts/run_event_study.py",
                     "python scripts/run_panel_regression.py",
+                    "python scripts/run_rolling_sensitivity.py",
                 ]
             )
         )
@@ -72,9 +75,17 @@ def main():
     group_returns = outputs["group_returns"]
     event_study = outputs["event_study"]
     regression = outputs["regression"]
+    rolling_beta = outputs["rolling_beta"]
 
-    tab_overview, tab_shocks, tab_event, tab_regression, tab_coverage = st.tabs(
-        ["Overview", "GPR Shocks", "Event Study", "Panel Regression", "Data Coverage"]
+    tab_overview, tab_shocks, tab_event, tab_regression, tab_rolling, tab_coverage = st.tabs(
+        [
+            "Overview",
+            "GPR Shocks",
+            "Event Study",
+            "Panel Regression",
+            "Rolling Beta",
+            "Data Coverage",
+        ]
     )
 
     with tab_overview:
@@ -134,6 +145,22 @@ def main():
             "The interaction term is the extra association between standardized GPR "
             "and returns for emerging market ETFs relative to developed market ETFs."
         )
+
+    with tab_rolling:
+        countries = sorted(rolling_beta["country"].dropna().unique())
+        selected_country = st.selectbox("Country", countries)
+        country_beta = rolling_beta.loc[
+            rolling_beta["country"] == selected_country
+        ].dropna(subset=["rolling_gpr_beta"])
+
+        fig = px.line(
+            country_beta,
+            x="date",
+            y="rolling_gpr_beta",
+            title=f"Rolling GPR Sensitivity: {selected_country}",
+        )
+        fig.add_hline(y=0, line_dash="dash", line_color="gray")
+        st.plotly_chart(fig, use_container_width=True)
 
     with tab_coverage:
         coverage = build_country_coverage(panel)

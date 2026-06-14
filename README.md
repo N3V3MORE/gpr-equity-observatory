@@ -26,6 +26,7 @@ scripts/build_analysis_panel.py   Combines returns, country metadata, and GPR
 scripts/plot_initial_trends.py    Creates the first GPR/returns figure
 scripts/run_event_study.py        Runs the first GPR shock event study
 scripts/run_panel_regression.py   Runs the baseline panel regression
+scripts/run_rolling_sensitivity.py Builds rolling GPR sensitivity estimates
 app.py                            Streamlit dashboard
 src/gprobs/                      Reusable project code
 tests/                           Checks for data and feature logic
@@ -47,6 +48,7 @@ python scripts/build_analysis_panel.py
 python scripts/plot_initial_trends.py
 python scripts/run_event_study.py
 python scripts/run_panel_regression.py
+python scripts/run_rolling_sensitivity.py
 streamlit run app.py
 ```
 
@@ -62,6 +64,7 @@ These commands download adjusted ETF prices, download daily GPR data, and write:
 - `data/processed/event_study_summary.csv`
 - `data/processed/panel_regression_baseline.csv`
 - `data/processed/panel_regression_summary.txt`
+- `data/processed/rolling_gpr_beta.csv`
 
 ## Data Note
 
