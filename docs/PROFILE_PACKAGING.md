@@ -1,5 +1,52 @@
 # Profile Packaging
 
+## What You Should Do Now
+
+Use this project as a GitHub/profile research project first. You do not need to
+deploy it publicly or add more datasets before showing it.
+
+Recommended next actions:
+
+1. Put the GitHub repository on your profile.
+2. Use the CV bullet below.
+3. Use the LinkedIn summary below if you want to post the project.
+4. Use the three-minute script before interviews or meetings.
+5. Use the screenshots in `reports/screenshots/` when you need visuals.
+
+Simple GitHub repository description:
+
+> Reproducible quant economics project studying geopolitical risk and equity
+> market responses across developed and emerging market ETF proxies.
+
+## What Not To Claim
+
+Do not claim that this project proves a causal effect. It does not.
+
+Do not claim that it is a trading system. It is not.
+
+Do not claim strong emerging-market asymmetry. The current evidence is mixed:
+the controlled GPR coefficient is negative, but the emerging-market interaction
+is not statistically strong.
+
+The strongest honest claim is:
+
+> I built a reproducible empirical research platform and found cautious evidence
+> that geopolitical risk is associated with equity-market risk, while the
+> emerging-market asymmetry result remains mixed.
+
+## Optional Future Work In Plain English
+
+You said the future options were confusing, so here is the short version.
+
+- Public deployment means turning the dashboard into a shareable web link. This
+  is optional.
+- FRED controls means adding more official macroeconomic variables, such as
+  interest rates or inflation data. This is useful later, but not required now.
+- GDELT or country-specific GPR means adding more advanced news/geopolitical
+  data. This is a bigger extension and should wait.
+
+For now, the best choice is to present the current project clearly.
+
 ## CV Bullet
 
 Built a reproducible Python research platform measuring equity-market responses
