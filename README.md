@@ -28,6 +28,7 @@ scripts/plot_initial_trends.py    Creates the first GPR/returns figure
 scripts/run_data_diagnostics.py   Builds coverage and large-return checks
 scripts/run_event_study.py        Runs the first GPR shock event study
 scripts/run_panel_regression.py   Runs the baseline panel regression
+scripts/run_quantile_regression.py Estimates tail-risk quantile regressions
 scripts/run_local_projections.py  Estimates dynamic GPR shock response paths
 scripts/run_rolling_sensitivity.py Builds rolling GPR sensitivity estimates
 scripts/build_all.py              Rebuilds the full MVP pipeline in order
@@ -61,6 +62,7 @@ python scripts/plot_initial_trends.py
 python scripts/run_data_diagnostics.py
 python scripts/run_event_study.py
 python scripts/run_panel_regression.py
+python scripts/run_quantile_regression.py
 python scripts/run_local_projections.py
 python scripts/run_rolling_sensitivity.py
 streamlit run app.py
@@ -85,6 +87,7 @@ These commands download adjusted ETF prices, download daily GPR data, and write:
 - `data/processed/panel_regression_summary.txt`
 - `data/processed/panel_regression_controlled.csv`
 - `data/processed/panel_regression_controlled_summary.txt`
+- `data/processed/quantile_regression_results.csv`
 - `data/processed/local_projection_results.csv`
 - `data/processed/rolling_gpr_beta.csv`
 
@@ -108,3 +111,7 @@ the observed ETF return inside the event window.
 The local projection output estimates cumulative ETF return responses at several
 daily horizons after GPR shock days. It is an association model, not a causal
 claim.
+
+The quantile regression output compares the GPR association at lower return
+quantiles against the median. This is useful for checking whether GPR matters
+more during bad market-return states than during typical days.

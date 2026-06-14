@@ -24,6 +24,7 @@ REQUIRED_FILES = {
     "abnormal_event_study": DATA_DIR / "event_study_abnormal_summary.csv",
     "regression": DATA_DIR / "panel_regression_baseline.csv",
     "controlled_regression": DATA_DIR / "panel_regression_controlled.csv",
+    "quantile_regression": DATA_DIR / "quantile_regression_results.csv",
     "local_projections": DATA_DIR / "local_projection_results.csv",
     "rolling_beta": DATA_DIR / "rolling_gpr_beta.csv",
     "large_returns": DATA_DIR / "large_return_flags.csv",
@@ -44,6 +45,7 @@ def load_outputs():
         "abnormal_event_study": pd.read_csv(REQUIRED_FILES["abnormal_event_study"]),
         "regression": pd.read_csv(REQUIRED_FILES["regression"]),
         "controlled_regression": pd.read_csv(REQUIRED_FILES["controlled_regression"]),
+        "quantile_regression": pd.read_csv(REQUIRED_FILES["quantile_regression"]),
         "local_projections": pd.read_csv(REQUIRED_FILES["local_projections"]),
         "rolling_beta": pd.read_csv(REQUIRED_FILES["rolling_beta"], parse_dates=["date"]),
         "large_returns": pd.read_csv(REQUIRED_FILES["large_returns"], parse_dates=["date"]),
@@ -71,6 +73,7 @@ def main():
                     "python scripts/run_data_diagnostics.py",
                     "python scripts/run_event_study.py",
                     "python scripts/run_panel_regression.py",
+                    "python scripts/run_quantile_regression.py",
                     "python scripts/run_local_projections.py",
                     "python scripts/run_rolling_sensitivity.py",
                 ]
@@ -88,16 +91,18 @@ def main():
     abnormal_event_study = outputs["abnormal_event_study"]
     regression = outputs["regression"]
     controlled_regression = outputs["controlled_regression"]
+    quantile_regression = outputs["quantile_regression"]
     local_projections = outputs["local_projections"]
     rolling_beta = outputs["rolling_beta"]
     large_returns = outputs["large_returns"]
 
-    tab_overview, tab_shocks, tab_event, tab_regression, tab_local, tab_rolling, tab_coverage = st.tabs(
+    tab_overview, tab_shocks, tab_event, tab_regression, tab_tail, tab_local, tab_rolling, tab_coverage = st.tabs(
         [
             "Overview",
             "GPR Shocks",
             "Event Study",
             "Panel Regression",
+            "Tail Risk",
             "Local Projections",
             "Rolling Beta",
             "Data Coverage",
@@ -181,6 +186,25 @@ def main():
             "and returns for emerging market ETFs relative to developed market ETFs. "
             "The controlled model also includes global equity, VIX, oil, dollar, "
             "and US 10-year yield controls."
+        )
+
+    with tab_tail:
+        key_quantile_terms = select_key_regression_terms(quantile_regression)
+        fig = px.line(
+            key_quantile_terms,
+            x="quantile",
+            y="estimate",
+            color="term",
+            markers=True,
+            title="GPR Coefficients Across Return Quantiles",
+        )
+        fig.add_hline(y=0, line_dash="dash", line_color="gray")
+        st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(key_quantile_terms, use_container_width=True, hide_index=True)
+        st.caption(
+            "Lower quantiles describe worse return days. A more negative coefficient "
+            "at the 10th percentile than at the median suggests stronger downside "
+            "association, but p-values still matter."
         )
 
     with tab_local:
