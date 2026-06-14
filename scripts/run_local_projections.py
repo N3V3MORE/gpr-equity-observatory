@@ -1,16 +1,12 @@
 from pathlib import Path
-import sys
 
 import pandas as pd
 
+from gprobs.analysis.local_projection import estimate_local_projections
+from gprobs.config import LOCAL_PROJECTION_MAX_HORIZON
+from gprobs.data.market_controls import merge_market_controls
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_PATH = PROJECT_ROOT / "src"
-if str(SRC_PATH) not in sys.path:
-    sys.path.insert(0, str(SRC_PATH))
-
-from gprobs.analysis.local_projection import estimate_local_projections
-from gprobs.data.market_controls import merge_market_controls
 
 
 def main():
@@ -26,7 +22,7 @@ def main():
 
     results = estimate_local_projections(
         panel,
-        max_horizon=20,
+        max_horizon=LOCAL_PROJECTION_MAX_HORIZON,
         include_controls=True,
     )
     results.to_csv(processed_dir / "local_projection_results.csv", index=False)

@@ -32,9 +32,9 @@ markets, and empirical research design.
 
 The current evidence should be reported carefully.
 
-The controlled panel regression finds a negative association between
-geopolitical risk and ETF returns. However, the extra emerging-market effect is
-not statistically strong in the current specification.
+The controlled panel regression finds a small negative association between daily
+geopolitical-risk jumps and ETF returns. However, the date fixed-effects H1 test
+does not find a statistically strong extra emerging-market effect.
 
 In plain English: the project finds evidence that geopolitical risk matters for
 equity-market risk, but it should not claim to prove that emerging markets always
@@ -63,6 +63,12 @@ instead of forcing a dramatic result.
 Install dependencies:
 
 ```powershell
+python -m pip install -e .
+```
+
+For local development and CI-style checks, install the dev extra:
+
+```powershell
 python -m pip install -r requirements.txt
 ```
 
@@ -82,7 +88,7 @@ Run the checks:
 
 ```powershell
 ruff check .
-pytest -q
+pytest --cov=gprobs --cov=app --cov-report=term-missing -q
 ```
 
 The build command downloads public data and writes generated files into

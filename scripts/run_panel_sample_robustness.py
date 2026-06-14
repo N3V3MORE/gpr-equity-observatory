@@ -1,16 +1,11 @@
 from pathlib import Path
-import sys
 
 import pandas as pd
 
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_PATH = PROJECT_ROOT / "src"
-if str(SRC_PATH) not in sys.path:
-    sys.path.insert(0, str(SRC_PATH))
-
 from gprobs.analysis.panel_sample_robustness import build_sample_robustness_table
 from gprobs.data.market_controls import merge_market_controls
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():

@@ -8,6 +8,11 @@ def format_percent(value: float, digits: int = 3) -> str:
     return f"{float(value) * 100:.{digits}f}%"
 
 
+def format_basis_points(value: float, digits: int = 1) -> str:
+    """Format a decimal return or coefficient as basis points."""
+    return f"{float(value) * 10000:.{digits}f} bps"
+
+
 def format_p_value(value: float) -> str:
     """Format p-values without false precision."""
     if value is None or math.isnan(float(value)):
@@ -21,6 +26,8 @@ def format_estimate(row: pd.Series) -> str:
     """Format estimate values using the unit implied by the row."""
     if row["method"] == "Drawdown classifier":
         return f"{float(row['estimate']):.3f}"
+    if "GPR" in str(row.get("focus", "")):
+        return format_basis_points(row["estimate"])
     return format_percent(row["estimate"])
 
 
@@ -66,17 +73,21 @@ def build_results_brief(
     """Build a concise Markdown brief from generated model outputs."""
     controlled = _method_row(evidence_summary, "Controlled panel regression")
     interaction = _method_row(evidence_summary, "Controlled emerging interaction")
+    date_fe_interaction = _method_row(
+        evidence_summary,
+        "Date fixed-effects emerging interaction",
+    )
     quantile = _method_row(evidence_summary, "Tail-risk quantile regression")
     local_developed = _method_row(evidence_summary, "Local projection developed")
     local_emerging = _method_row(evidence_summary, "Local projection emerging")
     drawdown = _method_row(evidence_summary, "Drawdown classifier")
 
     robustness_scenario = "Excluding COVID and Russia windows"
-    robust_gpr = _sample_row(sample_robustness, robustness_scenario, "gpr_z")
+    robust_gpr = _sample_row(sample_robustness, robustness_scenario, "gpr_change_z")
     robust_interaction = _sample_row(
         sample_robustness,
         robustness_scenario,
-        "gpr_z:emerging_market",
+        "gpr_change_z:emerging_market",
     )
 
     lines = [
@@ -84,9 +95,11 @@ def build_results_brief(
         "",
         "## Main Takeaway",
         "",
-        "The current evidence is mixed. The controlled panel regression finds a "
-        "negative GPR-return association, but the emerging-market interaction is "
-        "not strong evidence of a reliably larger emerging-market response.",
+        "The controlled panel regression now estimates responses to daily GPR jumps. "
+        "The clean H1 test is the date fixed-effects emerging-market interaction, "
+        "which absorbs common global shocks and reports the within-date EM differential.",
+        "The older controlled interaction alone is not strong evidence of a "
+        "reliably larger emerging-market response.",
         "",
         "## Key Evidence",
         "",
@@ -94,6 +107,7 @@ def build_results_brief(
             [
                 controlled,
                 interaction,
+                date_fe_interaction,
                 quantile,
                 local_developed,
                 local_emerging,
@@ -103,22 +117,24 @@ def build_results_brief(
         "",
         "## Sample Robustness",
         "",
-        f"Under `{robustness_scenario}`, the controlled GPR coefficient is "
-        f"{format_percent(robust_gpr['estimate'])} with p-value "
+        f"Under `{robustness_scenario}`, the controlled one-SD GPR-jump coefficient is "
+        f"{format_basis_points(robust_gpr['estimate'])} with p-value "
         f"{format_p_value(robust_gpr['p_value'])}. The emerging interaction is "
-        f"{format_percent(robust_interaction['estimate'])} with p-value "
+        f"{format_basis_points(robust_interaction['estimate'])} with p-value "
         f"{format_p_value(robust_interaction['p_value'])}.",
         "",
-        "That means the main controlled GPR coefficient is not only a COVID or "
-        "Russia-Ukraine result. But the emerging-market asymmetry claim remains "
+        "That means the main controlled GPR-jump coefficient is not only a COVID "
+        "or Russia-Ukraine result. But the emerging-market asymmetry claim remains "
         "weak in the current specification.",
         "",
         "## How To Explain This",
         "",
         "- This is an empirical risk-response project, not a trading system.",
         "- ETF returns are USD returns, so they include currency exposure.",
-        "- GPR shocks are not randomized events, so the results are associations.",
-        "- The best current conclusion is cautious: GPR is linked to equity risk, "
+        "- GPR jumps are not randomized events, so the results are associations.",
+        "- The date fixed-effects specification identifies the emerging-market "
+        "differential, not a separate global GPR-jump coefficient.",
+        "- The best current conclusion is cautious: GPR jumps are linked to equity risk, "
         "but emerging-market asymmetry is not yet a strong finding.",
         "",
     ]

@@ -35,13 +35,15 @@ oil level changes instead.
 
 The project uses several methods because no single model is enough.
 
-Event studies ask what happens around high-GPR shock dates. A raw event study
+Event studies ask what happens around large daily GPR jumps. A raw event study
 shows average ETF returns around shocks, while an abnormal-return event study
 subtracts the return expected from a simple market model.
 
-Panel regressions estimate the average association between GPR and returns,
-including an interaction for emerging markets. The controlled model adds global
-market, volatility, oil, dollar, and yield controls.
+Panel regressions estimate the average association between standardized GPR
+jumps and returns, including an interaction for emerging markets. The controlled
+model adds global market, volatility, oil, dollar, and yield controls; the H1
+model adds date fixed effects and reports the within-date emerging-market
+differential.
 
 Quantile regressions ask whether GPR matters more during bad return states than
 during normal days. This is important because the research question is about
@@ -64,15 +66,16 @@ prediction.
 
 The current evidence is mixed, which is useful.
 
-The controlled panel regression finds a negative average association between
-standardized GPR and ETF returns. However, the emerging-market interaction is
-not statistically strong after controls. That means the current evidence does
-not yet prove that emerging markets have a stronger average response.
+The controlled panel regression finds a small negative average association
+between standardized GPR jumps and ETF returns. However, the controlled and date
+fixed-effects emerging-market interactions are not statistically strong. That
+means the current evidence does not yet prove that emerging markets have a
+stronger average response.
 
-The quantile regressions are directionally interesting. The GPR coefficient at
-the 10th percentile is more negative than at the median, which is consistent
-with downside concentration. But the p-values are not strong enough to treat
-this as a firm result.
+The quantile regressions are directionally interesting. The GPR-jump coefficient
+at the 10th percentile is negative, which is consistent with downside
+concentration. But the p-values are not strong enough to treat this as a firm
+result.
 
 The local projections show small response estimates with wide confidence
 intervals, especially for emerging markets.
@@ -80,9 +83,9 @@ intervals, especially for emerging markets.
 The robustness results are useful but still cautious. Under the 90th-percentile
 shock definition, emerging-market abnormal returns are more negative than
 developed-market abnormal returns over the 10-day event window. But the
-95th-percentile shock definition is less stable. In the panel sample checks,
-the controlled GPR coefficient remains negative after excluding COVID and
-Russia-Ukraine windows, while the emerging-market interaction becomes weaker.
+95th-percentile GPR-jump definition is less supportive. In the panel sample checks,
+the controlled GPR-jump coefficient remains negative after excluding COVID and
+Russia-Ukraine windows, while the emerging-market interaction remains weak.
 
 The drawdown classifier has modest signal. Its mean ROC AUC is about 0.614, and
 rolling volatility is the most important feature. GPR variables are small in the

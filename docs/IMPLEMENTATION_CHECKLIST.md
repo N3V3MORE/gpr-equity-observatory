@@ -48,12 +48,12 @@ choices are documented in `docs/DATA_SOURCE_DECISIONS.md`.
 
 The current evidence should be described cautiously:
 
-- The controlled panel regression finds a negative GPR-return association.
+- The controlled panel regression finds a small negative GPR-jump association.
 - The emerging-market interaction is not statistically strong after controls.
 - Event robustness is mixed: the 90th-percentile shock definition is more
   supportive of emerging-market downside than the 95th-percentile definition.
-- Sample robustness keeps the controlled GPR coefficient negative, but weakens
-  the emerging-market interaction.
+- Sample robustness keeps the controlled GPR-jump coefficient negative, but the
+  emerging-market interaction remains weak.
 - The ML drawdown classifier has modest ranking signal, not a trading-grade
   forecast.
 

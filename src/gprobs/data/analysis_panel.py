@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 BASE_PANEL_COLUMNS = ["date", "ticker", "country", "market_group", "region", "return"]
 
 

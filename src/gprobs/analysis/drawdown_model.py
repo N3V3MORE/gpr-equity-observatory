@@ -6,7 +6,11 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from gprobs.analysis.panel_regression import CONTROL_COLUMNS
-
+from gprobs.config import (
+    DRAWDOWN_HORIZON_DAYS,
+    DRAWDOWN_THRESHOLD,
+    DRAWDOWN_VOLATILITY_WINDOW_DAYS,
+)
 
 DEFAULT_FEATURE_COLUMNS = [
     "gpr_z",
@@ -36,9 +40,9 @@ METRIC_COLUMNS = [
 
 def build_drawdown_dataset(
     panel: pd.DataFrame,
-    horizon: int = 20,
-    threshold: float = -0.05,
-    volatility_window: int = 20,
+    horizon: int = DRAWDOWN_HORIZON_DAYS,
+    threshold: float = DRAWDOWN_THRESHOLD,
+    volatility_window: int = DRAWDOWN_VOLATILITY_WINDOW_DAYS,
 ) -> pd.DataFrame:
     """Build a time-ordered dataset for forward drawdown classification."""
     if horizon < 1:

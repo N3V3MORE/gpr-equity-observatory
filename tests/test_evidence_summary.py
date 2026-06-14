@@ -7,22 +7,29 @@ from gprobs.analysis.evidence_summary import build_evidence_summary
 def test_build_evidence_summary_collects_core_outputs_in_order():
     baseline = pd.DataFrame(
         {
-            "term": ["gpr_z"],
+            "term": ["gpr_change_z"],
             "estimate": [-0.10],
             "p_value": [0.03],
         }
     )
     controlled = pd.DataFrame(
         {
-            "term": ["gpr_z", "gpr_z:emerging_market"],
+            "term": ["gpr_change_z", "gpr_change_z:emerging_market"],
             "estimate": [-0.06, 0.09],
             "p_value": [0.01, 0.13],
+        }
+    )
+    date_fe = pd.DataFrame(
+        {
+            "term": ["gpr_change_z:emerging_market"],
+            "estimate": [-0.03],
+            "p_value": [0.04],
         }
     )
     quantile = pd.DataFrame(
         {
             "quantile": [0.10, 0.50],
-            "term": ["gpr_z", "gpr_z"],
+            "term": ["gpr_change_z", "gpr_change_z"],
             "estimate": [-0.12, -0.04],
             "p_value": [0.16, 0.27],
         }
@@ -55,6 +62,7 @@ def test_build_evidence_summary_collects_core_outputs_in_order():
     summary = build_evidence_summary(
         baseline,
         controlled,
+        date_fe,
         quantile,
         local_projections,
         event_robustness,
@@ -72,6 +80,7 @@ def test_build_evidence_summary_collects_core_outputs_in_order():
         "Baseline panel regression",
         "Controlled panel regression",
         "Controlled emerging interaction",
+        "Date fixed-effects emerging interaction",
         "Tail-risk quantile regression",
         "Local projection developed",
         "Local projection emerging",
@@ -81,7 +90,7 @@ def test_build_evidence_summary_collects_core_outputs_in_order():
     ]
     assert summary.loc[1, "estimate"] == -0.06
     assert summary.loc[1, "p_value"] == 0.01
-    assert summary.loc[8, "estimate"] == 0.65
+    assert summary.loc[9, "estimate"] == 0.65
 
 
 def test_build_evidence_summary_raises_clear_error_for_missing_term():
@@ -89,11 +98,11 @@ def test_build_evidence_summary_raises_clear_error_for_missing_term():
     minimal = pd.DataFrame(
         {
             "quantile": [0.10],
-            "term": ["gpr_z"],
+            "term": ["gpr_change_z"],
             "estimate": [-0.12],
             "p_value": [0.16],
         }
     )
 
-    with pytest.raises(ValueError, match="Missing gpr_z"):
-        build_evidence_summary(empty, empty, minimal, empty, empty, empty)
+    with pytest.raises(ValueError, match="Missing gpr_change_z"):
+        build_evidence_summary(empty, empty, empty, minimal, empty, empty, empty)

@@ -9,12 +9,13 @@ data, public market controls, event studies, panel regressions, quantile
 regressions, local projections, rolling sensitivities, and a simple drawdown-risk
 classifier.
 
-The current evidence is mixed. Market-controlled regressions show a negative
-average association between standardized GPR and ETF returns, but the emerging
-market interaction is not statistically strong. Tail-risk estimates are
-directionally consistent with stronger downside effects, but they are not yet
-decisive. The strongest current contribution is the transparent empirical
-pipeline rather than a single headline result.
+The current evidence is mixed. Market-controlled regressions show small,
+statistically weak average responses to standardized daily GPR jumps. The
+date-fixed-effects interaction, which is the cleanest H1 test, does not show a
+reliable emerging-market differential. Event studies are more suggestive in the
+10-day window after 90th-percentile GPR jumps, but they are not decisive. The
+strongest current contribution is the transparent empirical pipeline rather than
+a single headline result.
 
 ## Research Question
 
@@ -25,8 +26,8 @@ The main question is:
 
 The project tests this question through several complementary views:
 
-- Event studies: what happens around high-GPR shock dates?
-- Panel regressions: how are returns associated with GPR after controls?
+- Event studies: what happens around large daily GPR jumps?
+- Panel regressions: how are returns associated with GPR jumps after controls?
 - Quantile regressions: does GPR matter more in the left tail of returns?
 - Local projections: how does the response path evolve over later horizons?
 - Drawdown classification: do current risk conditions help identify future
@@ -42,8 +43,8 @@ movement against the dollar.
 
 The geopolitical-risk source is the Caldara-Iacoviello daily GPR index. The
 project uses the aggregate GPR index, the act and threat components where
-available, and a high-GPR shock indicator based on the top 5 percent of the GPR
-distribution.
+available, the daily GPR change, and a shock indicator based on top-decile
+positive GPR jumps.
 
 The current market controls use public no-key proxies:
 
@@ -60,8 +61,9 @@ April 2020. Using a level change avoids an invalid mathematical transformation.
 
 ### Event Study
 
-The event study selects high-GPR dates and separates events that are too close
-together. It reports raw ETF return windows and market-model abnormal returns.
+The event study selects large positive GPR-jump dates and separates events that
+are too close together. It reports raw ETF return windows and market-model
+abnormal returns.
 The abnormal-return version estimates a pre-event market model for each ETF:
 
 ```text
@@ -74,17 +76,28 @@ the event window.
 ### Panel Regression
 
 The baseline panel regression estimates the association between ETF returns and
-standardized GPR:
+standardized daily GPR changes:
 
 ```text
-return_it = GPR_t + GPR_t * emerging_i + ETF fixed effects + error_it
+return_it = GPRChangeZ_t + GPRChangeZ_t * emerging_i + ETF fixed effects + error_it
 ```
 
 The controlled version adds global equity returns, VIX changes, oil changes,
 dollar returns, and US 10-year yield changes.
 
-The coefficient on `gpr_z` is the developed-market association. The coefficient
-on `gpr_z:emerging_market` is the additional emerging-market association.
+The coefficient on `gpr_change_z` is the developed-market response to a one-SD
+GPR jump. The coefficient on `gpr_change_z:emerging_market` is the additional
+emerging-market response.
+
+The H1 specification adds date fixed effects:
+
+```text
+return_it = GPRChangeZ_t * emerging_i + ETF fixed effects + date fixed effects + error_it
+```
+
+With date fixed effects, the common daily GPR jump is absorbed. The identified
+coefficient is therefore the within-date emerging-market differential, not a
+standalone global GPR effect.
 
 The sample-robustness version reruns the controlled panel model after excluding
 major crisis windows. This checks whether the main coefficient is mostly driven
@@ -119,24 +132,24 @@ plain-English interpretation.
 
 ## Current Results
 
-The controlled panel regression estimates the developed-market GPR coefficient
-at about `-0.000064`, with a p-value around `0.006`. The emerging-market
-interaction is positive at about `0.000090`, but the p-value is around `0.127`.
-This means the current model suggests a negative average GPR association for
-developed-market ETF returns, but it does not strongly support a differential
-average response for emerging markets after controls.
+The controlled panel regression estimates the developed-market GPR-jump
+coefficient at about `-0.4` basis points per one-SD GPR jump, with a p-value
+around `0.328`. The controlled emerging-market interaction is about `-0.6` basis
+points, with a p-value around `0.551`. The date-fixed-effects H1 interaction is
+also about `-0.6` basis points, with a p-value around `0.557`. This is a sharper
+and more interpretable specification, but it does not strongly support a
+differential average response for emerging markets.
 
-The sample-robustness checks keep the developed-market controlled GPR
-coefficient negative after excluding the COVID-crash window, the Russia-Ukraine
-invasion window, or both. The emerging-market interaction becomes much smaller
-when the Russia-Ukraine window is excluded. This weakens, rather than
-strengthens, the claim that emerging ETFs have a reliably larger average GPR
-response in the current specification.
+The sample-robustness checks keep the controlled GPR-jump coefficient negative
+after excluding the COVID-crash window, the Russia-Ukraine invasion window, or
+both. Under the combined exclusion, the developed-market coefficient is about
+`-0.6` basis points and the emerging interaction is about `-0.8` basis points,
+but neither is statistically strong.
 
 The quantile regression results are more suggestive than conclusive. The
-10th-percentile GPR coefficient is more negative than the median coefficient,
-which is directionally consistent with downside concentration. However, the
-p-values are not strong enough to describe this as a firm result.
+10th-percentile GPR-jump coefficient is about `-0.8` basis points, which is
+directionally consistent with downside concentration. However, the p-value is
+around `0.280`, so this is not a firm result.
 
 The local projection estimates show small cumulative responses and wide
 confidence intervals. Emerging-market response estimates are often larger but
@@ -149,28 +162,28 @@ This is modest predictive signal. Rolling volatility is the largest feature by
 standardized coefficient. GPR features are small in the current classifier, so
 the ML layer should be described as exploratory.
 
-The event-study robustness checks compare 90th- and 95th-percentile GPR shock
-definitions across 3-, 5-, and 10-trading-day windows. The 90th-percentile
-shock definition produces more negative emerging-market cumulative abnormal
-returns than developed-market returns across these windows, with the 10-day
-window around `-0.19%` for emerging markets versus about `-0.06%` for developed
-markets. The 95th-percentile shock definition is less stable: emerging markets
-look positive at shorter windows but negative by the 10-day window. This is
-useful evidence, but it is not a clean confirmation of the asymmetry hypothesis.
+The event-study robustness checks compare 90th- and 95th-percentile GPR-jump
+definitions across 3-, 5-, and 10-trading-day windows. The 90th-percentile jump
+definition produces a more negative 10-day cumulative abnormal return for
+emerging markets, around `-0.23%`, versus about `-0.12%` for developed markets.
+The 95th-percentile jump definition is less supportive, with positive 10-day
+abnormal returns in both groups. This is useful evidence, but it is not a clean
+confirmation of the asymmetry hypothesis.
 
 The compact evidence table makes the mixed evidence especially clear. The
-baseline panel GPR coefficient is positive, while the controlled panel
-coefficient is negative. That sign change is an important warning: conclusions
-depend on whether global market controls are included.
+baseline GPR-jump coefficient is positive, while the controlled panel
+coefficient is negative, and the date-fixed-effects interaction is small and
+statistically weak. That is an important warning against over-selling a single
+headline result.
 
 ## Interpretation
 
 The current evidence supports a cautious interpretation:
 
-- GPR is associated with equity-market risk, but the sign and strength depend on
-  model specification.
+- GPR jumps are associated with equity-market risk, but the sign and strength
+  depend on model specification.
 - The emerging-market asymmetry hypothesis is not yet strongly supported in the
-  average controlled panel regression.
+  average controlled or date-fixed-effects panel regression.
 - Tail-risk, local-projection, and event-study robustness results are useful
   diagnostics, but they do not yet carry the main conclusion alone.
 - The ML model is useful for disciplined risk classification practice, but it is
@@ -185,9 +198,22 @@ ETF returns are imperfect proxies for local equity markets. They are practical
 and reproducible, but they include currency exposure, ETF liquidity effects, and
 global-investor pricing.
 
-GPR shocks are not causal experiments. High GPR often coincides with oil shocks,
-global risk-aversion shocks, monetary-policy news, and other macro-financial
-events. Controls help, but they do not eliminate confounding.
+### Identification
+
+GPR shocks are not causal experiments. Large GPR jumps often coincide with oil
+shocks, global risk-aversion shocks, monetary-policy news, and other
+macro-financial events. Market controls help, and date fixed effects absorb
+common daily shocks, but they do not eliminate every source of confounding.
+
+The event-study timing should also be interpreted carefully. A news-based GPR
+jump can reflect information that markets partly anticipated before the event
+date, or information that arrived after a local market close. The event date is
+therefore a disciplined anchor, not proof that the shock was fully unanticipated.
+
+ETF returns are USD returns. This is appropriate for a global investor, but it
+means the measured response combines local equity returns and exchange-rate
+movements against the dollar. Some apparent emerging-market sensitivity can
+therefore be currency exposure rather than pure equity-market risk transmission.
 
 The controlled sample begins in 2008 because ACWI data begin then. This removes
 some earlier events from controlled models.

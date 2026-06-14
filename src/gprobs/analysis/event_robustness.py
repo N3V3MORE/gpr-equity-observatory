@@ -5,7 +5,13 @@ from gprobs.analysis.event_study import (
     select_spaced_events,
     summarize_abnormal_event_windows,
 )
-
+from gprobs.config import (
+    EVENT_ESTIMATION_GAP_DAYS,
+    EVENT_ESTIMATION_WINDOW_DAYS,
+    EVENT_MIN_ESTIMATION_OBS,
+    EVENT_MIN_GAP_DAYS,
+)
+from gprobs.data.gpr_data import mark_top_quantile_shocks
 
 ROBUSTNESS_COLUMNS = [
     "shock_quantile",
@@ -44,10 +50,10 @@ def build_event_robustness_table(
     gpr: pd.DataFrame,
     shock_quantiles: list[float],
     windows: list[int],
-    min_gap_days: int = 20,
-    estimation_window: int = 120,
-    estimation_gap: int = 20,
-    min_estimation_obs: int = 80,
+    min_gap_days: int = EVENT_MIN_GAP_DAYS,
+    estimation_window: int = EVENT_ESTIMATION_WINDOW_DAYS,
+    estimation_gap: int = EVENT_ESTIMATION_GAP_DAYS,
+    min_estimation_obs: int = EVENT_MIN_ESTIMATION_OBS,
 ) -> pd.DataFrame:
     """Compare event-study endpoints across shock thresholds and windows."""
     panel = panel.copy()
@@ -57,9 +63,7 @@ def build_event_robustness_table(
 
     results = []
     for shock_quantile in shock_quantiles:
-        shocked_gpr = gpr.copy()
-        threshold = shocked_gpr["gpr"].quantile(shock_quantile)
-        shocked_gpr["gpr_shock"] = shocked_gpr["gpr"] >= threshold
+        shocked_gpr = mark_top_quantile_shocks(gpr, quantile=shock_quantile)
         event_dates = select_spaced_events(shocked_gpr, min_gap_days=min_gap_days)
 
         for window in windows:

@@ -1,13 +1,6 @@
 from pathlib import Path
-import sys
 
 import pandas as pd
-
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_PATH = PROJECT_ROOT / "src"
-if str(SRC_PATH) not in sys.path:
-    sys.path.insert(0, str(SRC_PATH))
 
 from gprobs.analysis.event_study import (
     build_event_windows,
@@ -16,7 +9,16 @@ from gprobs.analysis.event_study import (
     summarize_abnormal_event_windows,
     summarize_event_windows,
 )
+from gprobs.config import (
+    EVENT_ESTIMATION_GAP_DAYS,
+    EVENT_ESTIMATION_WINDOW_DAYS,
+    EVENT_MIN_ESTIMATION_OBS,
+    EVENT_MIN_GAP_DAYS,
+    EVENT_WINDOW_DAYS,
+)
 from gprobs.data.market_controls import merge_market_controls
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
@@ -31,18 +33,18 @@ def main():
 
     controls = pd.read_csv(processed_dir / "market_controls.csv", parse_dates=["date"])
 
-    event_dates = select_spaced_events(gpr, min_gap_days=20)
-    windows = build_event_windows(panel, event_dates, window=5)
+    event_dates = select_spaced_events(gpr, min_gap_days=EVENT_MIN_GAP_DAYS)
+    windows = build_event_windows(panel, event_dates, window=EVENT_WINDOW_DAYS)
     summary = summarize_event_windows(windows)
 
     controlled_panel = merge_market_controls(panel, controls)
     abnormal_windows = build_market_model_event_windows(
         controlled_panel,
         event_dates,
-        window=5,
-        estimation_window=120,
-        estimation_gap=20,
-        min_estimation_obs=80,
+        window=EVENT_WINDOW_DAYS,
+        estimation_window=EVENT_ESTIMATION_WINDOW_DAYS,
+        estimation_gap=EVENT_ESTIMATION_GAP_DAYS,
+        min_estimation_obs=EVENT_MIN_ESTIMATION_OBS,
     )
     abnormal_summary = summarize_abnormal_event_windows(abnormal_windows)
 

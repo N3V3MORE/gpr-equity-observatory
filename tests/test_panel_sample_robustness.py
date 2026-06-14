@@ -14,7 +14,7 @@ def _toy_controlled_panel() -> pd.DataFrame:
             ("SPY", "developed", 0.0),
             ("EWZ", "emerging", -0.001),
         ]:
-            gpr = 100 + date_index * 3
+            gpr = 100 + date_index * 3 + (date_index % 3) * 5
             rows.append(
                 {
                     "date": date,
@@ -79,6 +79,6 @@ def test_build_sample_robustness_table_keeps_key_gpr_terms_by_scenario():
         "Excluding middle window",
         "Excluding middle window",
     ]
-    assert set(table["term"]) == {"gpr_z", "gpr_z:emerging_market"}
-    assert table.loc[0, "observation_count"] == 60
-    assert table.loc[2, "observation_count"] == 48
+    assert set(table["term"]) == {"gpr_change_z", "gpr_change_z:emerging_market"}
+    assert table.loc[0, "observation_count"] == 58
+    assert table.loc[2, "observation_count"] == 46

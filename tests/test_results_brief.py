@@ -14,6 +14,7 @@ def test_build_results_brief_summarizes_mixed_evidence_cautiously():
             "method": [
                 "Controlled panel regression",
                 "Controlled emerging interaction",
+                "Date fixed-effects emerging interaction",
                 "Tail-risk quantile regression",
                 "Local projection developed",
                 "Local projection emerging",
@@ -22,14 +23,15 @@ def test_build_results_brief_summarizes_mixed_evidence_cautiously():
             "focus": [
                 "Developed-market GPR coefficient",
                 "Extra emerging-market GPR coefficient",
+                "Extra emerging-market GPR coefficient with date FE",
                 "10th-percentile GPR coefficient",
                 "20-day cumulative response",
                 "20-day cumulative response",
                 "Mean ROC AUC",
             ],
-            "estimate": [-0.000064, 0.000090, -0.000117, 0.0022, 0.0037, 0.614],
-            "p_value": [0.006, 0.127, 0.156, 0.034, 0.696, float("nan")],
-            "plain_english": [""] * 6,
+            "estimate": [-0.000064, 0.000090, -0.000044, -0.000117, 0.0022, 0.0037, 0.614],
+            "p_value": [0.006, 0.127, 0.041, 0.156, 0.034, 0.696, float("nan")],
+            "plain_english": [""] * 7,
         }
     )
     sample_robustness = pd.DataFrame(
@@ -38,7 +40,7 @@ def test_build_results_brief_summarizes_mixed_evidence_cautiously():
                 "Excluding COVID and Russia windows",
                 "Excluding COVID and Russia windows",
             ],
-            "term": ["gpr_z", "gpr_z:emerging_market"],
+            "term": ["gpr_change_z", "gpr_change_z:emerging_market"],
             "estimate": [-0.000071, 0.000023],
             "std_error": [0.000031, 0.000066],
             "t_stat": [-2.29, 0.34],
@@ -51,7 +53,8 @@ def test_build_results_brief_summarizes_mixed_evidence_cautiously():
 
     assert "# GPR Equity Observatory Results Brief" in brief
     assert "Controlled panel regression" in brief
-    assert "-0.006%" in brief
+    assert "Date fixed-effects emerging interaction" in brief
+    assert "-0.6 bps" in brief
     assert "| Drawdown classifier | 0.614 | n/a |" in brief
     assert "not strong evidence" in brief
     assert "Excluding COVID and Russia windows" in brief

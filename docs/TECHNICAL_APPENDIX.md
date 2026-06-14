@@ -67,6 +67,7 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `data/processed/event_robustness_summary.csv`
 - `data/processed/panel_regression_baseline.csv`
 - `data/processed/panel_regression_controlled.csv`
+- `data/processed/panel_regression_date_fe.csv`
 - `data/processed/panel_sample_robustness.csv`
 - `data/processed/quantile_regression_results.csv`
 - `data/processed/local_projection_results.csv`
@@ -85,8 +86,9 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 
 - `return`: daily ETF log return.
 - `gpr`: daily geopolitical risk index.
-- `gpr_z`: standardized daily GPR.
-- `gpr_shock`: indicator for top-5-percent GPR days.
+- `gpr_change`: daily change in the geopolitical risk index.
+- `gpr_change_z`: standardized daily GPR change.
+- `gpr_shock`: indicator for top-decile positive GPR jumps.
 - `gpr_act`: GPR act subindex.
 - `gpr_threat`: GPR threat subindex.
 - `global_market_return`: daily ACWI log return.
@@ -98,22 +100,29 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 
 ## Model Notes
 
-Panel regressions use ETF fixed effects. The controlled panel regression adds
-global market, VIX, oil, dollar, and US 10-year yield controls.
+Panel regressions use ETF fixed effects and standardized daily GPR changes. The
+controlled panel regression adds global market, VIX, oil, dollar, and US
+10-year yield controls. The H1 panel specification adds date fixed effects and
+reports only `gpr_change_z:emerging_market`, because the common daily GPR jump is
+absorbed by the date effects.
+
+Panel standard errors are clustered by ticker and date in the main scripts. This
+is more defensible than ticker-only clustering, but the ticker dimension still
+has only 20 clusters, so p-values should be interpreted cautiously.
 
 Panel sample robustness reruns the controlled model after excluding the
 COVID-crash window, the Russia-Ukraine invasion window, and both windows
 together. Date windows are removed inclusively.
 
-Quantile regressions use the same main GPR terms as the panel regression and
+Quantile regressions use the same GPR-change terms as the panel regression and
 estimate coefficients at the 10th, 25th, and 50th percentiles.
 
 Local projections estimate cumulative ETF return responses for horizons 0
 through 20 trading days after a GPR shock.
 
 Event-study robustness compares end-of-window cumulative abnormal returns across
-90th- and 95th-percentile GPR shock definitions and 3-, 5-, and 10-trading-day
-post-shock windows.
+90th- and 95th-percentile GPR-jump shock definitions and 3-, 5-, and
+10-trading-day post-shock windows.
 
 The drawdown classifier uses logistic regression with standardized features and
 class balancing. Validation folds are chronological. No random time-series split

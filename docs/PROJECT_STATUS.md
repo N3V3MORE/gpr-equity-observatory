@@ -19,8 +19,8 @@ For a requirement-by-requirement audit against the original project plan, see
 - Data diagnostics: coverage and large-return flags.
 - Event study using raw returns.
 - Market-model abnormal-return event study.
-- Event-study robustness checks across GPR shock thresholds and event windows.
-- Baseline and market-controlled panel regressions.
+- Event-study robustness checks across GPR-jump thresholds and event windows.
+- Baseline, market-controlled, and date fixed-effects panel regressions.
 - Panel sample-robustness checks excluding major crisis windows.
 - Quantile regressions for tail-risk analysis.
 - Local projections for dynamic response paths.
@@ -38,21 +38,22 @@ The strongest current result is methodological rather than a dramatic empirical
 claim: the project now has a reproducible pipeline that can compare event-study,
 panel, quantile, local-projection, rolling-sensitivity, and ML evidence.
 
-The controlled panel regression estimates the main standardized GPR coefficient
-at about `-0.000064`, with a p-value near `0.006`. The emerging-market
-interaction is positive, about `0.000090`, but its p-value is about `0.127`.
-That means the current model does not give strong statistical evidence that
-emerging ETFs have a different average GPR response after controls.
+The controlled panel regression estimates the developed-market GPR-jump
+coefficient at about `-0.4` basis points per one-SD jump, with a p-value near
+`0.328`. The controlled emerging-market interaction is about `-0.6` basis
+points, with a p-value near `0.551`. The date fixed-effects H1 interaction is
+also about `-0.6` basis points, with a p-value near `0.557`. That means the
+current model does not give strong statistical evidence that emerging ETFs have
+a different average GPR-jump response.
 
-The sample-robustness checks keep the controlled GPR coefficient negative after
-excluding COVID and Russia-Ukraine windows. The emerging-market interaction
-becomes smaller and less precise when the Russia-Ukraine window is excluded,
-which argues against a strong emerging-market asymmetry claim.
+The sample-robustness checks keep the controlled GPR-jump coefficient negative
+after excluding COVID and Russia-Ukraine windows, but the estimates remain small
+and statistically weak. This argues against a strong emerging-market asymmetry
+claim.
 
 The quantile regressions are directionally interesting but not decisive. The
-10th-percentile GPR coefficient is more negative than the median coefficient,
-which is consistent with downside concentration, but the p-values are not strong
-enough to present as proof.
+10th-percentile GPR-jump coefficient is about `-0.8` basis points with a p-value
+near `0.280`, so it should not be presented as proof.
 
 The local projections show small cumulative response estimates. Confidence
 intervals are wide, especially for emerging markets, so these should be treated

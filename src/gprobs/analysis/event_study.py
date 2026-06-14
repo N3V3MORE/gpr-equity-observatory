@@ -1,5 +1,12 @@
 import pandas as pd
 
+from gprobs.config import (
+    EVENT_ESTIMATION_GAP_DAYS,
+    EVENT_ESTIMATION_WINDOW_DAYS,
+    EVENT_MIN_ESTIMATION_OBS,
+    EVENT_MIN_GAP_DAYS,
+    EVENT_WINDOW_DAYS,
+)
 
 EVENT_WINDOW_COLUMNS = [
     "event_date",
@@ -40,7 +47,7 @@ ABNORMAL_EVENT_SUMMARY_COLUMNS = [
 
 def select_spaced_events(
     gpr: pd.DataFrame,
-    min_gap_days: int = 20,
+    min_gap_days: int = EVENT_MIN_GAP_DAYS,
     shock_column: str = "gpr_shock",
 ) -> pd.Series:
     """Select shock dates while avoiding clusters of nearby shocks."""
@@ -60,7 +67,7 @@ def select_spaced_events(
 def build_event_windows(
     panel: pd.DataFrame,
     event_dates: pd.Series,
-    window: int = 5,
+    window: int = EVENT_WINDOW_DAYS,
 ) -> pd.DataFrame:
     """Build ticker-level return windows around each GPR shock date."""
     frames = []
@@ -119,10 +126,10 @@ def summarize_event_windows(windows: pd.DataFrame) -> pd.DataFrame:
 def build_market_model_event_windows(
     panel: pd.DataFrame,
     event_dates: pd.Series,
-    window: int = 5,
-    estimation_window: int = 120,
-    estimation_gap: int = 20,
-    min_estimation_obs: int = 80,
+    window: int = EVENT_WINDOW_DAYS,
+    estimation_window: int = EVENT_ESTIMATION_WINDOW_DAYS,
+    estimation_gap: int = EVENT_ESTIMATION_GAP_DAYS,
+    min_estimation_obs: int = EVENT_MIN_ESTIMATION_OBS,
 ) -> pd.DataFrame:
     """Build event windows with market-model abnormal returns."""
     frames = []

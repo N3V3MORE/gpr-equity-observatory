@@ -25,8 +25,8 @@ Do not claim that this project proves a causal effect. It does not.
 Do not claim that it is a trading system. It is not.
 
 Do not claim strong emerging-market asymmetry. The current evidence is mixed:
-the controlled GPR coefficient is negative, but the emerging-market interaction
-is not statistically strong.
+the controlled and date fixed-effects GPR-jump interactions are small and not
+statistically strong.
 
 The strongest honest claim is:
 

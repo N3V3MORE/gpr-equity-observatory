@@ -48,7 +48,7 @@ def test_build_event_robustness_table_returns_grid_summary():
     gpr = pd.DataFrame(
         {
             "date": pd.date_range("2024-01-01", periods=10),
-            "gpr": [10, 20, 30, 40, 50, 200, 60, 70, 80, 90],
+            "gpr": [10, 20, 30, 40, 50, 200, 201, 202, 260, 261],
         }
     )
 

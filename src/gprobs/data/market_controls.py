@@ -1,15 +1,9 @@
 import pandas as pd
 
+from gprobs.config import MARKET_CONTROL_TICKERS
 from gprobs.features.returns import calculate_log_returns
 
-
-CONTROL_TICKERS = {
-    "ACWI": "global equity ETF",
-    "^VIX": "VIX risk-aversion index",
-    "CL=F": "WTI crude oil futures",
-    "UUP": "US dollar ETF",
-    "^TNX": "US 10-year Treasury yield index",
-}
+CONTROL_TICKERS = MARKET_CONTROL_TICKERS
 
 CONTROL_COLUMNS = [
     "global_market_return",

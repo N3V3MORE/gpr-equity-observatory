@@ -3,12 +3,11 @@ import statsmodels.formula.api as smf
 
 from gprobs.analysis.panel_regression import CONTROL_COLUMNS, prepare_panel_regression_data
 
-
 QUANTILE_COLUMNS = ["quantile", "term", "estimate", "std_error", "t_stat", "p_value"]
 
-BASE_FORMULA = "etf_return ~ gpr_z + gpr_z:emerging_market + C(ticker)"
+BASE_FORMULA = "etf_return ~ gpr_change_z + gpr_change_z:emerging_market + C(ticker)"
 CONTROLLED_FORMULA = (
-    "etf_return ~ gpr_z + gpr_z:emerging_market + "
+    "etf_return ~ gpr_change_z + gpr_change_z:emerging_market + "
     "global_market_return + vix_change + oil_change + dollar_return + us10y_change + "
     "C(ticker)"
 )

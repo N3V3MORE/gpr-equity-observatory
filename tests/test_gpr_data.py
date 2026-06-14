@@ -25,6 +25,7 @@ def test_clean_daily_gpr_keeps_research_columns_with_clear_names():
         "date",
         "article_count",
         "gpr",
+        "gpr_change",
         "gpr_act",
         "gpr_threat",
         "gpr_ma7",
@@ -33,18 +34,23 @@ def test_clean_daily_gpr_keeps_research_columns_with_clear_names():
     ]
     assert cleaned.loc[0, "date"] == pd.Timestamp("2024-01-01")
     assert cleaned.loc[1, "gpr"] == 140.0
+    assert pd.isna(cleaned.loc[0, "gpr_change"])
+    assert cleaned.loc[1, "gpr_change"] == 60.0
 
 
-def test_mark_top_quantile_shocks_flags_high_gpr_days():
+def test_mark_top_quantile_shocks_flags_large_positive_gpr_jumps():
     gpr = pd.DataFrame(
         {
-            "date": pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"]),
-            "gpr": [10.0, 20.0, 100.0],
+            "date": pd.to_datetime(
+                ["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05"]
+            ),
+            "gpr": [10.0, 100.0, 101.0, 102.0, 160.0],
         }
     )
 
-    marked = mark_top_quantile_shocks(gpr, quantile=0.90)
+    marked = mark_top_quantile_shocks(gpr, quantile=0.75)
 
-    assert marked["gpr_shock"].tolist() == [False, False, True]
+    assert marked["gpr_change"].tolist()[1:] == [90.0, 1.0, 1.0, 58.0]
+    assert marked["gpr_shock"].tolist() == [False, True, False, False, False]
     assert marked["gpr_shock_threshold"].nunique() == 1
-    assert marked["gpr_shock_threshold"].iloc[0] > 20.0
+    assert marked["gpr_shock_threshold"].iloc[0] > 58.0

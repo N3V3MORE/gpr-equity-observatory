@@ -1,17 +1,24 @@
+import argparse
 from pathlib import Path
-import sys
-
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_PATH = PROJECT_ROOT / "src"
-if str(SRC_PATH) not in sys.path:
-    sys.path.insert(0, str(SRC_PATH))
 
 from gprobs.pipeline import run_pipeline
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run the full reproducible pipeline.")
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Refresh cached raw downloads before rebuilding derived outputs.",
+    )
+    return parser.parse_args()
+
 
 def main():
-    run_pipeline(PROJECT_ROOT)
+    args = parse_args()
+    run_pipeline(PROJECT_ROOT, refresh=args.refresh)
 
 
 if __name__ == "__main__":

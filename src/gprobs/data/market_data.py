@@ -2,6 +2,13 @@ from pathlib import Path
 
 import pandas as pd
 
+from gprobs.config import (
+    DATA_START_DATE,
+    DEFAULT_DOWNLOAD_RETRIES,
+    DEFAULT_DOWNLOAD_TIMEOUT_SECONDS,
+    DEFAULT_RETRY_BACKOFF_SECONDS,
+)
+from gprobs.data.download_cache import retry
 
 COUNTRY_COLUMNS = ["country", "ticker", "market_group", "region"]
 
@@ -18,25 +25,43 @@ def load_country_universe(path: str | Path = "data/country_universe.csv") -> pd.
 
 def download_adjusted_prices(
     tickers: list[str],
-    start: str = "2005-01-01",
+    start: str = DATA_START_DATE,
     end: str | None = None,
+    cache_path: str | Path | None = None,
+    refresh: bool = False,
+    timeout: int = DEFAULT_DOWNLOAD_TIMEOUT_SECONDS,
+    retries: int = DEFAULT_DOWNLOAD_RETRIES,
+    retry_backoff_seconds: float = DEFAULT_RETRY_BACKOFF_SECONDS,
 ) -> pd.DataFrame:
     """Download adjusted close prices from yfinance."""
-    try:
-        import yfinance as yf
-    except ImportError as error:
-        raise ImportError(
-            "yfinance is required to download market data. "
-            "Install dependencies with: python -m pip install -r requirements.txt"
-        ) from error
+    cache_path = Path(cache_path) if cache_path is not None else None
+    if cache_path is not None and cache_path.exists() and not refresh:
+        data = pd.read_pickle(cache_path)
+    else:
+        try:
+            import yfinance as yf
+        except ImportError as error:
+            raise ImportError(
+                "yfinance is required to download market data. "
+                "Install dependencies with: python -m pip install -e ."
+            ) from error
 
-    data = yf.download(
-        tickers=tickers,
-        start=start,
-        end=end,
-        auto_adjust=False,
-        progress=False,
-    )
+        data = retry(
+            lambda: yf.download(
+                tickers=tickers,
+                start=start,
+                end=end,
+                auto_adjust=False,
+                progress=False,
+                timeout=timeout,
+            ),
+            retries=retries,
+            backoff_seconds=retry_backoff_seconds,
+        )
+        if cache_path is not None:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            data.to_pickle(cache_path)
+
     prices = extract_adjusted_close(data)
     prices.index.name = "date"
     return prices.sort_index()

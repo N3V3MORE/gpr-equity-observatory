@@ -1,5 +1,6 @@
 import pandas as pd
 
+from gprobs.config import ROLLING_BETA_MIN_PERIODS, ROLLING_BETA_WINDOW_DAYS
 
 ROLLING_COLUMNS = [
     "date",
@@ -12,8 +13,8 @@ ROLLING_COLUMNS = [
 
 def calculate_rolling_gpr_beta(
     panel: pd.DataFrame,
-    window: int = 252,
-    min_periods: int = 126,
+    window: int = ROLLING_BETA_WINDOW_DAYS,
+    min_periods: int = ROLLING_BETA_MIN_PERIODS,
 ) -> pd.DataFrame:
     """Estimate rolling return sensitivity to standardized daily GPR."""
     if window < 2:

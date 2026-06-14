@@ -4,7 +4,7 @@ import pandas as pd
 import statsmodels.formula.api as smf
 
 from gprobs.analysis.panel_regression import CONTROL_COLUMNS
-
+from gprobs.config import LOCAL_PROJECTION_MAX_HORIZON
 
 LOCAL_PROJECTION_COLUMNS = [
     "horizon",
@@ -30,7 +30,7 @@ RESULT_COLUMNS = [
 
 def build_local_projection_data(
     panel: pd.DataFrame,
-    max_horizon: int = 20,
+    max_horizon: int = LOCAL_PROJECTION_MAX_HORIZON,
     include_controls: bool = False,
 ) -> pd.DataFrame:
     """Build cumulative future returns for local projection regressions."""
@@ -67,7 +67,7 @@ def build_local_projection_data(
 
 def estimate_local_projections(
     panel: pd.DataFrame,
-    max_horizon: int = 20,
+    max_horizon: int = LOCAL_PROJECTION_MAX_HORIZON,
     include_controls: bool = False,
     cluster_by_ticker: bool = True,
 ) -> pd.DataFrame:

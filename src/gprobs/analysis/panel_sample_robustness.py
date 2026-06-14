@@ -6,8 +6,7 @@ from gprobs.analysis.panel_regression import (
     tidy_regression_results,
 )
 
-
-KEY_TERMS = ["gpr_z", "gpr_z:emerging_market"]
+KEY_TERMS = ["gpr_change_z", "gpr_change_z:emerging_market"]
 SAMPLE_ROBUSTNESS_COLUMNS = [
     "scenario",
     "term",

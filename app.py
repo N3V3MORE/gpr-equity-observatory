@@ -1,70 +1,61 @@
+from dataclasses import dataclass
 from pathlib import Path
-import sys
 
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-
-PROJECT_ROOT = Path(__file__).resolve().parent
-SRC_PATH = PROJECT_ROOT / "src"
-if str(SRC_PATH) not in sys.path:
-    sys.path.insert(0, str(SRC_PATH))
-
+from gprobs.config import DRAWDOWN_HORIZON_DAYS, DRAWDOWN_THRESHOLD
 from gprobs.dashboard.metrics import build_country_coverage, select_key_regression_terms
 
-
+PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_DIR = PROJECT_ROOT / "data" / "processed"
 
-REQUIRED_FILES = {
-    "analysis_panel": DATA_DIR / "analysis_panel.csv",
-    "gpr": DATA_DIR / "gpr_daily.csv",
-    "group_returns": DATA_DIR / "group_return_summary.csv",
-    "event_study": DATA_DIR / "event_study_summary.csv",
-    "abnormal_event_study": DATA_DIR / "event_study_abnormal_summary.csv",
-    "event_robustness": DATA_DIR / "event_robustness_summary.csv",
-    "regression": DATA_DIR / "panel_regression_baseline.csv",
-    "controlled_regression": DATA_DIR / "panel_regression_controlled.csv",
-    "panel_sample_robustness": DATA_DIR / "panel_sample_robustness.csv",
-    "quantile_regression": DATA_DIR / "quantile_regression_results.csv",
-    "local_projections": DATA_DIR / "local_projection_results.csv",
-    "drawdown_metrics": DATA_DIR / "drawdown_model_metrics.csv",
-    "drawdown_importance": DATA_DIR / "drawdown_feature_importance.csv",
-    "evidence_summary": DATA_DIR / "evidence_summary.csv",
-    "rolling_beta": DATA_DIR / "rolling_gpr_beta.csv",
-    "large_returns": DATA_DIR / "large_return_flags.csv",
+
+@dataclass(frozen=True)
+class OutputSpec:
+    path: Path
+    date_columns: tuple[str, ...] = ()
+    low_memory: bool | None = None
+
+
+OUTPUT_SPECS = {
+    "analysis_panel": OutputSpec(DATA_DIR / "analysis_panel.csv", date_columns=("date",), low_memory=False),
+    "gpr": OutputSpec(DATA_DIR / "gpr_daily.csv", date_columns=("date",)),
+    "group_returns": OutputSpec(DATA_DIR / "group_return_summary.csv", date_columns=("date",)),
+    "event_study": OutputSpec(DATA_DIR / "event_study_summary.csv"),
+    "abnormal_event_study": OutputSpec(DATA_DIR / "event_study_abnormal_summary.csv"),
+    "event_robustness": OutputSpec(DATA_DIR / "event_robustness_summary.csv"),
+    "regression": OutputSpec(DATA_DIR / "panel_regression_baseline.csv"),
+    "controlled_regression": OutputSpec(DATA_DIR / "panel_regression_controlled.csv"),
+    "date_fe_regression": OutputSpec(DATA_DIR / "panel_regression_date_fe.csv"),
+    "panel_sample_robustness": OutputSpec(DATA_DIR / "panel_sample_robustness.csv"),
+    "quantile_regression": OutputSpec(DATA_DIR / "quantile_regression_results.csv"),
+    "local_projections": OutputSpec(DATA_DIR / "local_projection_results.csv"),
+    "drawdown_metrics": OutputSpec(
+        DATA_DIR / "drawdown_model_metrics.csv",
+        date_columns=("train_start", "train_end", "test_start", "test_end"),
+    ),
+    "drawdown_importance": OutputSpec(DATA_DIR / "drawdown_feature_importance.csv"),
+    "evidence_summary": OutputSpec(DATA_DIR / "evidence_summary.csv"),
+    "rolling_beta": OutputSpec(DATA_DIR / "rolling_gpr_beta.csv", date_columns=("date",)),
+    "large_returns": OutputSpec(DATA_DIR / "large_return_flags.csv", date_columns=("date",)),
 }
+
+REQUIRED_FILES = {name: spec.path for name, spec in OUTPUT_SPECS.items()}
 
 
 @st.cache_data
 def load_outputs():
-    return {
-        "analysis_panel": pd.read_csv(
-            REQUIRED_FILES["analysis_panel"],
-            parse_dates=["date"],
-            low_memory=False,
-        ),
-        "gpr": pd.read_csv(REQUIRED_FILES["gpr"], parse_dates=["date"]),
-        "group_returns": pd.read_csv(REQUIRED_FILES["group_returns"], parse_dates=["date"]),
-        "event_study": pd.read_csv(REQUIRED_FILES["event_study"]),
-        "abnormal_event_study": pd.read_csv(REQUIRED_FILES["abnormal_event_study"]),
-        "event_robustness": pd.read_csv(REQUIRED_FILES["event_robustness"]),
-        "regression": pd.read_csv(REQUIRED_FILES["regression"]),
-        "controlled_regression": pd.read_csv(REQUIRED_FILES["controlled_regression"]),
-        "panel_sample_robustness": pd.read_csv(
-            REQUIRED_FILES["panel_sample_robustness"]
-        ),
-        "quantile_regression": pd.read_csv(REQUIRED_FILES["quantile_regression"]),
-        "local_projections": pd.read_csv(REQUIRED_FILES["local_projections"]),
-        "drawdown_metrics": pd.read_csv(
-            REQUIRED_FILES["drawdown_metrics"],
-            parse_dates=["train_start", "train_end", "test_start", "test_end"],
-        ),
-        "drawdown_importance": pd.read_csv(REQUIRED_FILES["drawdown_importance"]),
-        "evidence_summary": pd.read_csv(REQUIRED_FILES["evidence_summary"]),
-        "rolling_beta": pd.read_csv(REQUIRED_FILES["rolling_beta"], parse_dates=["date"]),
-        "large_returns": pd.read_csv(REQUIRED_FILES["large_returns"], parse_dates=["date"]),
-    }
+    outputs = {}
+    for name, spec in OUTPUT_SPECS.items():
+        read_options = {}
+        if spec.date_columns:
+            read_options["parse_dates"] = list(spec.date_columns)
+        if spec.low_memory is not None:
+            read_options["low_memory"] = spec.low_memory
+        outputs[name] = pd.read_csv(spec.path, **read_options)
+    return outputs
 
 
 def missing_files():
@@ -111,6 +102,7 @@ def main():
     event_robustness = outputs["event_robustness"]
     regression = outputs["regression"]
     controlled_regression = outputs["controlled_regression"]
+    date_fe_regression = outputs["date_fe_regression"]
     panel_sample_robustness = outputs["panel_sample_robustness"]
     quantile_regression = outputs["quantile_regression"]
     local_projections = outputs["local_projections"]
@@ -184,9 +176,9 @@ def main():
         )
 
     with tab_shocks:
-        top_shocks = gpr.sort_values("gpr", ascending=False).head(25)
+        top_shocks = gpr.sort_values("gpr_change", ascending=False).head(25)
         st.dataframe(
-            top_shocks[["date", "gpr", "gpr_act", "gpr_threat", "event"]],
+            top_shocks[["date", "gpr", "gpr_change", "gpr_act", "gpr_threat", "event"]],
             use_container_width=True,
             hide_index=True,
         )
@@ -248,11 +240,14 @@ def main():
             st.subheader("With Market Controls")
             controlled_terms = select_key_regression_terms(controlled_regression)
             st.dataframe(controlled_terms, use_container_width=True, hide_index=True)
+        st.subheader("Date Fixed-Effects H1 Model")
+        date_fe_terms = select_key_regression_terms(date_fe_regression)
+        st.dataframe(date_fe_terms, use_container_width=True, hide_index=True)
         st.caption(
-            "The interaction term is the extra association between standardized GPR "
-            "and returns for emerging market ETFs relative to developed market ETFs. "
-            "The controlled model also includes global equity, VIX, oil, dollar, "
-            "and US 10-year yield controls."
+            "The interaction term is the extra association between a standardized "
+            "daily GPR jump and returns for emerging market ETFs relative to developed "
+            "market ETFs. The date fixed-effects model absorbs common global shocks, "
+            "so its interaction is the clean H1 estimand."
         )
         st.subheader("Sample Robustness")
         st.dataframe(
@@ -339,8 +334,8 @@ def main():
         st.subheader("Chronological Validation")
         st.dataframe(drawdown_metrics, use_container_width=True, hide_index=True)
         st.caption(
-            "This classifier predicts whether an ETF has a forward 20-trading-day "
-            "cumulative log-return drawdown of at least 5%. Splits are chronological, "
+            f"This classifier predicts whether an ETF has a forward {DRAWDOWN_HORIZON_DAYS}-trading-day "
+            f"cumulative log-return drawdown of at least {abs(DRAWDOWN_THRESHOLD):.0%}. Splits are chronological, "
             "so the model is always tested on later dates than it trains on."
         )
 

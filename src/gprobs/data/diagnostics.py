@@ -1,7 +1,12 @@
 import pandas as pd
 
+from gprobs.config import LARGE_RETURN_THRESHOLD
 
-def flag_large_returns(panel: pd.DataFrame, threshold: float = 0.20) -> pd.DataFrame:
+
+def flag_large_returns(
+    panel: pd.DataFrame,
+    threshold: float = LARGE_RETURN_THRESHOLD,
+) -> pd.DataFrame:
     """Flag unusually large daily ETF returns for manual review."""
     flagged = panel.loc[panel["return"].abs() > threshold].copy()
     flagged["abs_return"] = flagged["return"].abs()

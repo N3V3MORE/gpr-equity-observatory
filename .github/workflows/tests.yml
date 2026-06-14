@@ -6,7 +6,13 @@ on:
 
 jobs:
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12"]
 
     steps:
       - name: Check out repository
@@ -15,7 +21,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
 
       - name: Install dependencies
         run: |
@@ -25,4 +35,4 @@ jobs:
       - name: Run tests
         run: |
           ruff check .
-          pytest -q
+          pytest --cov=gprobs --cov=app --cov-report=term-missing -q

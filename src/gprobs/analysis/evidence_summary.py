@@ -2,6 +2,7 @@ import math
 
 import pandas as pd
 
+from gprobs.config import EVIDENCE_EVENT_SHOCK_QUANTILE, EVIDENCE_EVENT_WINDOW_DAYS
 
 SUMMARY_COLUMNS = ["method", "focus", "estimate", "p_value", "plain_english"]
 
@@ -76,6 +77,7 @@ def _add_row(
 def build_evidence_summary(
     baseline_regression: pd.DataFrame,
     controlled_regression: pd.DataFrame,
+    date_fe_regression: pd.DataFrame,
     quantile_regression: pd.DataFrame,
     local_projections: pd.DataFrame,
     event_robustness: pd.DataFrame,
@@ -84,45 +86,63 @@ def build_evidence_summary(
     """Build a compact plain-English table from existing model outputs."""
     rows: list[dict] = []
 
-    baseline_gpr = _term_row(baseline_regression, "gpr_z", "gpr_z")
+    baseline_gpr = _term_row(baseline_regression, "gpr_change_z", "gpr_change_z")
     _add_row(
         rows,
         "Baseline panel regression",
-        "Developed-market GPR coefficient",
+        "Developed-market GPR-change coefficient",
         baseline_gpr["estimate"],
         float(baseline_gpr["p_value"]),
-        "Before market controls, this is the developed-market GPR association.",
+        "Before market controls, this is the developed-market response to a one-SD GPR jump.",
     )
 
-    controlled_gpr = _term_row(controlled_regression, "gpr_z", "controlled gpr_z")
+    controlled_gpr = _term_row(
+        controlled_regression,
+        "gpr_change_z",
+        "controlled gpr_change_z",
+    )
     _add_row(
         rows,
         "Controlled panel regression",
-        "Developed-market GPR coefficient",
+        "Developed-market GPR-change coefficient",
         controlled_gpr["estimate"],
         float(controlled_gpr["p_value"]),
-        "After market controls, this is the developed-market GPR association.",
+        "After market controls, this is the developed-market response to a one-SD GPR jump.",
     )
 
     interaction = _term_row(
         controlled_regression,
-        "gpr_z:emerging_market",
-        "gpr_z:emerging_market",
+        "gpr_change_z:emerging_market",
+        "gpr_change_z:emerging_market",
     )
     _add_row(
         rows,
         "Controlled emerging interaction",
-        "Extra emerging-market GPR coefficient",
+        "Extra emerging-market GPR-change coefficient",
         interaction["estimate"],
         float(interaction["p_value"]),
-        "This is the extra emerging-market response after controls.",
+        "This is the extra emerging-market response to a one-SD GPR jump after controls.",
+    )
+
+    date_fe_interaction = _term_row(
+        date_fe_regression,
+        "gpr_change_z:emerging_market",
+        "date fixed-effects gpr_change_z:emerging_market",
+    )
+    _add_row(
+        rows,
+        "Date fixed-effects emerging interaction",
+        "Extra emerging-market GPR-change coefficient with date FE",
+        date_fe_interaction["estimate"],
+        float(date_fe_interaction["p_value"]),
+        "This identifies the emerging-market differential after absorbing common date shocks.",
     )
 
     q10_gpr = _quantile_row(
         quantile_regression,
         0.10,
-        "gpr_z",
-        "10th-percentile gpr_z",
+        "gpr_change_z",
+        "10th-percentile gpr_change_z",
     )
     _add_row(
         rows,
@@ -146,11 +166,16 @@ def build_evidence_summary(
         )
 
     for market_group in ["developed", "emerging"]:
-        event_row = _event_robustness_row(event_robustness, 0.90, 10, market_group)
+        event_row = _event_robustness_row(
+            event_robustness,
+            EVIDENCE_EVENT_SHOCK_QUANTILE,
+            EVIDENCE_EVENT_WINDOW_DAYS,
+            market_group,
+        )
         _add_row(
             rows,
             f"Event robustness {market_group}",
-            "90th-percentile shock, 10-day endpoint",
+            f"{EVIDENCE_EVENT_SHOCK_QUANTILE:.0%} shock, {EVIDENCE_EVENT_WINDOW_DAYS}-day endpoint",
             event_row["cumulative_average_abnormal_return"],
             math.nan,
             "This is the abnormal-return endpoint under a wider shock definition.",

@@ -30,7 +30,7 @@ def test_build_country_coverage_summarizes_dates_and_observation_counts():
 def test_select_key_regression_terms_keeps_gpr_terms_only():
     table = pd.DataFrame(
         {
-            "term": ["Intercept", "gpr_z", "gpr_z:emerging_market"],
+            "term": ["Intercept", "gpr_change_z", "gpr_change_z:emerging_market"],
             "estimate": [0.0, 0.1, -0.2],
             "p_value": [1.0, 0.05, 0.10],
         }
@@ -38,4 +38,4 @@ def test_select_key_regression_terms_keeps_gpr_terms_only():
 
     selected = select_key_regression_terms(table)
 
-    assert selected["term"].tolist() == ["gpr_z", "gpr_z:emerging_market"]
+    assert selected["term"].tolist() == ["gpr_change_z", "gpr_change_z:emerging_market"]

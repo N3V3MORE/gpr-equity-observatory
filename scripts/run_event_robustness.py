@@ -1,16 +1,19 @@
 from pathlib import Path
-import sys
 
 import pandas as pd
 
+from gprobs.analysis.event_robustness import build_event_robustness_table
+from gprobs.config import (
+    EVENT_ESTIMATION_GAP_DAYS,
+    EVENT_ESTIMATION_WINDOW_DAYS,
+    EVENT_MIN_ESTIMATION_OBS,
+    EVENT_MIN_GAP_DAYS,
+    EVENT_ROBUSTNESS_SHOCK_QUANTILES,
+    EVENT_ROBUSTNESS_WINDOWS,
+)
+from gprobs.data.market_controls import merge_market_controls
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_PATH = PROJECT_ROOT / "src"
-if str(SRC_PATH) not in sys.path:
-    sys.path.insert(0, str(SRC_PATH))
-
-from gprobs.analysis.event_robustness import build_event_robustness_table
-from gprobs.data.market_controls import merge_market_controls
 
 
 def main():
@@ -28,12 +31,12 @@ def main():
     robustness = build_event_robustness_table(
         controlled_panel,
         gpr,
-        shock_quantiles=[0.90, 0.95],
-        windows=[3, 5, 10],
-        min_gap_days=20,
-        estimation_window=120,
-        estimation_gap=20,
-        min_estimation_obs=80,
+        shock_quantiles=EVENT_ROBUSTNESS_SHOCK_QUANTILES,
+        windows=EVENT_ROBUSTNESS_WINDOWS,
+        min_gap_days=EVENT_MIN_GAP_DAYS,
+        estimation_window=EVENT_ESTIMATION_WINDOW_DAYS,
+        estimation_gap=EVENT_ESTIMATION_GAP_DAYS,
+        min_estimation_obs=EVENT_MIN_ESTIMATION_OBS,
     )
 
     robustness.to_csv(processed_dir / "event_robustness_summary.csv", index=False)
