@@ -50,6 +50,11 @@ asymmetry, not just average returns.
 Local projections estimate the response path over later horizons after GPR
 shock days.
 
+Robustness checks rerun the event-study logic under different GPR shock
+thresholds and event-window lengths. The panel robustness layer also reruns the
+controlled regression after excluding the COVID crash and Russia-Ukraine
+invasion windows.
+
 A simple drawdown classifier asks whether current GPR and market conditions help
 identify higher forward downside risk. It uses chronological validation rather
 than random splits, because random splits are inappropriate for time-series
@@ -72,6 +77,13 @@ this as a firm result.
 The local projections show small response estimates with wide confidence
 intervals, especially for emerging markets.
 
+The robustness results are useful but still cautious. Under the 90th-percentile
+shock definition, emerging-market abnormal returns are more negative than
+developed-market abnormal returns over the 10-day event window. But the
+95th-percentile shock definition is less stable. In the panel sample checks,
+the controlled GPR coefficient remains negative after excluding COVID and
+Russia-Ukraine windows, while the emerging-market interaction becomes weaker.
+
 The drawdown classifier has modest signal. Its mean ROC AUC is about 0.614, and
 rolling volatility is the most important feature. GPR variables are small in the
 current model.
@@ -87,20 +99,23 @@ The useful outcome is that the project now has:
 - a reproducible data pipeline,
 - tested data and feature logic,
 - multiple empirical methods,
+- robustness checks,
 - a dashboard for interpretation,
 - a research note,
 - a technical appendix,
+- a short generated results brief,
 - and clear limitations.
 
-That foundation makes it possible to add robustness checks, better macro
-controls, country-specific GPR data, and eventually news-event features without
-losing the empirical structure.
+That foundation makes it possible to add better macro controls, country-specific
+GPR data, and eventually news-event features without losing the empirical
+structure.
 
 ## Next Steps
 
 The next step is not to add complexity for its own sake. The priority should be
-robustness: different shock thresholds, different event windows, alternative
-controls, and country-specific GPR where coverage is reliable.
+better external data where it clearly improves interpretation: FRED macro
+controls if an API key is available, and country-specific GPR where coverage is
+reliable.
 
 Only after that would I add a GDELT extension. News-event data could be useful,
 but it is noisy and can easily distract from the main economics question.
