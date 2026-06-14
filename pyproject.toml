@@ -1,0 +1,9 @@
+[project]
+name = "gpr-equity-observatory"
+version = "0.1.0"
+description = "Reproducible economics research project on geopolitical risk and equity markets."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

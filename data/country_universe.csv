@@ -1,0 +1,21 @@
+country,ticker,market_group,region
+United States,SPY,developed,North America
+United Kingdom,EWU,developed,Europe
+Germany,EWG,developed,Europe
+France,EWQ,developed,Europe
+Japan,EWJ,developed,Asia Pacific
+Canada,EWC,developed,North America
+Australia,EWA,developed,Asia Pacific
+Switzerland,EWL,developed,Europe
+Netherlands,EWN,developed,Europe
+Sweden,EWD,developed,Europe
+India,INDA,emerging,Asia Pacific
+Brazil,EWZ,emerging,Latin America
+Mexico,EWW,emerging,Latin America
+South Africa,EZA,emerging,Africa
+Turkey,TUR,emerging,Europe
+Indonesia,EIDO,emerging,Asia Pacific
+Malaysia,EWM,emerging,Asia Pacific
+Thailand,THD,emerging,Asia Pacific
+Poland,EPOL,emerging,Europe
+Chile,ECH,emerging,Latin America
