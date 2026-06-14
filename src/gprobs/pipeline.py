@@ -20,6 +20,7 @@ PIPELINE_STEPS = [
     PipelineStep("Run panel regressions", "run_panel_regression.py"),
     PipelineStep("Run quantile regressions", "run_quantile_regression.py"),
     PipelineStep("Run local projections", "run_local_projections.py"),
+    PipelineStep("Run drawdown model", "run_drawdown_model.py"),
     PipelineStep("Run rolling GPR sensitivity", "run_rolling_sensitivity.py"),
     PipelineStep("Plot initial trends", "plot_initial_trends.py"),
 ]

@@ -14,6 +14,7 @@ def test_pipeline_steps_are_in_dependency_order():
         "run_panel_regression.py",
         "run_quantile_regression.py",
         "run_local_projections.py",
+        "run_drawdown_model.py",
         "run_rolling_sensitivity.py",
         "plot_initial_trends.py",
     ]

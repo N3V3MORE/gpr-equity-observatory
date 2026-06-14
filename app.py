@@ -26,6 +26,8 @@ REQUIRED_FILES = {
     "controlled_regression": DATA_DIR / "panel_regression_controlled.csv",
     "quantile_regression": DATA_DIR / "quantile_regression_results.csv",
     "local_projections": DATA_DIR / "local_projection_results.csv",
+    "drawdown_metrics": DATA_DIR / "drawdown_model_metrics.csv",
+    "drawdown_importance": DATA_DIR / "drawdown_feature_importance.csv",
     "rolling_beta": DATA_DIR / "rolling_gpr_beta.csv",
     "large_returns": DATA_DIR / "large_return_flags.csv",
 }
@@ -47,6 +49,11 @@ def load_outputs():
         "controlled_regression": pd.read_csv(REQUIRED_FILES["controlled_regression"]),
         "quantile_regression": pd.read_csv(REQUIRED_FILES["quantile_regression"]),
         "local_projections": pd.read_csv(REQUIRED_FILES["local_projections"]),
+        "drawdown_metrics": pd.read_csv(
+            REQUIRED_FILES["drawdown_metrics"],
+            parse_dates=["train_start", "train_end", "test_start", "test_end"],
+        ),
+        "drawdown_importance": pd.read_csv(REQUIRED_FILES["drawdown_importance"]),
         "rolling_beta": pd.read_csv(REQUIRED_FILES["rolling_beta"], parse_dates=["date"]),
         "large_returns": pd.read_csv(REQUIRED_FILES["large_returns"], parse_dates=["date"]),
     }
@@ -75,6 +82,7 @@ def main():
                     "python scripts/run_panel_regression.py",
                     "python scripts/run_quantile_regression.py",
                     "python scripts/run_local_projections.py",
+                    "python scripts/run_drawdown_model.py",
                     "python scripts/run_rolling_sensitivity.py",
                 ]
             )
@@ -93,10 +101,12 @@ def main():
     controlled_regression = outputs["controlled_regression"]
     quantile_regression = outputs["quantile_regression"]
     local_projections = outputs["local_projections"]
+    drawdown_metrics = outputs["drawdown_metrics"]
+    drawdown_importance = outputs["drawdown_importance"]
     rolling_beta = outputs["rolling_beta"]
     large_returns = outputs["large_returns"]
 
-    tab_overview, tab_shocks, tab_event, tab_regression, tab_tail, tab_local, tab_rolling, tab_coverage = st.tabs(
+    tab_overview, tab_shocks, tab_event, tab_regression, tab_tail, tab_local, tab_ml, tab_rolling, tab_coverage = st.tabs(
         [
             "Overview",
             "GPR Shocks",
@@ -104,6 +114,7 @@ def main():
             "Panel Regression",
             "Tail Risk",
             "Local Projections",
+            "ML Drawdown",
             "Rolling Beta",
             "Data Coverage",
         ]
@@ -237,6 +248,34 @@ def main():
         fig.add_hline(y=0, line_dash="dash", line_color="gray")
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(local_projections, use_container_width=True, hide_index=True)
+
+    with tab_ml:
+        mean_auc = drawdown_metrics["roc_auc"].mean()
+        mean_ap = drawdown_metrics["average_precision"].mean()
+        mean_base_rate = drawdown_metrics["base_rate"].mean()
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Mean ROC AUC", f"{mean_auc:.3f}")
+        col2.metric("Mean average precision", f"{mean_ap:.3f}")
+        col3.metric("Mean event rate", f"{mean_base_rate:.1%}")
+
+        fig = px.bar(
+            drawdown_importance,
+            x="abs_coefficient",
+            y="feature",
+            orientation="h",
+            title="Drawdown Model Feature Importance",
+        )
+        fig.update_layout(yaxis={"categoryorder": "total ascending"})
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.subheader("Chronological Validation")
+        st.dataframe(drawdown_metrics, use_container_width=True, hide_index=True)
+        st.caption(
+            "This classifier predicts whether an ETF has a forward 20-trading-day "
+            "cumulative log-return drawdown of at least 5%. Splits are chronological, "
+            "so the model is always tested on later dates than it trains on."
+        )
 
     with tab_rolling:
         countries = sorted(rolling_beta["country"].dropna().unique())

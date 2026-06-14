@@ -30,6 +30,7 @@ scripts/run_event_study.py        Runs the first GPR shock event study
 scripts/run_panel_regression.py   Runs the baseline panel regression
 scripts/run_quantile_regression.py Estimates tail-risk quantile regressions
 scripts/run_local_projections.py  Estimates dynamic GPR shock response paths
+scripts/run_drawdown_model.py     Trains a simple drawdown-risk classifier
 scripts/run_rolling_sensitivity.py Builds rolling GPR sensitivity estimates
 scripts/build_all.py              Rebuilds the full MVP pipeline in order
 app.py                            Streamlit dashboard
@@ -64,6 +65,7 @@ python scripts/run_event_study.py
 python scripts/run_panel_regression.py
 python scripts/run_quantile_regression.py
 python scripts/run_local_projections.py
+python scripts/run_drawdown_model.py
 python scripts/run_rolling_sensitivity.py
 streamlit run app.py
 ```
@@ -89,6 +91,9 @@ These commands download adjusted ETF prices, download daily GPR data, and write:
 - `data/processed/panel_regression_controlled_summary.txt`
 - `data/processed/quantile_regression_results.csv`
 - `data/processed/local_projection_results.csv`
+- `data/processed/drawdown_model_dataset.csv`
+- `data/processed/drawdown_model_metrics.csv`
+- `data/processed/drawdown_feature_importance.csv`
 - `data/processed/rolling_gpr_beta.csv`
 
 ## Data Note
@@ -115,3 +120,7 @@ claim.
 The quantile regression output compares the GPR association at lower return
 quantiles against the median. This is useful for checking whether GPR matters
 more during bad market-return states than during typical days.
+
+The drawdown classifier predicts whether a country ETF has a forward
+20-trading-day cumulative log-return drawdown of at least 5 percent. It uses
+chronological validation, not random train/test splits.
