@@ -131,6 +131,15 @@ This is modest predictive signal. Rolling volatility is the largest feature by
 standardized coefficient. GPR features are small in the current classifier, so
 the ML layer should be described as exploratory.
 
+The event-study robustness checks compare 90th- and 95th-percentile GPR shock
+definitions across 3-, 5-, and 10-trading-day windows. The 90th-percentile
+shock definition produces more negative emerging-market cumulative abnormal
+returns than developed-market returns across these windows, with the 10-day
+window around `-0.19%` for emerging markets versus about `-0.06%` for developed
+markets. The 95th-percentile shock definition is less stable: emerging markets
+look positive at shorter windows but negative by the 10-day window. This is
+useful evidence, but it is not a clean confirmation of the asymmetry hypothesis.
+
 ## Interpretation
 
 The current evidence supports a cautious interpretation:
@@ -139,8 +148,8 @@ The current evidence supports a cautious interpretation:
   model specification.
 - The emerging-market asymmetry hypothesis is not yet strongly supported in the
   average controlled panel regression.
-- Tail-risk and local-projection results are useful diagnostics, but they need
-  robustness checks before they can carry the main conclusion.
+- Tail-risk, local-projection, and event-study robustness results are useful
+  diagnostics, but they do not yet carry the main conclusion alone.
 - The ML model is useful for disciplined risk classification practice, but it is
   not a strong prediction engine.
 
@@ -167,7 +176,6 @@ GPR could change the interpretation of country-level sensitivity.
 
 The most useful next steps are:
 
-- Add robustness checks for event windows and GPR shock thresholds.
 - Add a compact table comparing baseline, controlled, quantile, and local
   projection results.
 - Add FRED macro controls if an API key is available.
