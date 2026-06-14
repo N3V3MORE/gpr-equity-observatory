@@ -69,6 +69,8 @@ These commands download adjusted ETF prices, download daily GPR data, and write:
 - `data/processed/large_return_flags.csv`
 - `data/processed/event_windows.csv`
 - `data/processed/event_study_summary.csv`
+- `data/processed/event_windows_abnormal.csv`
+- `data/processed/event_study_abnormal_summary.csv`
 - `data/processed/panel_regression_baseline.csv`
 - `data/processed/panel_regression_summary.txt`
 - `data/processed/panel_regression_controlled.csv`
@@ -87,3 +89,7 @@ ACWI for global equities, `^VIX` for risk aversion, `CL=F` for WTI crude oil,
 UUP for the US dollar, and `^TNX` for the US 10-year yield index. The controlled
 sample starts later because ACWI begins in 2008. Oil is used as a daily level
 change, not a log return, because WTI futures traded below zero in April 2020.
+
+The abnormal-return event study estimates a simple pre-event market model for
+each ETF using ACWI as the market proxy, then subtracts the expected return from
+the observed ETF return inside the event window.

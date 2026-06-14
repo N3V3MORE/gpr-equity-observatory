@@ -21,6 +21,7 @@ REQUIRED_FILES = {
     "gpr": DATA_DIR / "gpr_daily.csv",
     "group_returns": DATA_DIR / "group_return_summary.csv",
     "event_study": DATA_DIR / "event_study_summary.csv",
+    "abnormal_event_study": DATA_DIR / "event_study_abnormal_summary.csv",
     "regression": DATA_DIR / "panel_regression_baseline.csv",
     "controlled_regression": DATA_DIR / "panel_regression_controlled.csv",
     "rolling_beta": DATA_DIR / "rolling_gpr_beta.csv",
@@ -39,6 +40,7 @@ def load_outputs():
         "gpr": pd.read_csv(REQUIRED_FILES["gpr"], parse_dates=["date"]),
         "group_returns": pd.read_csv(REQUIRED_FILES["group_returns"], parse_dates=["date"]),
         "event_study": pd.read_csv(REQUIRED_FILES["event_study"]),
+        "abnormal_event_study": pd.read_csv(REQUIRED_FILES["abnormal_event_study"]),
         "regression": pd.read_csv(REQUIRED_FILES["regression"]),
         "controlled_regression": pd.read_csv(REQUIRED_FILES["controlled_regression"]),
         "rolling_beta": pd.read_csv(REQUIRED_FILES["rolling_beta"], parse_dates=["date"]),
@@ -80,6 +82,7 @@ def main():
     gpr = outputs["gpr"]
     group_returns = outputs["group_returns"]
     event_study = outputs["event_study"]
+    abnormal_event_study = outputs["abnormal_event_study"]
     regression = outputs["regression"]
     controlled_regression = outputs["controlled_regression"]
     rolling_beta = outputs["rolling_beta"]
@@ -135,12 +138,24 @@ def main():
 
     with tab_event:
         fig = px.line(
+            abnormal_event_study,
+            x="relative_day",
+            y="cumulative_average_abnormal_return",
+            color="market_group",
+            markers=True,
+            title="Average Cumulative Abnormal Returns Around GPR Shock Dates",
+        )
+        fig.add_vline(x=0, line_dash="dash", line_color="black")
+        st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(abnormal_event_study, use_container_width=True, hide_index=True)
+
+        fig = px.line(
             event_study,
             x="relative_day",
             y="cumulative_average_return",
             color="market_group",
             markers=True,
-            title="Average Cumulative ETF Returns Around GPR Shock Dates",
+            title="Raw Average Cumulative ETF Returns Around GPR Shock Dates",
         )
         fig.add_vline(x=0, line_dash="dash", line_color="black")
         st.plotly_chart(fig, use_container_width=True)

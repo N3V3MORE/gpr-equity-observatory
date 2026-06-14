@@ -2,7 +2,9 @@ import pandas as pd
 
 from gprobs.analysis.event_study import (
     build_event_windows,
+    build_market_model_event_windows,
     select_spaced_events,
+    summarize_abnormal_event_windows,
     summarize_event_windows,
 )
 
@@ -66,3 +68,62 @@ def test_summarize_event_windows_averages_then_cumsums_by_group():
         "event_count",
     ]
     assert summary.loc[1, "cumulative_average_return"] == -0.01
+
+
+def test_build_market_model_event_windows_calculates_abnormal_returns():
+    panel = pd.DataFrame(
+        {
+            "date": pd.to_datetime(
+                [
+                    "2024-01-01",
+                    "2024-01-02",
+                    "2024-01-03",
+                    "2024-01-04",
+                    "2024-01-05",
+                ]
+            ),
+            "ticker": ["SPY"] * 5,
+            "country": ["United States"] * 5,
+            "market_group": ["developed"] * 5,
+            "region": ["North America"] * 5,
+            "return": [0.03, 0.05, 0.07, 0.11, 0.13],
+            "global_market_return": [0.01, 0.02, 0.03, 0.04, 0.05],
+        }
+    )
+
+    windows = build_market_model_event_windows(
+        panel,
+        event_dates=pd.to_datetime(["2024-01-04"]),
+        window=1,
+        estimation_window=2,
+        estimation_gap=1,
+        min_estimation_obs=2,
+    )
+
+    assert windows["relative_day"].tolist() == [-1, 0, 1]
+    assert round(windows.loc[0, "expected_return"], 10) == 0.07
+    assert round(windows.loc[0, "abnormal_return"], 10) == 0.0
+    assert round(windows.loc[1, "abnormal_return"], 10) == 0.02
+
+
+def test_summarize_abnormal_event_windows_cumsums_abnormal_returns():
+    windows = pd.DataFrame(
+        {
+            "event_date": pd.to_datetime(["2024-01-01", "2024-01-01"]),
+            "market_group": ["developed", "developed"],
+            "relative_day": [-1, 0],
+            "abnormal_return": [0.01, -0.03],
+        }
+    )
+
+    summary = summarize_abnormal_event_windows(windows)
+
+    assert summary.columns.tolist() == [
+        "market_group",
+        "relative_day",
+        "average_abnormal_return",
+        "cumulative_average_abnormal_return",
+        "observation_count",
+        "event_count",
+    ]
+    assert round(summary.loc[1, "cumulative_average_abnormal_return"], 10) == -0.02

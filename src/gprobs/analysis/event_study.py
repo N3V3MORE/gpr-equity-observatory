@@ -22,6 +22,21 @@ EVENT_SUMMARY_COLUMNS = [
     "event_count",
 ]
 
+ABNORMAL_EVENT_WINDOW_COLUMNS = EVENT_WINDOW_COLUMNS + [
+    "global_market_return",
+    "expected_return",
+    "abnormal_return",
+]
+
+ABNORMAL_EVENT_SUMMARY_COLUMNS = [
+    "market_group",
+    "relative_day",
+    "average_abnormal_return",
+    "cumulative_average_abnormal_return",
+    "observation_count",
+    "event_count",
+]
+
 
 def select_spaced_events(
     gpr: pd.DataFrame,
@@ -99,3 +114,84 @@ def summarize_event_windows(windows: pd.DataFrame) -> pd.DataFrame:
         "average_return"
     ].cumsum()
     return summary[EVENT_SUMMARY_COLUMNS]
+
+
+def build_market_model_event_windows(
+    panel: pd.DataFrame,
+    event_dates: pd.Series,
+    window: int = 5,
+    estimation_window: int = 120,
+    estimation_gap: int = 20,
+    min_estimation_obs: int = 80,
+) -> pd.DataFrame:
+    """Build event windows with market-model abnormal returns."""
+    frames = []
+
+    for _, ticker_panel in panel.groupby("ticker"):
+        ticker_panel = ticker_panel.sort_values("date").reset_index(drop=True)
+        trading_dates = ticker_panel["date"]
+
+        for event_date in event_dates:
+            event_date = pd.Timestamp(event_date)
+            event_position = trading_dates.searchsorted(event_date, side="left")
+            if event_position >= len(ticker_panel):
+                continue
+
+            estimation_end = event_position - estimation_gap
+            estimation_start = estimation_end - estimation_window
+            if estimation_start < 0:
+                continue
+
+            estimation_data = ticker_panel.iloc[estimation_start:estimation_end].dropna(
+                subset=["return", "global_market_return"]
+            )
+            if len(estimation_data) < min_estimation_obs:
+                continue
+
+            market_variance = estimation_data["global_market_return"].var()
+            if market_variance == 0:
+                continue
+
+            beta = estimation_data["return"].cov(estimation_data["global_market_return"]) / market_variance
+            alpha = estimation_data["return"].mean() - beta * estimation_data["global_market_return"].mean()
+
+            start_position = max(event_position - window, 0)
+            end_position = min(event_position + window + 1, len(ticker_panel))
+            event_window = ticker_panel.iloc[start_position:end_position].copy()
+            event_window["expected_return"] = alpha + beta * event_window["global_market_return"]
+            event_window["abnormal_return"] = event_window["return"] - event_window["expected_return"]
+            event_window.insert(0, "event_date", event_date)
+            event_window.insert(1, "event_trading_date", trading_dates.iloc[event_position])
+            event_window.insert(
+                2,
+                "relative_day",
+                list(range(start_position - event_position, end_position - event_position)),
+            )
+            frames.append(event_window)
+
+    if not frames:
+        return pd.DataFrame(columns=ABNORMAL_EVENT_WINDOW_COLUMNS)
+
+    windows = pd.concat(frames, ignore_index=True)
+    return windows[ABNORMAL_EVENT_WINDOW_COLUMNS]
+
+
+def summarize_abnormal_event_windows(windows: pd.DataFrame) -> pd.DataFrame:
+    """Average abnormal event-window returns by market group and relative day."""
+    if windows.empty:
+        return pd.DataFrame(columns=ABNORMAL_EVENT_SUMMARY_COLUMNS)
+
+    summary = (
+        windows.groupby(["market_group", "relative_day"], as_index=False)
+        .agg(
+            average_abnormal_return=("abnormal_return", "mean"),
+            observation_count=("abnormal_return", "count"),
+            event_count=("event_date", "nunique"),
+        )
+        .sort_values(["market_group", "relative_day"])
+        .reset_index(drop=True)
+    )
+    summary["cumulative_average_abnormal_return"] = summary.groupby("market_group")[
+        "average_abnormal_return"
+    ].cumsum()
+    return summary[ABNORMAL_EVENT_SUMMARY_COLUMNS]
