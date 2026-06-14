@@ -51,6 +51,9 @@ results mean, see `docs/PROJECT_STATUS.md`.
 The current research-note draft is in `docs/RESEARCH_NOTE.md`, with technical
 details in `docs/TECHNICAL_APPENDIX.md`.
 
+Profile and communication drafts are in `docs/PROFILE_PACKAGING.md` and
+`docs/BLOG_POST_DRAFT.md`.
+
 ## Build the First Returns Panel
 
 ```powershell
