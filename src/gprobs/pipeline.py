@@ -18,6 +18,7 @@ PIPELINE_STEPS = [
     PipelineStep("Run data diagnostics", "run_data_diagnostics.py"),
     PipelineStep("Run event studies", "run_event_study.py"),
     PipelineStep("Run panel regressions", "run_panel_regression.py"),
+    PipelineStep("Run local projections", "run_local_projections.py"),
     PipelineStep("Run rolling GPR sensitivity", "run_rolling_sensitivity.py"),
     PipelineStep("Plot initial trends", "plot_initial_trends.py"),
 ]

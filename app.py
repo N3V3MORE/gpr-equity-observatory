@@ -24,6 +24,7 @@ REQUIRED_FILES = {
     "abnormal_event_study": DATA_DIR / "event_study_abnormal_summary.csv",
     "regression": DATA_DIR / "panel_regression_baseline.csv",
     "controlled_regression": DATA_DIR / "panel_regression_controlled.csv",
+    "local_projections": DATA_DIR / "local_projection_results.csv",
     "rolling_beta": DATA_DIR / "rolling_gpr_beta.csv",
     "large_returns": DATA_DIR / "large_return_flags.csv",
 }
@@ -43,6 +44,7 @@ def load_outputs():
         "abnormal_event_study": pd.read_csv(REQUIRED_FILES["abnormal_event_study"]),
         "regression": pd.read_csv(REQUIRED_FILES["regression"]),
         "controlled_regression": pd.read_csv(REQUIRED_FILES["controlled_regression"]),
+        "local_projections": pd.read_csv(REQUIRED_FILES["local_projections"]),
         "rolling_beta": pd.read_csv(REQUIRED_FILES["rolling_beta"], parse_dates=["date"]),
         "large_returns": pd.read_csv(REQUIRED_FILES["large_returns"], parse_dates=["date"]),
     }
@@ -69,6 +71,7 @@ def main():
                     "python scripts/run_data_diagnostics.py",
                     "python scripts/run_event_study.py",
                     "python scripts/run_panel_regression.py",
+                    "python scripts/run_local_projections.py",
                     "python scripts/run_rolling_sensitivity.py",
                 ]
             )
@@ -85,15 +88,17 @@ def main():
     abnormal_event_study = outputs["abnormal_event_study"]
     regression = outputs["regression"]
     controlled_regression = outputs["controlled_regression"]
+    local_projections = outputs["local_projections"]
     rolling_beta = outputs["rolling_beta"]
     large_returns = outputs["large_returns"]
 
-    tab_overview, tab_shocks, tab_event, tab_regression, tab_rolling, tab_coverage = st.tabs(
+    tab_overview, tab_shocks, tab_event, tab_regression, tab_local, tab_rolling, tab_coverage = st.tabs(
         [
             "Overview",
             "GPR Shocks",
             "Event Study",
             "Panel Regression",
+            "Local Projections",
             "Rolling Beta",
             "Data Coverage",
         ]
@@ -177,6 +182,37 @@ def main():
             "The controlled model also includes global equity, VIX, oil, dollar, "
             "and US 10-year yield controls."
         )
+
+    with tab_local:
+        fig = px.line(
+            local_projections,
+            x="horizon",
+            y="estimate",
+            color="market_group",
+            markers=True,
+            title="Local Projection Response to GPR Shock",
+        )
+        for group, group_data in local_projections.groupby("market_group"):
+            fig.add_scatter(
+                x=group_data["horizon"],
+                y=group_data["ci_low"],
+                mode="lines",
+                line={"width": 0},
+                showlegend=False,
+                hoverinfo="skip",
+            )
+            fig.add_scatter(
+                x=group_data["horizon"],
+                y=group_data["ci_high"],
+                mode="lines",
+                fill="tonexty",
+                line={"width": 0},
+                name=f"{group} 95% CI",
+                hoverinfo="skip",
+            )
+        fig.add_hline(y=0, line_dash="dash", line_color="gray")
+        st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(local_projections, use_container_width=True, hide_index=True)
 
     with tab_rolling:
         countries = sorted(rolling_beta["country"].dropna().unique())

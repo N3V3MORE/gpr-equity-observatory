@@ -28,6 +28,7 @@ scripts/plot_initial_trends.py    Creates the first GPR/returns figure
 scripts/run_data_diagnostics.py   Builds coverage and large-return checks
 scripts/run_event_study.py        Runs the first GPR shock event study
 scripts/run_panel_regression.py   Runs the baseline panel regression
+scripts/run_local_projections.py  Estimates dynamic GPR shock response paths
 scripts/run_rolling_sensitivity.py Builds rolling GPR sensitivity estimates
 scripts/build_all.py              Rebuilds the full MVP pipeline in order
 app.py                            Streamlit dashboard
@@ -60,6 +61,7 @@ python scripts/plot_initial_trends.py
 python scripts/run_data_diagnostics.py
 python scripts/run_event_study.py
 python scripts/run_panel_regression.py
+python scripts/run_local_projections.py
 python scripts/run_rolling_sensitivity.py
 streamlit run app.py
 ```
@@ -83,6 +85,7 @@ These commands download adjusted ETF prices, download daily GPR data, and write:
 - `data/processed/panel_regression_summary.txt`
 - `data/processed/panel_regression_controlled.csv`
 - `data/processed/panel_regression_controlled_summary.txt`
+- `data/processed/local_projection_results.csv`
 - `data/processed/rolling_gpr_beta.csv`
 
 ## Data Note
@@ -101,3 +104,7 @@ change, not a log return, because WTI futures traded below zero in April 2020.
 The abnormal-return event study estimates a simple pre-event market model for
 each ETF using ACWI as the market proxy, then subtracts the expected return from
 the observed ETF return inside the event window.
+
+The local projection output estimates cumulative ETF return responses at several
+daily horizons after GPR shock days. It is an association model, not a causal
+claim.
