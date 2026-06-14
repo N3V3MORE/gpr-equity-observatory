@@ -76,6 +76,9 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `data/processed/evidence_summary.csv`
 - `data/processed/rolling_gpr_beta.csv`
 - `reports/RESULTS_BRIEF.md`
+- `reports/screenshots/dashboard_overview.png`
+- `reports/screenshots/dashboard_robustness.png`
+- `reports/screenshots/dashboard_panel_regression.png`
 - `reports/figures/gpr_and_group_returns.png`
 
 ## Variable Definitions

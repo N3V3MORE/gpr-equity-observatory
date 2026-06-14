@@ -111,3 +111,11 @@ reliable, and later a carefully scoped GDELT extension.
 Use `reports/RESULTS_BRIEF.md` when you need a short, honest explanation of the
 main result. It is generated from the pipeline outputs, so rebuild it with
 `python scripts/build_all.py` rather than editing it by hand.
+
+## Dashboard Screenshots
+
+Profile-ready screenshots are saved in `reports/screenshots/`:
+
+- `dashboard_overview.png`: data scope and main GPR chart.
+- `dashboard_robustness.png`: event-study robustness chart.
+- `dashboard_panel_regression.png`: regression and sample-robustness tables.
