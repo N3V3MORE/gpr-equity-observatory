@@ -24,6 +24,7 @@ scripts/build_returns_panel.py   Builds the first ETF returns panel
 scripts/build_gpr_dataset.py      Builds the daily GPR dataset
 scripts/build_analysis_panel.py   Combines returns, country metadata, and GPR
 scripts/plot_initial_trends.py    Creates the first GPR/returns figure
+scripts/run_data_diagnostics.py   Builds coverage and large-return checks
 scripts/run_event_study.py        Runs the first GPR shock event study
 scripts/run_panel_regression.py   Runs the baseline panel regression
 scripts/run_rolling_sensitivity.py Builds rolling GPR sensitivity estimates
@@ -46,6 +47,7 @@ python scripts/build_returns_panel.py
 python scripts/build_gpr_dataset.py
 python scripts/build_analysis_panel.py
 python scripts/plot_initial_trends.py
+python scripts/run_data_diagnostics.py
 python scripts/run_event_study.py
 python scripts/run_panel_regression.py
 python scripts/run_rolling_sensitivity.py
@@ -60,6 +62,8 @@ These commands download adjusted ETF prices, download daily GPR data, and write:
 - `data/processed/analysis_panel.csv`
 - `data/processed/group_return_summary.csv`
 - `reports/figures/gpr_and_group_returns.png`
+- `data/processed/country_coverage_summary.csv`
+- `data/processed/large_return_flags.csv`
 - `data/processed/event_windows.csv`
 - `data/processed/event_study_summary.csv`
 - `data/processed/panel_regression_baseline.csv`

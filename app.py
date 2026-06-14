@@ -23,6 +23,7 @@ REQUIRED_FILES = {
     "event_study": DATA_DIR / "event_study_summary.csv",
     "regression": DATA_DIR / "panel_regression_baseline.csv",
     "rolling_beta": DATA_DIR / "rolling_gpr_beta.csv",
+    "large_returns": DATA_DIR / "large_return_flags.csv",
 }
 
 
@@ -39,6 +40,7 @@ def load_outputs():
         "event_study": pd.read_csv(REQUIRED_FILES["event_study"]),
         "regression": pd.read_csv(REQUIRED_FILES["regression"]),
         "rolling_beta": pd.read_csv(REQUIRED_FILES["rolling_beta"], parse_dates=["date"]),
+        "large_returns": pd.read_csv(REQUIRED_FILES["large_returns"], parse_dates=["date"]),
     }
 
 
@@ -59,6 +61,7 @@ def main():
                     "python scripts/build_returns_panel.py",
                     "python scripts/build_gpr_dataset.py",
                     "python scripts/build_analysis_panel.py",
+                    "python scripts/run_data_diagnostics.py",
                     "python scripts/run_event_study.py",
                     "python scripts/run_panel_regression.py",
                     "python scripts/run_rolling_sensitivity.py",
@@ -76,6 +79,7 @@ def main():
     event_study = outputs["event_study"]
     regression = outputs["regression"]
     rolling_beta = outputs["rolling_beta"]
+    large_returns = outputs["large_returns"]
 
     tab_overview, tab_shocks, tab_event, tab_regression, tab_rolling, tab_coverage = st.tabs(
         [
@@ -164,7 +168,10 @@ def main():
 
     with tab_coverage:
         coverage = build_country_coverage(panel)
+        st.subheader("Country Coverage")
         st.dataframe(coverage, use_container_width=True, hide_index=True)
+        st.subheader("Large Daily Return Flags")
+        st.dataframe(large_returns, use_container_width=True, hide_index=True)
 
 
 if __name__ == "__main__":
