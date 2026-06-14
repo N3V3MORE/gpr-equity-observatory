@@ -36,7 +36,7 @@ It is written as a plain-English audit, not as a marketing summary.
 | GDELT extension is integrated | Not started | Add only after choosing a narrow country/event scope |
 | Country-specific GPR is integrated | Needs decision | Official pages exist, but data access is not a simple workbook link |
 | Dashboard includes data quality, model diagnostics, and downloads | Mostly done | Data quality and model diagnostics exist; explicit download buttons are not custom-built |
-| Tests and linting are present | Partial | Tests exist; no separate lint tool is configured |
+| Tests and linting are present | Done | Pytest and Ruff are configured |
 | GitHub Actions run tests | Done | `.github/workflows/tests.yml` |
 | Blog post is published | Drafted | `docs/BLOG_POST_DRAFT.md`; publishing is outside the repo |
 | Walkthrough video or demo script exists | Partial | Three-minute script exists; video is not recorded |

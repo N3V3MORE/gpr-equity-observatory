@@ -120,7 +120,18 @@ def main():
     rolling_beta = outputs["rolling_beta"]
     large_returns = outputs["large_returns"]
 
-    tab_overview, tab_shocks, tab_event, tab_robustness, tab_regression, tab_tail, tab_local, tab_ml, tab_rolling, tab_coverage = st.tabs(
+    (
+        tab_overview,
+        tab_shocks,
+        tab_event,
+        tab_robustness,
+        tab_regression,
+        tab_tail,
+        tab_local,
+        tab_ml,
+        tab_rolling,
+        tab_coverage,
+    ) = st.tabs(
         [
             "Overview",
             "GPR Shocks",
