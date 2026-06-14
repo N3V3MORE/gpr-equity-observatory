@@ -66,9 +66,9 @@ rolling betas, and data coverage.
 
 The current results are mixed. The controlled panel regression finds a negative
 association between GPR and returns, but the emerging-market interaction is not
-statistically strong. Tail-risk and local-projection results are useful but
-still need robustness checks. The ML classifier has modest predictive value,
-with rolling volatility more important than GPR features.
+statistically strong. Robustness checks support the controlled GPR association
+more than the emerging-market asymmetry claim. The ML classifier has modest
+predictive value, with rolling volatility more important than GPR features.
 
 The main strength of the project is not a dramatic headline result. It is the
 reproducible empirical framework: the methods are tested, the data pipeline is
@@ -103,5 +103,11 @@ avoid look-ahead bias and keep the model simple enough to interpret.
 
 ### What would improve the project next?
 
-The best next steps are robustness checks, FRED macro controls, country-specific
-GPR where reliable, and later a carefully scoped GDELT extension.
+The best next steps are FRED macro controls, country-specific GPR where
+reliable, and later a carefully scoped GDELT extension.
+
+## Quick Results Brief
+
+Use `reports/RESULTS_BRIEF.md` when you need a short, honest explanation of the
+main result. It is generated from the pipeline outputs, so rebuild it with
+`python scripts/build_all.py` rather than editing it by hand.

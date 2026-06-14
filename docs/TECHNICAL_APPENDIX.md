@@ -44,6 +44,7 @@ streamlit run app.py
 - `src/gprobs/analysis/drawdown_model.py`: drawdown-risk classifier.
 - `src/gprobs/analysis/evidence_summary.py`: compact model comparison table.
 - `src/gprobs/analysis/rolling_sensitivity.py`: rolling GPR beta.
+- `src/gprobs/reporting/results_brief.py`: generated plain-English results brief.
 - `app.py`: Streamlit dashboard.
 
 ## Generated Outputs
@@ -74,6 +75,7 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `data/processed/drawdown_feature_importance.csv`
 - `data/processed/evidence_summary.csv`
 - `data/processed/rolling_gpr_beta.csv`
+- `reports/RESULTS_BRIEF.md`
 - `reports/figures/gpr_and_group_returns.png`
 
 ## Variable Definitions
@@ -117,6 +119,9 @@ is used.
 The evidence summary table is not a new model. It gathers headline rows from
 the existing event-study, regression, quantile, local-projection, and ML outputs
 so the dashboard can compare methods in one place.
+
+The results brief is a generated Markdown report. It is intended for quick
+review and profile packaging, not as a substitute for the research note.
 
 ## Known Caveats
 

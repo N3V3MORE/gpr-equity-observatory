@@ -25,6 +25,7 @@ PIPELINE_STEPS = [
     PipelineStep("Run drawdown model", "run_drawdown_model.py"),
     PipelineStep("Build evidence summary", "run_evidence_summary.py"),
     PipelineStep("Run rolling GPR sensitivity", "run_rolling_sensitivity.py"),
+    PipelineStep("Write results brief", "write_results_brief.py"),
     PipelineStep("Plot initial trends", "plot_initial_trends.py"),
 ]
 

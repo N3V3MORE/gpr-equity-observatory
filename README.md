@@ -35,6 +35,7 @@ scripts/run_local_projections.py  Estimates dynamic GPR shock response paths
 scripts/run_drawdown_model.py     Trains a simple drawdown-risk classifier
 scripts/run_evidence_summary.py   Builds a compact model comparison table
 scripts/run_rolling_sensitivity.py Builds rolling GPR sensitivity estimates
+scripts/write_results_brief.py    Writes the plain-English results brief
 scripts/build_all.py              Rebuilds the full MVP pipeline in order
 app.py                            Streamlit dashboard
 src/gprobs/                      Reusable project code
@@ -81,6 +82,7 @@ python scripts/run_local_projections.py
 python scripts/run_drawdown_model.py
 python scripts/run_evidence_summary.py
 python scripts/run_rolling_sensitivity.py
+python scripts/write_results_brief.py
 python scripts/plot_initial_trends.py
 streamlit run app.py
 ```
@@ -113,6 +115,7 @@ These commands download adjusted ETF prices, download daily GPR data, and write:
 - `data/processed/drawdown_feature_importance.csv`
 - `data/processed/evidence_summary.csv`
 - `data/processed/rolling_gpr_beta.csv`
+- `reports/RESULTS_BRIEF.md`
 
 ## Data Note
 
@@ -151,3 +154,6 @@ chronological validation, not random train/test splits.
 
 The evidence summary table collects the main model outputs into one
 plain-English comparison table for the dashboard and research note.
+
+`reports/RESULTS_BRIEF.md` is a short generated summary designed for quick
+project review, interviews, and profile packaging.

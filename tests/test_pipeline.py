@@ -19,5 +19,6 @@ def test_pipeline_steps_are_in_dependency_order():
         "run_drawdown_model.py",
         "run_evidence_summary.py",
         "run_rolling_sensitivity.py",
+        "write_results_brief.py",
         "plot_initial_trends.py",
     ]

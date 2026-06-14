@@ -24,6 +24,7 @@ separates what is implemented from what the evidence currently says.
 - Rolling GPR sensitivity by country.
 - Simple drawdown-risk classifier with chronological validation.
 - Compact evidence summary table for comparing methods.
+- Generated plain-English results brief for quick review.
 - Streamlit dashboard.
 - One-command pipeline rebuild: `python scripts/build_all.py`.
 - Automated test workflow for GitHub Actions.
@@ -62,6 +63,9 @@ features are small in the current version.
 The overview evidence table is deliberately mixed. For example, the baseline
 panel coefficient is positive, while the controlled panel coefficient is
 negative. That is a warning not to overstate a single headline result.
+
+`reports/RESULTS_BRIEF.md` now gives a short generated summary of these results
+for interviews, profile packaging, or quick project review.
 
 ## Interpretation Rules
 
