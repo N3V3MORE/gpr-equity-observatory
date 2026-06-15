@@ -17,3 +17,11 @@ def test_dashboard_tab_render_helpers_are_defined():
 
     for helper_name in expected_helpers:
         assert callable(getattr(app, helper_name))
+
+
+def test_ml_tab_uses_purged_validation_wording():
+    assert app.ML_VALIDATION_HEADING == "Purged Chronological Validation"
+    assert app.ML_VALIDATION_CAPTION == (
+        "Splits are purged chronological, so the model trains only on earlier dates "
+        "and excludes dates immediately before the test fold to reduce forward-label leakage."
+    )

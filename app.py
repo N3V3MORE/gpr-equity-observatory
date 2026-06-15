@@ -10,6 +10,11 @@ from gprobs.dashboard.metrics import build_country_coverage, select_key_regressi
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_DIR = PROJECT_ROOT / "data" / "processed"
+ML_VALIDATION_HEADING = "Purged Chronological Validation"
+ML_VALIDATION_CAPTION = (
+    "Splits are purged chronological, so the model trains only on earlier dates "
+    "and excludes dates immediately before the test fold to reduce forward-label leakage."
+)
 
 
 @dataclass(frozen=True)
@@ -450,12 +455,12 @@ def render_ml_tab(
     fig.update_layout(yaxis={"categoryorder": "total ascending"})
     st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("Chronological Validation")
+    st.subheader(ML_VALIDATION_HEADING)
     st.dataframe(drawdown_metrics, use_container_width=True, hide_index=True)
     st.caption(
         f"This classifier predicts whether an ETF has a forward {DRAWDOWN_HORIZON_DAYS}-trading-day "
-        f"cumulative log-return drawdown of at least {abs(DRAWDOWN_THRESHOLD):.0%}. Splits are chronological, "
-        "so the model is always tested on later dates than it trains on."
+        f"cumulative log-return drawdown of at least {abs(DRAWDOWN_THRESHOLD):.0%}. "
+        f"{ML_VALIDATION_CAPTION}"
     )
 
 
