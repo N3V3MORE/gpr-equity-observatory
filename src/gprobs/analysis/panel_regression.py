@@ -1,8 +1,8 @@
 import warnings
 
 import pandas as pd
-import statsmodels.api as sm
 import statsmodels.formula.api as smf
+from linearmodels.panel import PanelOLS
 
 BASELINE_FORMULA = (
     "etf_return ~ gpr_change_z + gpr_change_z:emerging_market + C(ticker)"
@@ -64,25 +64,11 @@ def _fit_with_clustered_covariance(
     return model.fit(cov_type="cluster", cov_kwds={"groups": cluster_groups})
 
 
-def _residualize_two_way(
-    values: pd.Series,
-    groups: pd.DataFrame,
-    max_iter: int = 100,
-    tolerance: float = 1e-10,
-) -> pd.Series:
-    residual = values.astype(float).copy()
-    for _ in range(max_iter):
-        previous = residual.copy()
-        for column in groups.columns:
-            residual = residual - residual.groupby(groups[column]).transform("mean")
-        if (residual - previous).abs().max() < tolerance:
-            break
-    return residual
-
-
 def prepare_panel_regression_data(
     panel: pd.DataFrame,
     include_controls: bool = False,
+    gpr_change_mean: float | None = None,
+    gpr_change_std: float | None = None,
 ) -> pd.DataFrame:
     """Prepare the return panel for the baseline fixed-effects regression."""
     panel = _add_gpr_change_from_level(panel)
@@ -95,11 +81,14 @@ def prepare_panel_regression_data(
     data["etf_return"] = data["return"]
     data["emerging_market"] = (data["market_group"] == "emerging").astype(int)
 
-    gpr_std = data["gpr_change"].std(ddof=0)
-    if gpr_std == 0:
+    if gpr_change_mean is None:
+        gpr_change_mean = data["gpr_change"].mean()
+    if gpr_change_std is None:
+        gpr_change_std = data["gpr_change"].std(ddof=0)
+    if gpr_change_std == 0:
         raise ValueError("GPR change has no variation, so it cannot be standardized.")
 
-    data["gpr_change_z"] = (data["gpr_change"] - data["gpr_change"].mean()) / gpr_std
+    data["gpr_change_z"] = (data["gpr_change"] - gpr_change_mean) / gpr_change_std
     return data
 
 
@@ -107,9 +96,15 @@ def run_baseline_panel_regression(
     panel: pd.DataFrame,
     cluster_by_ticker: bool = True,
     cluster_by_date: bool | None = None,
+    gpr_change_mean: float | None = None,
+    gpr_change_std: float | None = None,
 ):
     """Estimate return sensitivity to GPR with ticker fixed effects."""
-    data = prepare_panel_regression_data(panel)
+    data = prepare_panel_regression_data(
+        panel,
+        gpr_change_mean=gpr_change_mean,
+        gpr_change_std=gpr_change_std,
+    )
     model = smf.ols(BASELINE_FORMULA, data=data)
     return _fit_with_clustered_covariance(
         model,
@@ -123,9 +118,16 @@ def run_controlled_panel_regression(
     panel: pd.DataFrame,
     cluster_by_ticker: bool = True,
     cluster_by_date: bool | None = None,
+    gpr_change_mean: float | None = None,
+    gpr_change_std: float | None = None,
 ):
     """Estimate GPR sensitivity after adding public market controls."""
-    data = prepare_panel_regression_data(panel, include_controls=True)
+    data = prepare_panel_regression_data(
+        panel,
+        include_controls=True,
+        gpr_change_mean=gpr_change_mean,
+        gpr_change_std=gpr_change_std,
+    )
     model = smf.ols(CONTROLLED_FORMULA, data=data)
     return _fit_with_clustered_covariance(
         model,
@@ -139,38 +141,47 @@ def run_date_fe_panel_regression(
     panel: pd.DataFrame,
     cluster_by_ticker: bool = True,
     cluster_by_date: bool | None = None,
+    gpr_change_mean: float | None = None,
+    gpr_change_std: float | None = None,
 ):
     """Estimate the emerging-market differential after absorbing date shocks."""
-    data = prepare_panel_regression_data(panel)
-    interaction = data["gpr_change_z"] * data["emerging_market"]
-    groups = data[["ticker", "date"]]
-    model_data = pd.DataFrame(
-        {
-            "etf_return": _residualize_two_way(data["etf_return"], groups),
-            DATE_FE_TERM: _residualize_two_way(interaction, groups),
-            "ticker": data["ticker"],
-            "date": data["date"],
-        }
+    data = prepare_panel_regression_data(
+        panel,
+        gpr_change_mean=gpr_change_mean,
+        gpr_change_std=gpr_change_std,
     )
-    model = sm.OLS(model_data["etf_return"], model_data[[DATE_FE_TERM]])
-    return _fit_with_clustered_covariance(
-        model,
-        model_data,
-        cluster_by_ticker=cluster_by_ticker,
-        cluster_by_date=cluster_by_date,
+
+    if cluster_by_date is None:
+        cluster_by_date = cluster_by_ticker
+
+    model_data = data.copy()
+    model_data[DATE_FE_TERM] = model_data["gpr_change_z"] * model_data["emerging_market"]
+    model_data = model_data.set_index(["ticker", "date"])
+    model = PanelOLS(
+        model_data["etf_return"],
+        model_data[[DATE_FE_TERM]],
+        entity_effects=True,
+        time_effects=True,
     )
+    if cluster_by_ticker or cluster_by_date:
+        return model.fit(
+            cov_type="clustered",
+            cluster_entity=cluster_by_ticker,
+            cluster_time=cluster_by_date,
+        )
+    return model.fit()
 
 
 def tidy_regression_results(result) -> pd.DataFrame:
-    """Convert a statsmodels result into a small readable coefficient table."""
+    """Convert a regression result into a small readable coefficient table."""
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore",
             message="invalid value encountered in sqrt",
             category=RuntimeWarning,
         )
-        std_errors = result.bse.values
-        t_stats = result.tvalues.values
+        std_errors = _result_values(result, "bse", "std_errors")
+        t_stats = _result_values(result, "tvalues", "tstats")
         p_values = result.pvalues.values
 
     return pd.DataFrame(
@@ -182,3 +193,10 @@ def tidy_regression_results(result) -> pd.DataFrame:
             "p_value": p_values,
         }
     )
+
+
+def _result_values(result, statsmodels_name: str, linearmodels_name: str):
+    values = getattr(result, statsmodels_name, None)
+    if values is None:
+        values = getattr(result, linearmodels_name)
+    return values.values

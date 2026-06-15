@@ -4,11 +4,10 @@ import pandas as pd
 
 def calculate_log_returns(prices: pd.Series) -> pd.Series:
     """Calculate log returns from a price series without forward-filling prices."""
-    clean_prices = prices.dropna()
-    if (clean_prices <= 0).any():
+    if (prices.dropna() <= 0).any():
         raise ValueError("Prices must be positive before log returns can be calculated.")
 
-    returns = np.log(clean_prices / clean_prices.shift(1)).dropna()
+    returns = np.log(prices / prices.shift(1)).dropna()
     returns.name = "return"
     return returns
 

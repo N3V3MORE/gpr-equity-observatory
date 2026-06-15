@@ -146,7 +146,7 @@ the GPR association at the 10th percentile, 25th percentile, and median.
 ### Why use ML?
 
 The ML layer reframes the problem as risk classification: can current conditions
-help flag higher short-horizon drawdown risk? I use chronological validation to
+help flag higher short-horizon drawdown risk? I use purged chronological validation to
 avoid look-ahead bias and keep the model simple enough to interpret.
 
 ### What would improve the project next?

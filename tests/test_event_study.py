@@ -140,5 +140,29 @@ def test_summarize_abnormal_event_windows_cumsums_abnormal_returns():
         "cumulative_average_abnormal_return",
         "observation_count",
         "event_count",
+        "std_error",
+        "t_stat",
+        "p_value",
     ]
     assert round(summary.loc[1, "cumulative_average_abnormal_return"], 10) == -0.02
+    assert pd.isna(summary.loc[1, "p_value"])
+
+
+def test_summarize_abnormal_event_windows_adds_cross_sectional_inference():
+    windows = pd.DataFrame(
+        {
+            "event_date": pd.to_datetime(["2024-01-01"] * 4),
+            "ticker": ["SPY", "EWZ", "SPY", "EWZ"],
+            "market_group": ["developed", "developed", "developed", "developed"],
+            "relative_day": [-1, -1, 0, 0],
+            "abnormal_return": [0.01, 0.03, -0.02, -0.04],
+        }
+    )
+
+    summary = summarize_abnormal_event_windows(windows)
+
+    endpoint = summary.loc[summary["relative_day"] == 0].iloc[0]
+    assert round(endpoint["cumulative_average_abnormal_return"], 10) == -0.01
+    assert endpoint["std_error"] > 0
+    assert endpoint["t_stat"] < 0
+    assert 0 <= endpoint["p_value"] <= 1

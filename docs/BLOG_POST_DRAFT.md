@@ -58,7 +58,7 @@ controlled regression after excluding the COVID crash and Russia-Ukraine
 invasion windows.
 
 A simple drawdown classifier asks whether current GPR and market conditions help
-identify higher forward downside risk. It uses chronological validation rather
+identify higher forward downside risk. It uses purged chronological validation rather
 than random splits, because random splits are inappropriate for time-series
 prediction.
 

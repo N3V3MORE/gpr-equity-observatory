@@ -13,6 +13,9 @@ def test_summarize_window_endpoint_keeps_final_relative_day_by_group():
             "relative_day": [-1, 1, -1, 1],
             "cumulative_average_abnormal_return": [0.01, -0.02, 0.03, -0.04],
             "event_count": [5, 5, 5, 5],
+            "std_error": [0.01, 0.02, 0.03, 0.04],
+            "t_stat": [1.0, -1.0, 1.0, -1.0],
+            "p_value": [0.30, 0.40, 0.50, 0.60],
         }
     )
 
@@ -28,9 +31,13 @@ def test_summarize_window_endpoint_keeps_final_relative_day_by_group():
         "market_group",
         "cumulative_average_abnormal_return",
         "event_count",
+        "std_error",
+        "t_stat",
+        "p_value",
     ]
     assert endpoint["market_group"].tolist() == ["developed", "emerging"]
     assert endpoint["cumulative_average_abnormal_return"].tolist() == [-0.02, -0.04]
+    assert endpoint["p_value"].tolist() == [0.40, 0.60]
 
 
 def test_build_event_robustness_table_returns_grid_summary():
@@ -61,6 +68,7 @@ def test_build_event_robustness_table_returns_grid_summary():
         estimation_window=2,
         estimation_gap=1,
         min_estimation_obs=2,
+        expanding_min_periods=2,
     )
 
     assert set(robustness["market_group"]) == {"developed", "emerging"}
@@ -112,6 +120,7 @@ def test_build_event_robustness_uses_peak_cluster_selector(monkeypatch):
         estimation_window=2,
         estimation_gap=1,
         min_estimation_obs=2,
+        expanding_min_periods=2,
     )
 
     assert calls == [

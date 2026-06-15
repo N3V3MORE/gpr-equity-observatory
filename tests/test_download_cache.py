@@ -35,6 +35,23 @@ def test_retry_recovers_from_transient_failure():
     assert attempts["count"] == 2
 
 
+def test_retry_does_not_retry_non_transient_errors():
+    attempts = {"count": 0}
+
+    def invalid_operation():
+        attempts["count"] += 1
+        raise ValueError("bad request")
+
+    try:
+        retry(invalid_operation, retries=3, backoff_seconds=0)
+    except ValueError as exc:
+        assert "bad request" in str(exc)
+    else:
+        raise AssertionError("retry swallowed a non-transient error")
+
+    assert attempts["count"] == 1
+
+
 def test_download_url_to_cache_reuses_existing_file_without_fetch(tmp_path):
     cache_path = tmp_path / "cached.xls"
     cache_path.write_bytes(b"already cached")
@@ -74,7 +91,17 @@ def test_download_adjusted_prices_reuses_cached_yfinance_payload(tmp_path):
         {"Adj Close": [100.0, 105.0]},
         index=pd.to_datetime(["2024-01-01", "2024-01-02"]),
     )
-    raw.to_pickle(cache_path)
+    pd.to_pickle(
+        {
+            "metadata": {
+                "tickers": ["SPY"],
+                "start": "2005-01-01",
+                "end": None,
+            },
+            "data": raw,
+        },
+        cache_path,
+    )
 
     prices = download_adjusted_prices(["SPY"], cache_path=cache_path)
 
@@ -95,7 +122,7 @@ def test_download_adjusted_prices_retries_and_refreshes_cache(monkeypatch, tmp_p
         def download(**kwargs):
             attempts["count"] += 1
             if attempts["count"] == 1:
-                raise RuntimeError("temporary yfinance failure")
+                raise URLError("temporary yfinance failure")
             return raw
 
     monkeypatch.setitem(__import__("sys").modules, "yfinance", FakeYFinance)
@@ -111,3 +138,44 @@ def test_download_adjusted_prices_retries_and_refreshes_cache(monkeypatch, tmp_p
     assert attempts["count"] == 2
     assert cache_path.exists()
     assert prices.loc[pd.Timestamp("2024-01-02"), "price"] == 105.0
+
+
+def test_download_adjusted_prices_refreshes_cache_when_request_changes(monkeypatch, tmp_path):
+    cache_path = tmp_path / "prices.pkl"
+    cached_raw = pd.DataFrame(
+        {"Adj Close": [100.0, 105.0]},
+        index=pd.to_datetime(["2024-01-01", "2024-01-02"]),
+    )
+    pd.to_pickle(
+        {
+            "metadata": {
+                "tickers": ["SPY"],
+                "start": "2005-01-01",
+                "end": None,
+            },
+            "data": cached_raw,
+        },
+        cache_path,
+    )
+    fresh_raw = pd.DataFrame(
+        {"Adj Close": [50.0, 55.0]},
+        index=pd.to_datetime(["2024-01-01", "2024-01-02"]),
+    )
+    attempts = {"count": 0}
+
+    class FakeYFinance:
+        @staticmethod
+        def download(**kwargs):
+            attempts["count"] += 1
+            return fresh_raw
+
+    monkeypatch.setitem(__import__("sys").modules, "yfinance", FakeYFinance)
+
+    prices = download_adjusted_prices(
+        ["EWZ"],
+        cache_path=cache_path,
+        retry_backoff_seconds=0,
+    )
+
+    assert attempts["count"] == 1
+    assert prices.loc[pd.Timestamp("2024-01-02"), "price"] == 55.0

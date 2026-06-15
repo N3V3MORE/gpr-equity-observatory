@@ -3,7 +3,15 @@ import statsmodels.formula.api as smf
 
 from gprobs.analysis.panel_regression import CONTROL_COLUMNS, prepare_panel_regression_data
 
-QUANTILE_COLUMNS = ["quantile", "term", "estimate", "std_error", "t_stat", "p_value"]
+QUANTILE_COLUMNS = [
+    "quantile",
+    "term",
+    "estimate",
+    "std_error",
+    "t_stat",
+    "p_value",
+    "inference",
+]
 
 BASE_FORMULA = "etf_return ~ gpr_change_z + gpr_change_z:emerging_market + C(ticker)"
 CONTROLLED_FORMULA = (
@@ -50,5 +58,6 @@ def _tidy_quantile_result(result, quantile: float) -> pd.DataFrame:
             "std_error": result.bse.values,
             "t_stat": result.tvalues.values,
             "p_value": result.pvalues.values,
+            "inference": "iid_asymptotic",
         }
     )[QUANTILE_COLUMNS]

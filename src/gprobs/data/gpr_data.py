@@ -151,12 +151,13 @@ def mark_top_quantile_shocks(
 
     marked["gpr_shock_full_sample"] = full_sample_shock
     marked["gpr_shock_expanding"] = expanding_shock
-    marked["gpr_shock"] = full_sample_shock
+    marked["gpr_shock"] = expanding_shock
     marked["gpr_shock_threshold"] = full_sample_threshold
     marked["gpr_shock_expanding_threshold"] = expanding_threshold
 
     if value_column == "gpr_change":
-        marked["gpr_change_shock"] = full_sample_shock
+        marked["gpr_change_shock_full_sample"] = full_sample_shock
+        marked["gpr_change_shock"] = expanding_shock
         marked["gpr_change_shock_expanding"] = expanding_shock
 
     return marked

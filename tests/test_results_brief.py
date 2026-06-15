@@ -30,7 +30,25 @@ def test_build_results_brief_summarizes_mixed_evidence_cautiously():
                 "Mean ROC AUC",
             ],
             "estimate": [-0.000064, 0.000090, -0.000044, -0.000117, 0.0022, 0.0037, 0.614],
+            "unit": [
+                "basis_points",
+                "basis_points",
+                "basis_points",
+                "basis_points",
+                "percent",
+                "percent",
+                "score",
+            ],
             "p_value": [0.006, 0.127, 0.041, 0.156, 0.034, 0.696, float("nan")],
+            "inference": [
+                "two-way clustered",
+                "two-way clustered",
+                "two-way clustered",
+                "i.i.d. QuantReg asymptotic p-value",
+                "two-way clustered",
+                "two-way clustered",
+                "cross-validation metric",
+            ],
             "plain_english": [""] * 7,
         }
     )
@@ -55,7 +73,8 @@ def test_build_results_brief_summarizes_mixed_evidence_cautiously():
     assert "Controlled panel regression" in brief
     assert "Date fixed-effects emerging interaction" in brief
     assert "-0.6 bps" in brief
-    assert "| Drawdown classifier | 0.614 | n/a |" in brief
+    assert "| Drawdown classifier | 0.614 | n/a | cross-validation metric |" in brief
+    assert "i.i.d. QuantReg asymptotic p-value" in brief
     assert "market-model abnormal return responses" in brief
     assert "not strong evidence" in brief
     assert "Excluding COVID and Russia windows" in brief

@@ -25,7 +25,7 @@ It is written as a plain-English audit, not as a marketing summary.
 | Dashboard has screenshots or public deployment | Done | `reports/screenshots/` |
 | Robustness checks exist | Done | Event-window/threshold checks and panel sample checks |
 | Local projections or quantile analysis exists | Done | Both local projections and quantile regressions are implemented |
-| ML drawdown model exists with time-aware validation | Done | Drawdown classifier with chronological validation folds |
+| ML drawdown model exists with time-aware validation | Done | Drawdown classifier with purged chronological validation folds |
 | Project can be explained in interviews | Done | `docs/PROFILE_PACKAGING.md` and `reports/RESULTS_BRIEF.md` |
 | CV bullet sounds credible and specific | Done | `docs/PROFILE_PACKAGING.md` |
 

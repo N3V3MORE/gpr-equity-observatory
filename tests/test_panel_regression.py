@@ -131,6 +131,7 @@ def test_run_date_fe_panel_regression_identifies_emerging_interaction_only():
 
     assert "gpr_change_z:emerging_market" in result.params.index
     assert "gpr_change_z" not in result.params.index
+    assert result.df_resid < len(panel) - 1
 
 
 def test_tidy_regression_results_returns_readable_table():

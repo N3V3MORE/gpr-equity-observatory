@@ -32,6 +32,7 @@ def test_build_evidence_summary_collects_core_outputs_in_order():
             "term": ["gpr_change_z", "gpr_change_z"],
             "estimate": [-0.12, -0.04],
             "p_value": [0.16, 0.27],
+            "inference": ["iid_asymptotic", "iid_asymptotic"],
         }
     )
     local_projections = pd.DataFrame(
@@ -49,6 +50,7 @@ def test_build_evidence_summary_collects_core_outputs_in_order():
             "market_group": ["developed", "emerging"],
             "cumulative_average_abnormal_return": [-0.001, -0.002],
             "event_count": [100, 100],
+            "p_value": [0.20, 0.30],
         }
     )
     drawdown_metrics = pd.DataFrame(
@@ -73,7 +75,9 @@ def test_build_evidence_summary_collects_core_outputs_in_order():
         "method",
         "focus",
         "estimate",
+        "unit",
         "p_value",
+        "inference",
         "plain_english",
     ]
     assert summary["method"].tolist() == [
@@ -90,6 +94,8 @@ def test_build_evidence_summary_collects_core_outputs_in_order():
     ]
     assert summary.loc[1, "estimate"] == -0.06
     assert summary.loc[1, "p_value"] == 0.01
+    assert summary.loc[4, "inference"] == "i.i.d. QuantReg asymptotic p-value"
+    assert summary.loc[7, "p_value"] == 0.20
     assert summary.loc[9, "estimate"] == 0.65
 
 
@@ -101,6 +107,7 @@ def test_build_evidence_summary_raises_clear_error_for_missing_term():
             "term": ["gpr_change_z"],
             "estimate": [-0.12],
             "p_value": [0.16],
+            "inference": ["iid_asymptotic"],
         }
     )
 

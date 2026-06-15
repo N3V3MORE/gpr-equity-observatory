@@ -72,6 +72,8 @@ def test_build_sample_robustness_table_keeps_key_gpr_terms_by_scenario():
         "t_stat",
         "p_value",
         "observation_count",
+        "gpr_change_mean",
+        "gpr_change_std",
     ]
     assert table["scenario"].tolist() == [
         "Full sample",
@@ -82,3 +84,5 @@ def test_build_sample_robustness_table_keeps_key_gpr_terms_by_scenario():
     assert set(table["term"]) == {"gpr_change_z", "gpr_change_z:emerging_market"}
     assert table.loc[0, "observation_count"] == 58
     assert table.loc[2, "observation_count"] == 46
+    assert table["gpr_change_mean"].nunique() == 1
+    assert table["gpr_change_std"].nunique() == 1

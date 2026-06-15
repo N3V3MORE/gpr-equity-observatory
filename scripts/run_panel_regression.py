@@ -15,6 +15,13 @@ from gprobs.data.market_controls import merge_market_controls
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _summary_text(result) -> str:
+    summary = result.summary
+    if callable(summary):
+        summary = summary()
+    return summary.as_text()
+
+
 def main():
     processed_dir = PROJECT_ROOT / "data" / "processed"
 
@@ -37,7 +44,6 @@ def main():
     baseline_table.to_csv(processed_dir / "panel_regression_baseline.csv", index=False)
     controlled_table.to_csv(processed_dir / "panel_regression_controlled.csv", index=False)
     date_fe_table.to_csv(processed_dir / "panel_regression_date_fe.csv", index=False)
-    date_fe_table.to_csv(processed_dir / "panel_regression_two_way_fe.csv", index=False)
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore",
@@ -49,9 +55,9 @@ def main():
             message="invalid value encountered in sqrt",
             category=RuntimeWarning,
         )
-        baseline_summary_text = baseline_result.summary().as_text()
-        controlled_summary_text = controlled_result.summary().as_text()
-        date_fe_summary_text = date_fe_result.summary().as_text()
+        baseline_summary_text = _summary_text(baseline_result)
+        controlled_summary_text = _summary_text(controlled_result)
+        date_fe_summary_text = _summary_text(date_fe_result)
 
     (processed_dir / "panel_regression_summary.txt").write_text(
         baseline_summary_text,
@@ -62,10 +68,6 @@ def main():
         encoding="utf-8",
     )
     (processed_dir / "panel_regression_date_fe_summary.txt").write_text(
-        date_fe_summary_text,
-        encoding="utf-8",
-    )
-    (processed_dir / "panel_regression_two_way_fe_summary.txt").write_text(
         date_fe_summary_text,
         encoding="utf-8",
     )

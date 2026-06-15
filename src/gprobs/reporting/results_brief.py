@@ -23,12 +23,15 @@ def format_p_value(value: float) -> str:
 
 
 def format_estimate(row: pd.Series) -> str:
-    """Format estimate values using the unit implied by the row."""
-    if row["method"] == "Drawdown classifier":
+    """Format estimate values using the row's structured unit."""
+    unit = row.get("unit")
+    if unit == "score":
         return f"{float(row['estimate']):.3f}"
-    if "GPR" in str(row.get("focus", "")):
+    if unit == "basis_points":
         return format_basis_points(row["estimate"])
-    return format_percent(row["estimate"])
+    if unit == "percent":
+        return format_percent(row["estimate"])
+    raise ValueError(f"Unknown estimate unit: {unit}")
 
 
 def _method_row(evidence: pd.DataFrame, method: str) -> pd.Series:
@@ -55,13 +58,13 @@ def _sample_row(
 
 def _evidence_table(rows: list[pd.Series]) -> list[str]:
     lines = [
-        "| Method | Estimate | p-value |",
-        "| --- | ---: | ---: |",
+        "| Method | Estimate | p-value | Inference |",
+        "| --- | ---: | ---: | --- |",
     ]
     for row in rows:
         lines.append(
             f"| {row['method']} | {format_estimate(row)} | "
-            f"{format_p_value(row['p_value'])} |"
+            f"{format_p_value(row['p_value'])} | {row['inference']} |"
         )
     return lines
 

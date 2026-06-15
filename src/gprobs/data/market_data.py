@@ -35,36 +35,79 @@ def download_adjusted_prices(
 ) -> pd.DataFrame:
     """Download adjusted close prices from yfinance."""
     cache_path = Path(cache_path) if cache_path is not None else None
+    metadata = _price_request_metadata(tickers, start, end)
     if cache_path is not None and cache_path.exists() and not refresh:
-        data = pd.read_pickle(cache_path)
+        data = _read_price_cache(cache_path, metadata)
     else:
-        try:
-            import yfinance as yf
-        except ImportError as error:
-            raise ImportError(
-                "yfinance is required to download market data. "
-                "Install dependencies with: python -m pip install -e ."
-            ) from error
+        data = None
 
-        data = retry(
-            lambda: yf.download(
-                tickers=tickers,
-                start=start,
-                end=end,
-                auto_adjust=False,
-                progress=False,
-                timeout=timeout,
-            ),
+    if data is None:
+        data = _download_yfinance_prices(
+            tickers=tickers,
+            start=start,
+            end=end,
+            timeout=timeout,
             retries=retries,
-            backoff_seconds=retry_backoff_seconds,
+            retry_backoff_seconds=retry_backoff_seconds,
         )
         if cache_path is not None:
             cache_path.parent.mkdir(parents=True, exist_ok=True)
-            data.to_pickle(cache_path)
+            pd.to_pickle({"metadata": metadata, "data": data}, cache_path)
 
     prices = extract_adjusted_close(data)
     prices.index.name = "date"
     return prices.sort_index()
+
+
+def _price_request_metadata(
+    tickers: list[str],
+    start: str,
+    end: str | None,
+) -> dict:
+    return {
+        "tickers": sorted(tickers),
+        "start": start,
+        "end": end,
+    }
+
+
+def _read_price_cache(cache_path: Path, expected_metadata: dict):
+    cached = pd.read_pickle(cache_path)
+    if not isinstance(cached, dict):
+        return None
+    if cached.get("metadata") != expected_metadata:
+        return None
+    return cached.get("data")
+
+
+def _download_yfinance_prices(
+    tickers: list[str],
+    start: str,
+    end: str | None,
+    timeout: int,
+    retries: int,
+    retry_backoff_seconds: float,
+) -> pd.DataFrame:
+    try:
+        import yfinance as yf
+    except ImportError as error:
+        raise ImportError(
+            "yfinance is required to download market data. "
+            "Install dependencies with: python -m pip install -e ."
+        ) from error
+
+    return retry(
+        lambda: yf.download(
+            tickers=tickers,
+            start=start,
+            end=end,
+            auto_adjust=False,
+            progress=False,
+            timeout=timeout,
+        ),
+        retries=retries,
+        backoff_seconds=retry_backoff_seconds,
+    )
 
 
 def extract_adjusted_close(data: pd.DataFrame) -> pd.DataFrame:

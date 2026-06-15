@@ -55,7 +55,9 @@ def test_run_quantile_regressions_returns_tidy_gpr_terms_by_quantile():
         "std_error",
         "t_stat",
         "p_value",
+        "inference",
     ]
     assert set(results["quantile"]) == {0.10, 0.50}
     assert "gpr_change_z" in results["term"].tolist()
     assert "gpr_change_z:emerging_market" in results["term"].tolist()
+    assert set(results["inference"]) == {"iid_asymptotic"}

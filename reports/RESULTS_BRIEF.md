@@ -7,15 +7,15 @@ The older controlled interaction alone is not strong evidence of a reliably larg
 
 ## Key Evidence
 
-| Method | Estimate | p-value |
-| --- | ---: | ---: |
-| Controlled panel regression | -0.4 bps | 0.328 |
-| Controlled emerging interaction | -0.6 bps | 0.551 |
-| Date fixed-effects emerging interaction | -0.6 bps | 0.557 |
-| Tail-risk quantile regression | -0.8 bps | 0.280 |
-| Local projection developed | 0.008% | 0.681 |
-| Local projection emerging | -0.112% | 0.031 |
-| Drawdown classifier | 0.616 | n/a |
+| Method | Estimate | p-value | Inference |
+| --- | ---: | ---: | --- |
+| Controlled panel regression | -0.4 bps | 0.328 | two-way clustered by ticker/date |
+| Controlled emerging interaction | -0.6 bps | 0.551 | two-way clustered by ticker/date |
+| Date fixed-effects emerging interaction | -0.6 bps | 0.563 | two-way clustered by ticker/date |
+| Tail-risk quantile regression | -0.8 bps | 0.280 | i.i.d. QuantReg asymptotic p-value |
+| Local projection developed | 0.003% | 0.964 | two-way clustered by ticker/date |
+| Local projection emerging | -0.060% | 0.604 | two-way clustered by ticker/date |
+| Drawdown classifier | 0.616 | n/a | cross-validation metric |
 
 Local projection rows are market-model abnormal return responses, not raw cumulative ETF returns.
 

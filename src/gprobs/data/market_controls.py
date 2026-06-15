@@ -23,10 +23,10 @@ def build_market_controls(prices: pd.DataFrame) -> pd.DataFrame:
 
     controls = pd.DataFrame(index=prices.index)
     controls["global_market_return"] = calculate_log_returns(prices["ACWI"])
-    controls["vix_change"] = prices["^VIX"].dropna().diff()
-    controls["oil_change"] = prices["CL=F"].dropna().diff()
+    controls["vix_change"] = prices["^VIX"].diff()
+    controls["oil_change"] = prices["CL=F"].diff()
     controls["dollar_return"] = calculate_log_returns(prices["UUP"])
-    controls["us10y_change"] = prices["^TNX"].dropna().diff()
+    controls["us10y_change"] = prices["^TNX"].diff()
 
     controls = controls.dropna().reset_index()
     controls = controls.rename(columns={controls.columns[0]: "date"})

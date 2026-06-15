@@ -13,18 +13,25 @@ EXPECTED_OUTPUT_COLUMNS = {
         "gpr",
         "gpr_change",
         "gpr_change_z",
+        "gpr_shock",
         "gpr_change_shock",
+        "gpr_change_shock_full_sample",
         "gpr_change_shock_expanding",
     },
     "gpr": {
         "date",
         "gpr",
+        "gpr_act",
+        "gpr_threat",
         "gpr_change",
         "gpr_change_z",
+        "gpr_shock",
         "gpr_shock_full_sample",
         "gpr_shock_expanding",
         "gpr_change_shock",
+        "gpr_change_shock_full_sample",
         "gpr_change_shock_expanding",
+        "event",
     },
     "group_returns": {"date", "market_group", "average_return", "country_count"},
     "event_study": {
@@ -42,6 +49,9 @@ EXPECTED_OUTPUT_COLUMNS = {
         "cumulative_average_abnormal_return",
         "observation_count",
         "event_count",
+        "std_error",
+        "t_stat",
+        "p_value",
     },
     "event_robustness": {
         "shock_quantile",
@@ -49,6 +59,9 @@ EXPECTED_OUTPUT_COLUMNS = {
         "market_group",
         "cumulative_average_abnormal_return",
         "event_count",
+        "std_error",
+        "t_stat",
+        "p_value",
     },
     "regression": {"term", "estimate", "std_error", "t_stat", "p_value"},
     "controlled_regression": {"term", "estimate", "std_error", "t_stat", "p_value"},
@@ -61,6 +74,8 @@ EXPECTED_OUTPUT_COLUMNS = {
         "t_stat",
         "p_value",
         "observation_count",
+        "gpr_change_mean",
+        "gpr_change_std",
     },
     "quantile_regression": {
         "quantile",
@@ -69,6 +84,7 @@ EXPECTED_OUTPUT_COLUMNS = {
         "std_error",
         "t_stat",
         "p_value",
+        "inference",
     },
     "local_projections": {
         "horizon",
@@ -92,14 +108,22 @@ EXPECTED_OUTPUT_COLUMNS = {
         "observation_count",
     },
     "drawdown_importance": {"feature", "coefficient", "abs_coefficient"},
-    "evidence_summary": {"method", "focus", "estimate", "p_value", "plain_english"},
+    "evidence_summary": {
+        "method",
+        "focus",
+        "estimate",
+        "unit",
+        "p_value",
+        "inference",
+        "plain_english",
+    },
     "rolling_beta": {"date", "ticker", "country", "market_group", "rolling_gpr_beta"},
     "large_returns": {"date", "ticker", "country", "return", "abs_return"},
 }
 
 
-def test_app_uses_original_two_way_fe_panel_regression_filename():
-    assert app.REQUIRED_FILES["date_fe_regression"].name == "panel_regression_two_way_fe.csv"
+def test_app_uses_single_date_fe_panel_regression_filename():
+    assert app.REQUIRED_FILES["date_fe_regression"].name == "panel_regression_date_fe.csv"
 
 
 def test_dashboard_required_outputs_declare_expected_columns():

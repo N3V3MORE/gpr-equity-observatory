@@ -1,6 +1,7 @@
 import pandas as pd
 
 from gprobs.analysis.local_projection import (
+    _fit_horizon_model,
     build_local_projection_data,
     estimate_local_projections,
 )
@@ -153,6 +154,33 @@ def test_estimate_local_projections_drops_missing_control_rows_before_clustering
     )
 
     assert len(results) == 2
+
+
+def test_fit_horizon_model_two_way_clusters_by_ticker_and_date():
+    data = pd.DataFrame(
+        {
+            "date": pd.to_datetime(
+                [
+                    "2024-01-01",
+                    "2024-01-01",
+                    "2024-01-02",
+                    "2024-01-02",
+                    "2024-01-03",
+                    "2024-01-03",
+                    "2024-01-04",
+                    "2024-01-04",
+                ]
+            ),
+            "ticker": ["SPY", "EWZ"] * 4,
+            "cumulative_abnormal_return": [0.01, -0.02, 0.02, -0.03, 0.00, -0.01, 0.03, -0.02],
+            "gpr_shock": [0, 0, 1, 1, 0, 0, 1, 1],
+            "emerging_market": [0, 1] * 4,
+        }
+    )
+
+    result = _fit_horizon_model(data, include_controls=False, cluster_by_ticker=True)
+
+    assert list(result.cov_kwds["groups"].columns) == ["ticker", "date"]
 
 
 def test_estimate_local_projections_uses_abnormal_returns_instead_of_raw_market_drift():

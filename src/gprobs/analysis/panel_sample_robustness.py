@@ -15,6 +15,8 @@ SAMPLE_ROBUSTNESS_COLUMNS = [
     "t_stat",
     "p_value",
     "observation_count",
+    "gpr_change_mean",
+    "gpr_change_std",
 ]
 DEFAULT_SCENARIOS = {
     "Full controlled sample": [],
@@ -51,6 +53,8 @@ def _extract_key_terms(
     table: pd.DataFrame,
     scenario: str,
     observation_count: int,
+    gpr_change_mean: float,
+    gpr_change_std: float,
 ) -> pd.DataFrame:
     key_terms = table.loc[table["term"].isin(KEY_TERMS)].copy()
     key_terms["term"] = pd.Categorical(
@@ -61,6 +65,8 @@ def _extract_key_terms(
     key_terms = key_terms.sort_values("term").reset_index(drop=True)
     key_terms.insert(0, "scenario", scenario)
     key_terms["observation_count"] = observation_count
+    key_terms["gpr_change_mean"] = gpr_change_mean
+    key_terms["gpr_change_std"] = gpr_change_std
     return key_terms[SAMPLE_ROBUSTNESS_COLUMNS]
 
 
@@ -71,17 +77,35 @@ def build_sample_robustness_table(
 ) -> pd.DataFrame:
     """Rerun the controlled panel model after excluding named date windows."""
     scenarios = scenarios or DEFAULT_SCENARIOS
+    full_prepared = prepare_panel_regression_data(panel, include_controls=True)
+    gpr_change_mean = float(full_prepared["gpr_change"].mean())
+    gpr_change_std = float(full_prepared["gpr_change"].std(ddof=0))
     frames = []
 
     for scenario, excluded_periods in scenarios.items():
         sample = filter_excluded_periods(panel, excluded_periods)
-        prepared = prepare_panel_regression_data(sample, include_controls=True)
+        prepared = prepare_panel_regression_data(
+            sample,
+            include_controls=True,
+            gpr_change_mean=gpr_change_mean,
+            gpr_change_std=gpr_change_std,
+        )
         result = run_controlled_panel_regression(
             sample,
             cluster_by_ticker=cluster_by_ticker,
+            gpr_change_mean=gpr_change_mean,
+            gpr_change_std=gpr_change_std,
         )
         table = tidy_regression_results(result)
-        frames.append(_extract_key_terms(table, scenario, len(prepared)))
+        frames.append(
+            _extract_key_terms(
+                table,
+                scenario,
+                len(prepared),
+                gpr_change_mean,
+                gpr_change_std,
+            )
+        )
 
     if not frames:
         return pd.DataFrame(columns=SAMPLE_ROBUSTNESS_COLUMNS)

@@ -13,7 +13,7 @@ def main():
     summary = build_evidence_summary(
         pd.read_csv(processed_dir / "panel_regression_baseline.csv"),
         pd.read_csv(processed_dir / "panel_regression_controlled.csv"),
-        pd.read_csv(processed_dir / "panel_regression_two_way_fe.csv"),
+        pd.read_csv(processed_dir / "panel_regression_date_fe.csv"),
         pd.read_csv(processed_dir / "quantile_regression_results.csv"),
         pd.read_csv(processed_dir / "local_projection_results.csv"),
         pd.read_csv(processed_dir / "event_robustness_summary.csv"),

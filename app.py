@@ -34,7 +34,9 @@ OUTPUT_SPECS = {
             "gpr",
             "gpr_change",
             "gpr_change_z",
+            "gpr_shock",
             "gpr_change_shock",
+            "gpr_change_shock_full_sample",
             "gpr_change_shock_expanding",
         ),
         low_memory=False,
@@ -45,12 +47,17 @@ OUTPUT_SPECS = {
         required_columns=(
             "date",
             "gpr",
+            "gpr_act",
+            "gpr_threat",
             "gpr_change",
             "gpr_change_z",
+            "gpr_shock",
             "gpr_shock_full_sample",
             "gpr_shock_expanding",
             "gpr_change_shock",
+            "gpr_change_shock_full_sample",
             "gpr_change_shock_expanding",
+            "event",
         ),
     ),
     "group_returns": OutputSpec(
@@ -78,6 +85,9 @@ OUTPUT_SPECS = {
             "cumulative_average_abnormal_return",
             "observation_count",
             "event_count",
+            "std_error",
+            "t_stat",
+            "p_value",
         ),
     ),
     "event_robustness": OutputSpec(
@@ -88,6 +98,9 @@ OUTPUT_SPECS = {
             "market_group",
             "cumulative_average_abnormal_return",
             "event_count",
+            "std_error",
+            "t_stat",
+            "p_value",
         ),
     ),
     "regression": OutputSpec(
@@ -99,7 +112,7 @@ OUTPUT_SPECS = {
         required_columns=("term", "estimate", "std_error", "t_stat", "p_value"),
     ),
     "date_fe_regression": OutputSpec(
-        DATA_DIR / "panel_regression_two_way_fe.csv",
+        DATA_DIR / "panel_regression_date_fe.csv",
         required_columns=("term", "estimate", "std_error", "t_stat", "p_value"),
     ),
     "panel_sample_robustness": OutputSpec(
@@ -112,11 +125,21 @@ OUTPUT_SPECS = {
             "t_stat",
             "p_value",
             "observation_count",
+            "gpr_change_mean",
+            "gpr_change_std",
         ),
     ),
     "quantile_regression": OutputSpec(
         DATA_DIR / "quantile_regression_results.csv",
-        required_columns=("quantile", "term", "estimate", "std_error", "t_stat", "p_value"),
+        required_columns=(
+            "quantile",
+            "term",
+            "estimate",
+            "std_error",
+            "t_stat",
+            "p_value",
+            "inference",
+        ),
     ),
     "local_projections": OutputSpec(
         DATA_DIR / "local_projection_results.csv",
@@ -152,7 +175,15 @@ OUTPUT_SPECS = {
     ),
     "evidence_summary": OutputSpec(
         DATA_DIR / "evidence_summary.csv",
-        required_columns=("method", "focus", "estimate", "p_value", "plain_english"),
+        required_columns=(
+            "method",
+            "focus",
+            "estimate",
+            "unit",
+            "p_value",
+            "inference",
+            "plain_english",
+        ),
     ),
     "rolling_beta": OutputSpec(
         DATA_DIR / "rolling_gpr_beta.csv",

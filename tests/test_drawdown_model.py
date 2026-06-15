@@ -38,6 +38,10 @@ def test_build_drawdown_dataset_uses_future_returns_for_target():
     assert first_row["drawdown_risk"] == 1
     assert second_row["forward_min_return"] == -0.04
     assert second_row["drawdown_risk"] == 0
+    assert dataset["date"].tolist() == [
+        pd.Timestamp("2024-01-01"),
+        pd.Timestamp("2024-01-02"),
+    ]
     assert "lag_return_1d" in dataset.columns
     assert "rolling_volatility" in dataset.columns
     assert "gpr_change_z" in dataset.columns
@@ -74,7 +78,7 @@ def test_evaluate_drawdown_classifier_uses_chronological_folds():
         }
     )
 
-    metrics = evaluate_drawdown_classifier(dataset, n_splits=2)
+    metrics = evaluate_drawdown_classifier(dataset, n_splits=2, embargo_dates=1)
 
     assert metrics.columns.tolist() == [
         "fold",
@@ -90,6 +94,9 @@ def test_evaluate_drawdown_classifier_uses_chronological_folds():
     ]
     assert set(metrics["model_name"]) == {"constant_baseline", "volatility_only", "full_features"}
     assert (metrics["train_end"] < metrics["test_start"]).all()
+    first_fold = metrics.loc[metrics["fold"] == 1].iloc[0]
+    assert first_fold["train_end"] == pd.Timestamp("2024-01-01")
+    assert first_fold["test_start"] == pd.Timestamp("2024-01-03")
 
 
 def test_fit_drawdown_feature_importance_returns_one_row_per_feature():

@@ -78,7 +78,6 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `data/processed/panel_regression_baseline.csv`
 - `data/processed/panel_regression_controlled.csv`
 - `data/processed/panel_regression_date_fe.csv`
-- `data/processed/panel_regression_two_way_fe.csv`
 - `data/processed/panel_sample_robustness.csv`
 - `data/processed/quantile_regression_results.csv`
 - `data/processed/local_projection_results.csv`
@@ -99,13 +98,15 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `gpr`: daily geopolitical risk index.
 - `gpr_change`: daily change in the geopolitical risk index.
 - `gpr_change_z`: standardized daily GPR change.
-- `gpr_change_shock`: full-sample top-quantile positive daily GPR-change
-  indicator.
+- `gpr_change_shock`: expanding-window top-quantile positive daily GPR-change
+  indicator using only prior observations for the threshold.
+- `gpr_change_shock_full_sample`: full-sample top-quantile positive daily
+  GPR-change indicator retained for comparison only.
 - `gpr_change_shock_expanding`: expanding-window top-quantile positive daily
   GPR-change indicator using only prior observations for the threshold.
 - `gpr_shock_full_sample`: full-sample GPR-change shock indicator.
 - `gpr_shock_expanding`: expanding-window GPR-change shock indicator.
-- `gpr_shock`: compatibility alias for `gpr_change_shock`.
+- `gpr_shock`: compatibility alias for the expanding-window shock flag.
 - `gpr_act`: GPR act subindex.
 - `gpr_threat`: GPR threat subindex.
 - `global_market_return`: daily ACWI log return.
@@ -129,16 +130,20 @@ has only 20 clusters, so p-values should be interpreted cautiously.
 
 Panel sample robustness reruns the controlled model after excluding the
 COVID-crash window, the Russia-Ukraine invasion window, and both windows
-together. Date windows are removed inclusively.
+together. Date windows are removed inclusively. GPR changes are standardized
+once on the full controlled sample and reused across all subsamples.
 
 Quantile regressions use the same GPR-change terms as the panel regression and
-estimate coefficients at the 10th, 25th, and 50th percentiles.
+estimate coefficients at the 10th, 25th, and 50th percentiles. Their p-values
+are statsmodels QuantReg i.i.d. asymptotic p-values, not cluster-robust panel
+p-values.
 
 Local projections estimate cumulative market-model abnormal ETF return responses
 for horizons 0 through 20 trading days after a GPR shock. For each ticker and
 base date, the expected return path comes from a trailing pre-date market model
 using `global_market_return`; the projection dependent variable is the forward
 sum of observed ETF returns minus those expected returns.
+Standard errors are clustered by ticker and date.
 
 Event studies use daily GPR-change shocks. When multiple shock days occur inside
 the minimum-gap window, the event date is the largest `gpr_change` in that
@@ -146,17 +151,21 @@ cluster rather than the first shock day.
 
 Event-study robustness compares end-of-window cumulative abnormal returns across
 90th- and 95th-percentile GPR-change shock definitions and 3-, 5-, and
-10-trading-day post-shock windows.
+10-trading-day post-shock windows. Endpoint p-values use a cross-sectional
+t-test over event-ticker cumulative abnormal returns.
 
-The drawdown classifier compares three chronological-validation rows per fold:
-a constant baseline, a rolling-volatility-only logistic regression, and the full
-feature logistic regression. Its GPR inputs use an expanding daily GPR-change
-z-score and the expanding-window GPR-change shock flag. No random time-series
-split is used.
+The drawdown classifier compares three purged chronological-validation rows per
+fold: a constant baseline, a rolling-volatility-only logistic regression, and
+the full feature logistic regression. Its GPR inputs use an expanding daily
+GPR-change z-score and the expanding-window GPR-change shock flag. Training
+dates immediately before each test fold are embargoed by the forward-label
+horizon, and incomplete end-of-series forward labels are dropped.
 
 The evidence summary table is not a new model. It gathers headline rows from
 the existing event-study, regression, quantile, local-projection, and ML outputs
-so the dashboard can compare methods in one place.
+so the dashboard can compare methods in one place. It carries structured
+`unit` and `inference` fields so estimates and p-values are labelled
+consistently.
 
 The results brief is a generated Markdown report. It is intended for quick
 review and profile packaging, not as a substitute for the research note.

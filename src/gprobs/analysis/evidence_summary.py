@@ -4,7 +4,15 @@ import pandas as pd
 
 from gprobs.config import EVIDENCE_EVENT_SHOCK_QUANTILE, EVIDENCE_EVENT_WINDOW_DAYS
 
-SUMMARY_COLUMNS = ["method", "focus", "estimate", "p_value", "plain_english"]
+SUMMARY_COLUMNS = [
+    "method",
+    "focus",
+    "estimate",
+    "unit",
+    "p_value",
+    "inference",
+    "plain_english",
+]
 
 
 def _single_row(table: pd.DataFrame, mask: pd.Series, label: str) -> pd.Series:
@@ -60,7 +68,9 @@ def _add_row(
     method: str,
     focus: str,
     estimate: float,
+    unit: str,
     p_value: float,
+    inference: str,
     plain_english: str,
 ) -> None:
     rows.append(
@@ -68,10 +78,18 @@ def _add_row(
             "method": method,
             "focus": focus,
             "estimate": float(estimate),
+            "unit": unit,
             "p_value": p_value,
+            "inference": inference,
             "plain_english": plain_english,
         }
     )
+
+
+def _quantile_inference(row: pd.Series) -> str:
+    if row.get("inference") == "iid_asymptotic":
+        return "i.i.d. QuantReg asymptotic p-value"
+    return str(row.get("inference", "QuantReg p-value"))
 
 
 def build_evidence_summary(
@@ -92,7 +110,9 @@ def build_evidence_summary(
         "Baseline panel regression",
         "Developed-market GPR-change coefficient",
         baseline_gpr["estimate"],
+        "basis_points",
         float(baseline_gpr["p_value"]),
+        "two-way clustered by ticker/date",
         "Before market controls, this is the developed-market response to a one-SD GPR jump.",
     )
 
@@ -106,7 +126,9 @@ def build_evidence_summary(
         "Controlled panel regression",
         "Developed-market GPR-change coefficient",
         controlled_gpr["estimate"],
+        "basis_points",
         float(controlled_gpr["p_value"]),
+        "two-way clustered by ticker/date",
         "After market controls, this is the developed-market response to a one-SD GPR jump.",
     )
 
@@ -120,7 +142,9 @@ def build_evidence_summary(
         "Controlled emerging interaction",
         "Extra emerging-market GPR-change coefficient",
         interaction["estimate"],
+        "basis_points",
         float(interaction["p_value"]),
+        "two-way clustered by ticker/date",
         "This is the extra emerging-market response to a one-SD GPR jump after controls.",
     )
 
@@ -134,7 +158,9 @@ def build_evidence_summary(
         "Date fixed-effects emerging interaction",
         "Extra emerging-market GPR-change coefficient with date FE",
         date_fe_interaction["estimate"],
+        "basis_points",
         float(date_fe_interaction["p_value"]),
+        "two-way clustered by ticker/date",
         "This identifies the emerging-market differential after absorbing common date shocks.",
     )
 
@@ -149,8 +175,10 @@ def build_evidence_summary(
         "Tail-risk quantile regression",
         "10th-percentile GPR coefficient",
         q10_gpr["estimate"],
+        "basis_points",
         float(q10_gpr["p_value"]),
-        "This checks whether GPR matters on bad return days.",
+        _quantile_inference(q10_gpr),
+        "This checks whether GPR matters on bad return days; its p-value is not cluster robust.",
     )
 
     horizon = int(local_projections["horizon"].max())
@@ -161,7 +189,9 @@ def build_evidence_summary(
             f"Local projection {market_group}",
             f"{horizon}-day cumulative abnormal response",
             lp_row["estimate"],
+            "percent",
             float(lp_row["p_value"]),
+            "two-way clustered by ticker/date",
             "This is the cumulative market-model abnormal return response after a GPR shock.",
         )
 
@@ -177,7 +207,9 @@ def build_evidence_summary(
             f"Event robustness {market_group}",
             f"{EVIDENCE_EVENT_SHOCK_QUANTILE:.0%} shock, {EVIDENCE_EVENT_WINDOW_DAYS}-day endpoint",
             event_row["cumulative_average_abnormal_return"],
-            math.nan,
+            "percent",
+            float(event_row.get("p_value", math.nan)),
+            "cross-sectional t-test across event-ticker CARs",
             "This is the abnormal-return endpoint under a wider shock definition.",
         )
 
@@ -199,7 +231,9 @@ def build_evidence_summary(
         "Drawdown classifier",
         "Mean ROC AUC",
         mean_auc,
+        "score",
         math.nan,
+        "cross-validation metric",
         f"Average precision is {mean_ap:.3f} versus base rate {mean_base_rate:.1%}.",
     )
 

@@ -34,6 +34,23 @@ def test_build_market_controls_calculates_returns_and_level_changes():
     assert controls.loc[1, "us10y_change"] == -1.5
 
 
+def test_build_market_controls_does_not_bridge_missing_level_controls():
+    prices = pd.DataFrame(
+        {
+            "ACWI": [100.0, 110.0, 121.0],
+            "^VIX": [20.0, None, 23.0],
+            "CL=F": [70.0, 71.0, 72.0],
+            "UUP": [25.0, 26.0, 27.0],
+            "^TNX": [40.0, 41.0, 39.5],
+        },
+        index=pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"]),
+    )
+
+    controls = build_market_controls(prices)
+
+    assert controls.empty
+
+
 def test_merge_market_controls_adds_same_day_controls_to_panel():
     panel = pd.DataFrame(
         {

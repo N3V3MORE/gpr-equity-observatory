@@ -99,6 +99,7 @@ def estimate_local_projections(
     estimation_gap: int = EVENT_ESTIMATION_GAP_DAYS,
     min_estimation_obs: int = EVENT_MIN_ESTIMATION_OBS,
     cluster_by_ticker: bool = True,
+    cluster_by_date: bool | None = None,
 ) -> pd.DataFrame:
     """Estimate GPR shock response paths using market-model abnormal returns."""
     data = build_local_projection_data(
@@ -116,6 +117,7 @@ def estimate_local_projections(
             horizon_data,
             include_controls=include_controls,
             cluster_by_ticker=cluster_by_ticker,
+            cluster_by_date=cluster_by_date,
         )
         rows.extend(_response_rows(result, int(horizon)))
 
@@ -220,6 +222,7 @@ def _fit_horizon_model(
     data: pd.DataFrame,
     include_controls: bool,
     cluster_by_ticker: bool,
+    cluster_by_date: bool | None = None,
 ):
     formula = "cumulative_abnormal_return ~ gpr_shock + gpr_shock:emerging_market + C(ticker)"
     if include_controls:
@@ -229,14 +232,29 @@ def _fit_horizon_model(
             f"{controls} + C(ticker)"
         )
 
+    if cluster_by_date is None:
+        cluster_by_date = cluster_by_ticker
+
     model_columns = ["cumulative_abnormal_return", "gpr_shock", "emerging_market", "ticker"]
+    if cluster_by_date:
+        model_columns.append("date")
     if include_controls:
         model_columns.extend(CONTROL_COLUMNS)
     data = data.dropna(subset=model_columns)
 
     model = smf.ols(formula, data=data)
-    if cluster_by_ticker:
-        return model.fit(cov_type="cluster", cov_kwds={"groups": data["ticker"]})
+    if cluster_by_ticker or cluster_by_date:
+        groups = {}
+        if cluster_by_ticker:
+            groups["ticker"] = pd.factorize(data["ticker"])[0]
+        if cluster_by_date:
+            groups["date"] = pd.factorize(pd.to_datetime(data["date"]))[0]
+        cluster_groups = (
+            next(iter(groups.values()))
+            if len(groups) == 1
+            else pd.DataFrame(groups, index=data.index)
+        )
+        return model.fit(cov_type="cluster", cov_kwds={"groups": cluster_groups})
     return model.fit()
 
 

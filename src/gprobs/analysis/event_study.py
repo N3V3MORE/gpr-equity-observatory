@@ -1,4 +1,5 @@
 import pandas as pd
+from scipy import stats
 
 from gprobs.config import (
     EVENT_ESTIMATION_GAP_DAYS,
@@ -42,6 +43,9 @@ ABNORMAL_EVENT_SUMMARY_COLUMNS = [
     "cumulative_average_abnormal_return",
     "observation_count",
     "event_count",
+    "std_error",
+    "t_stat",
+    "p_value",
 ]
 
 
@@ -247,7 +251,45 @@ def summarize_abnormal_event_windows(windows: pd.DataFrame) -> pd.DataFrame:
         .sort_values(["market_group", "relative_day"])
         .reset_index(drop=True)
     )
-    summary["cumulative_average_abnormal_return"] = summary.groupby("market_group")[
-        "average_abnormal_return"
-    ].cumsum()
+    inference = _abnormal_car_inference(windows)
+    summary = summary.drop(columns=["cumulative_average_abnormal_return"], errors="ignore")
+    summary = summary.merge(inference, on=["market_group", "relative_day"], how="left")
     return summary[ABNORMAL_EVENT_SUMMARY_COLUMNS]
+
+
+def _abnormal_car_inference(windows: pd.DataFrame) -> pd.DataFrame:
+    car_group_columns = ["market_group", "event_date"]
+    if "ticker" in windows.columns:
+        car_group_columns.append("ticker")
+
+    event_cars = windows.sort_values(car_group_columns + ["relative_day"]).copy()
+    event_cars["_car"] = event_cars.groupby(car_group_columns)["abnormal_return"].cumsum()
+    inference = (
+        event_cars.groupby(["market_group", "relative_day"], as_index=False)
+        .agg(
+            cumulative_average_abnormal_return=("_car", "mean"),
+            car_count=("_car", "count"),
+            car_std=("_car", "std"),
+        )
+        .sort_values(["market_group", "relative_day"])
+        .reset_index(drop=True)
+    )
+    inference["std_error"] = inference["car_std"] / inference["car_count"].pow(0.5)
+    inference["t_stat"] = inference["cumulative_average_abnormal_return"] / inference["std_error"]
+    inference["p_value"] = inference.apply(_two_sided_t_p_value, axis=1)
+    return inference[
+        [
+            "market_group",
+            "relative_day",
+            "cumulative_average_abnormal_return",
+            "std_error",
+            "t_stat",
+            "p_value",
+        ]
+    ]
+
+
+def _two_sided_t_p_value(row: pd.Series) -> float:
+    if row["car_count"] <= 1 or pd.isna(row["t_stat"]):
+        return float("nan")
+    return float(2 * stats.t.sf(abs(row["t_stat"]), df=row["car_count"] - 1))

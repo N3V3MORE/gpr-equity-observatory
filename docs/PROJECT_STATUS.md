@@ -25,7 +25,7 @@ For a requirement-by-requirement audit against the original project plan, see
 - Quantile regressions for tail-risk analysis.
 - Local projections for dynamic abnormal-return response paths.
 - Rolling GPR sensitivity by country.
-- Simple drawdown-risk classifier with chronological validation.
+- Simple drawdown-risk classifier with purged chronological validation.
 - Compact evidence summary table for comparing methods.
 - Generated plain-English results brief for quick review.
 - Streamlit dashboard.

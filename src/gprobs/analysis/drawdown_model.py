@@ -106,17 +106,22 @@ def build_drawdown_dataset(
         "drawdown_risk",
     ] + DEFAULT_FEATURE_COLUMNS
     dataset = dataset[keep_columns].dropna()
-    return dataset.sort_values(["date", "ticker"]).reset_index(drop=True)
+    dataset = dataset.sort_values(["date", "ticker"]).reset_index(drop=True)
+    dataset.attrs["forward_horizon"] = horizon
+    return dataset
 
 
 def evaluate_drawdown_classifier(
     dataset: pd.DataFrame,
     n_splits: int = 5,
     feature_columns: list[str] | None = None,
+    embargo_dates: int | None = None,
 ) -> pd.DataFrame:
-    """Evaluate drawdown classification with chronological validation folds."""
+    """Evaluate drawdown classification with purged chronological validation folds."""
     model_specs = _drawdown_model_specs(feature_columns)
-    folds = _date_folds(dataset, n_splits=n_splits)
+    if embargo_dates is None:
+        embargo_dates = int(dataset.attrs.get("forward_horizon", DRAWDOWN_HORIZON_DAYS))
+    folds = _date_folds(dataset, n_splits=n_splits, embargo_dates=embargo_dates)
 
     rows = []
     for fold_number, (train_dates, test_dates) in enumerate(folds, start=1):
@@ -272,19 +277,27 @@ def _coerce_shock_to_int(value) -> int:
 
 
 def _forward_min_cumulative_return(returns: pd.Series, horizon: int) -> pd.Series:
-    cumulative_paths = []
-    cumulative = pd.Series(0.0, index=returns.index)
-    for offset in range(1, horizon + 1):
-        cumulative = cumulative + returns.shift(-offset)
-        cumulative_paths.append(cumulative.copy())
+    forward_returns = pd.concat(
+        [returns.shift(-offset) for offset in range(1, horizon + 1)],
+        axis=1,
+    )
+    cumulative_paths = forward_returns.cumsum(axis=1)
+    forward_min = cumulative_paths.min(axis=1)
+    forward_min[forward_returns.isna().any(axis=1)] = np.nan
 
-    return pd.concat(cumulative_paths, axis=1).min(axis=1)
+    return forward_min
 
 
-def _date_folds(dataset: pd.DataFrame, n_splits: int) -> list[tuple[pd.Series, pd.Series]]:
+def _date_folds(
+    dataset: pd.DataFrame,
+    n_splits: int,
+    embargo_dates: int = 0,
+) -> list[tuple[pd.Series, pd.Series]]:
     unique_dates = pd.Series(sorted(dataset["date"].drop_duplicates()))
     if n_splits < 1:
         raise ValueError("n_splits must be at least 1.")
+    if embargo_dates < 0:
+        raise ValueError("embargo_dates must be non-negative.")
     if len(unique_dates) < n_splits + 2:
         raise ValueError("Not enough dates for the requested number of splits.")
 
@@ -296,7 +309,11 @@ def _date_folds(dataset: pd.DataFrame, n_splits: int) -> list[tuple[pd.Series, p
         if split_number == n_splits - 1:
             test_end = len(unique_dates)
 
-        train_dates = unique_dates.iloc[:test_start]
+        train_end = max(test_start - embargo_dates, 0)
+        if train_end == 0:
+            raise ValueError("Not enough training dates before the embargoed test fold.")
+
+        train_dates = unique_dates.iloc[:train_end]
         test_dates = unique_dates.iloc[test_start:test_end]
         folds.append((train_dates, test_dates))
 

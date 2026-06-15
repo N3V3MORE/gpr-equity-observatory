@@ -39,7 +39,7 @@ def main():
     event_rate = dataset["drawdown_risk"].mean()
     print(f"Saved {len(dataset):,} drawdown model rows.")
     print(f"Forward {DRAWDOWN_HORIZON_DAYS}-day drawdown event rate: {event_rate:.2%}.")
-    print(f"Saved {len(metrics):,} chronological validation folds.")
+    print(f"Saved {len(metrics):,} purged chronological validation folds.")
     print(f"Saved {len(importance):,} feature-importance rows.")
 
 

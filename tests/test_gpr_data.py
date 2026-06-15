@@ -48,10 +48,11 @@ def test_mark_top_quantile_shocks_flags_large_positive_gpr_jumps():
         }
     )
 
-    marked = mark_top_quantile_shocks(gpr, quantile=0.75)
+    marked = mark_top_quantile_shocks(gpr, quantile=0.75, expanding_min_periods=2)
 
     assert marked["gpr_change"].tolist()[1:] == [90.0, 1.0, 1.0, 58.0]
-    assert marked["gpr_shock"].tolist() == [False, True, False, False, False]
+    assert marked["gpr_shock_full_sample"].tolist() == [False, True, False, False, False]
+    assert marked["gpr_shock"].tolist() == [False, False, False, False, True]
     assert marked["gpr_shock_threshold"].nunique() == 1
     assert marked["gpr_shock_threshold"].iloc[0] > 58.0
 
@@ -76,6 +77,7 @@ def test_mark_top_quantile_shocks_names_full_sample_and_expanding_change_shocks(
         "gpr_change",
         "gpr_change_z",
         "gpr_change_shock",
+        "gpr_change_shock_full_sample",
         "gpr_change_shock_expanding",
         "gpr_shock_full_sample",
         "gpr_shock_expanding",
@@ -84,8 +86,9 @@ def test_mark_top_quantile_shocks_names_full_sample_and_expanding_change_shocks(
     }
     assert expected_columns.issubset(marked.columns)
     assert marked["gpr_change"].tolist()[1:] == [10.0, 20.0, 100.0, 30.0]
-    assert marked["gpr_change_shock"].tolist() == [False, False, False, True, False]
-    assert marked["gpr_shock_full_sample"].equals(marked["gpr_change_shock"])
+    assert marked["gpr_change_shock_full_sample"].tolist() == [False, False, False, True, False]
+    assert marked["gpr_shock_full_sample"].equals(marked["gpr_change_shock_full_sample"])
     assert marked["gpr_shock"].equals(marked["gpr_change_shock"])
     assert marked["gpr_change_shock_expanding"].tolist() == [False, False, False, True, False]
+    assert marked["gpr_change_shock"].equals(marked["gpr_change_shock_expanding"])
     assert marked["gpr_shock_expanding"].equals(marked["gpr_change_shock_expanding"])

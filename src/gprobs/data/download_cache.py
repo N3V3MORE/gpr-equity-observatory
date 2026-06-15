@@ -1,12 +1,21 @@
 from collections.abc import Callable
 from pathlib import Path
+from socket import timeout as SocketTimeout
 from time import sleep
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from gprobs.config import (
     DEFAULT_DOWNLOAD_RETRIES,
     DEFAULT_DOWNLOAD_TIMEOUT_SECONDS,
     DEFAULT_RETRY_BACKOFF_SECONDS,
+)
+
+TRANSIENT_DOWNLOAD_ERRORS = (
+    TimeoutError,
+    ConnectionError,
+    SocketTimeout,
+    URLError,
 )
 
 
@@ -25,12 +34,20 @@ def retry(
         try:
             return operation()
         except Exception as error:
+            if not _is_retryable_error(error):
+                raise
             last_error = error
             if attempt == retries:
                 break
             sleep(backoff_seconds * attempt)
 
     raise RuntimeError(f"Download failed after {retries} attempts.") from last_error
+
+
+def _is_retryable_error(error: Exception) -> bool:
+    if isinstance(error, HTTPError):
+        return error.code == 429 or 500 <= error.code < 600
+    return isinstance(error, TRANSIENT_DOWNLOAD_ERRORS)
 
 
 def fetch_url_bytes(url: str, timeout: int = DEFAULT_DOWNLOAD_TIMEOUT_SECONDS) -> bytes:

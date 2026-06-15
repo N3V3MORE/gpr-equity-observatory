@@ -10,6 +10,7 @@ from gprobs.config import (
     EVENT_ESTIMATION_WINDOW_DAYS,
     EVENT_MIN_ESTIMATION_OBS,
     EVENT_MIN_GAP_DAYS,
+    GPR_EXPANDING_SHOCK_MIN_PERIODS,
 )
 from gprobs.data.gpr_data import mark_top_quantile_shocks
 
@@ -19,6 +20,9 @@ ROBUSTNESS_COLUMNS = [
     "market_group",
     "cumulative_average_abnormal_return",
     "event_count",
+    "std_error",
+    "t_stat",
+    "p_value",
 ]
 
 
@@ -33,7 +37,14 @@ def summarize_window_endpoint(
 
     endpoint = summary.loc[
         summary["relative_day"] == window,
-        ["market_group", "cumulative_average_abnormal_return", "event_count"],
+        [
+            "market_group",
+            "cumulative_average_abnormal_return",
+            "event_count",
+            "std_error",
+            "t_stat",
+            "p_value",
+        ],
     ].copy()
     endpoint["shock_quantile"] = float(shock_quantile)
     endpoint["window"] = int(window)
@@ -54,6 +65,7 @@ def build_event_robustness_table(
     estimation_window: int = EVENT_ESTIMATION_WINDOW_DAYS,
     estimation_gap: int = EVENT_ESTIMATION_GAP_DAYS,
     min_estimation_obs: int = EVENT_MIN_ESTIMATION_OBS,
+    expanding_min_periods: int = GPR_EXPANDING_SHOCK_MIN_PERIODS,
 ) -> pd.DataFrame:
     """Compare event-study endpoints across shock thresholds and windows."""
     panel = panel.copy()
@@ -63,7 +75,11 @@ def build_event_robustness_table(
 
     results = []
     for shock_quantile in shock_quantiles:
-        shocked_gpr = mark_top_quantile_shocks(gpr, quantile=shock_quantile)
+        shocked_gpr = mark_top_quantile_shocks(
+            gpr,
+            quantile=shock_quantile,
+            expanding_min_periods=expanding_min_periods,
+        )
         event_dates = select_peak_cluster_events(
             shocked_gpr,
             shock_column="gpr_change_shock",

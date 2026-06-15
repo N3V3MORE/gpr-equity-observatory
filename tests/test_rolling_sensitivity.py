@@ -1,4 +1,5 @@
 import pandas as pd
+import pandas.testing as pdt
 
 from gprobs.analysis.rolling_sensitivity import calculate_rolling_gpr_beta
 
@@ -28,3 +29,27 @@ def test_calculate_rolling_gpr_beta_returns_country_level_series():
     ]
     assert rolling["rolling_gpr_beta"].notna().sum() == 3
     assert rolling["rolling_gpr_beta"].iloc[-1] > 0
+
+
+def test_calculate_rolling_gpr_beta_uses_raw_gpr_scale():
+    panel = pd.DataFrame(
+        {
+            "date": pd.date_range("2024-01-01", periods=4),
+            "ticker": ["SPY"] * 4,
+            "country": ["United States"] * 4,
+            "market_group": ["developed"] * 4,
+            "return": [0.01, 0.03, 0.02, 0.04],
+            "gpr": [100.0, 120.0, 140.0, 160.0],
+        }
+    )
+
+    rolling = calculate_rolling_gpr_beta(panel, window=3, min_periods=2)
+    expected = panel["return"].rolling(3, min_periods=2).cov(panel["gpr"]) / panel[
+        "gpr"
+    ].rolling(3, min_periods=2).var()
+
+    pdt.assert_series_equal(
+        rolling["rolling_gpr_beta"],
+        expected.rename("rolling_gpr_beta"),
+        check_names=True,
+    )

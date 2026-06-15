@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Reproducible economics research project on geopolitical risk and equity markets."
 requires-python = ">=3.11"
 dependencies = [
+    "linearmodels>=6,<8",
     "matplotlib>=3.9,<4",
     "numpy>=2.2,<3",
     "pandas>=2.2,<4",
