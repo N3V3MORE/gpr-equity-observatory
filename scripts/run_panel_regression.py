@@ -37,6 +37,7 @@ def main():
     baseline_table.to_csv(processed_dir / "panel_regression_baseline.csv", index=False)
     controlled_table.to_csv(processed_dir / "panel_regression_controlled.csv", index=False)
     date_fe_table.to_csv(processed_dir / "panel_regression_date_fe.csv", index=False)
+    date_fe_table.to_csv(processed_dir / "panel_regression_two_way_fe.csv", index=False)
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore",
@@ -61,6 +62,10 @@ def main():
         encoding="utf-8",
     )
     (processed_dir / "panel_regression_date_fe_summary.txt").write_text(
+        date_fe_summary_text,
+        encoding="utf-8",
+    )
+    (processed_dir / "panel_regression_two_way_fe_summary.txt").write_text(
         date_fe_summary_text,
         encoding="utf-8",
     )

@@ -7,14 +7,16 @@ from sklearn.preprocessing import StandardScaler
 
 from gprobs.analysis.panel_regression import CONTROL_COLUMNS
 from gprobs.config import (
+    DEFAULT_GPR_SHOCK_QUANTILE,
     DRAWDOWN_HORIZON_DAYS,
     DRAWDOWN_THRESHOLD,
     DRAWDOWN_VOLATILITY_WINDOW_DAYS,
+    GPR_EXPANDING_SHOCK_MIN_PERIODS,
 )
 
 DEFAULT_FEATURE_COLUMNS = [
-    "gpr_z",
-    "gpr_shock",
+    "gpr_change_z",
+    "gpr_change_shock_expanding",
     "global_market_return",
     "vix_change",
     "oil_change",
@@ -25,8 +27,11 @@ DEFAULT_FEATURE_COLUMNS = [
     "emerging_market",
 ]
 
+VOLATILITY_FEATURE_COLUMNS = ["rolling_volatility"]
+
 METRIC_COLUMNS = [
     "fold",
+    "model_name",
     "train_start",
     "train_end",
     "test_start",
@@ -50,22 +55,28 @@ def build_drawdown_dataset(
     if volatility_window < 2:
         raise ValueError("volatility_window must be at least 2.")
 
-    columns = [
+    base_columns = [
         "date",
         "ticker",
         "country",
         "market_group",
         "return",
-        "gpr",
-        "gpr_shock",
     ] + CONTROL_COLUMNS
-    data = panel[columns].copy()
-    data["gpr_shock"] = data["gpr_shock"].map(_coerce_shock_to_int)
+    gpr_source_columns = [
+        column
+        for column in [
+            "gpr",
+            "gpr_change",
+            "gpr_change_shock_expanding",
+            "gpr_shock_expanding",
+        ]
+        if column in panel.columns
+    ]
+    if "gpr" not in gpr_source_columns and "gpr_change" not in gpr_source_columns:
+        raise ValueError("Panel data is missing gpr_change and gpr columns.")
 
-    gpr_std = data["gpr"].std(ddof=0)
-    if gpr_std == 0:
-        raise ValueError("GPR has no variation, so drawdown features cannot be built.")
-    data["gpr_z"] = (data["gpr"] - data["gpr"].mean()) / gpr_std
+    data = panel[base_columns + gpr_source_columns].copy()
+    data = _add_time_aware_gpr_features(data)
     data["emerging_market"] = (data["market_group"] == "emerging").astype(int)
 
     frames = []
@@ -104,33 +115,33 @@ def evaluate_drawdown_classifier(
     feature_columns: list[str] | None = None,
 ) -> pd.DataFrame:
     """Evaluate drawdown classification with chronological validation folds."""
-    feature_columns = feature_columns or DEFAULT_FEATURE_COLUMNS
+    model_specs = _drawdown_model_specs(feature_columns)
     folds = _date_folds(dataset, n_splits=n_splits)
 
     rows = []
     for fold_number, (train_dates, test_dates) in enumerate(folds, start=1):
         train = dataset.loc[dataset["date"].isin(train_dates)]
         test = dataset.loc[dataset["date"].isin(test_dates)]
-        model = _make_classifier()
-        model.fit(train[feature_columns], train["drawdown_risk"])
-        probabilities = model.predict_proba(test[feature_columns])[:, 1]
+        for model_name, model_features in model_specs:
+            probabilities = _predict_probabilities(train, test, model_features)
 
-        rows.append(
-            {
-                "fold": fold_number,
-                "train_start": train["date"].min(),
-                "train_end": train["date"].max(),
-                "test_start": test["date"].min(),
-                "test_end": test["date"].max(),
-                "roc_auc": _safe_roc_auc(test["drawdown_risk"], probabilities),
-                "average_precision": average_precision_score(
-                    test["drawdown_risk"],
-                    probabilities,
-                ),
-                "base_rate": test["drawdown_risk"].mean(),
-                "observation_count": len(test),
-            }
-        )
+            rows.append(
+                {
+                    "fold": fold_number,
+                    "model_name": model_name,
+                    "train_start": train["date"].min(),
+                    "train_end": train["date"].max(),
+                    "test_start": test["date"].min(),
+                    "test_end": test["date"].max(),
+                    "roc_auc": _safe_roc_auc(test["drawdown_risk"], probabilities),
+                    "average_precision": average_precision_score(
+                        test["drawdown_risk"],
+                        probabilities,
+                    ),
+                    "base_rate": test["drawdown_risk"].mean(),
+                    "observation_count": len(test),
+                }
+            )
 
     return pd.DataFrame(rows, columns=METRIC_COLUMNS)
 
@@ -153,6 +164,105 @@ def fit_drawdown_feature_importance(
     )
     importance["abs_coefficient"] = importance["coefficient"].abs()
     return importance.sort_values("abs_coefficient", ascending=False).reset_index(drop=True)
+
+
+def _add_time_aware_gpr_features(data: pd.DataFrame) -> pd.DataFrame:
+    daily_gpr = _unique_daily_gpr_frame(data)
+    if "gpr_change" not in daily_gpr.columns:
+        daily_gpr["gpr_change"] = daily_gpr["gpr"].diff()
+
+    daily_gpr["gpr_change_z"] = _expanding_z_score(daily_gpr["gpr_change"])
+    if "gpr_change_shock_expanding" not in daily_gpr.columns:
+        if "gpr_shock_expanding" in daily_gpr.columns:
+            daily_gpr["gpr_change_shock_expanding"] = daily_gpr[
+                "gpr_shock_expanding"
+            ]
+        else:
+            threshold = (
+                daily_gpr["gpr_change"]
+                .shift(1)
+                .expanding(min_periods=GPR_EXPANDING_SHOCK_MIN_PERIODS)
+                .quantile(DEFAULT_GPR_SHOCK_QUANTILE)
+            )
+            daily_gpr["gpr_change_shock_expanding"] = (
+                daily_gpr["gpr_change"] >= threshold
+            ).fillna(False)
+
+    gpr_features = daily_gpr[
+        ["date", "gpr_change", "gpr_change_z", "gpr_change_shock_expanding"]
+    ].copy()
+    gpr_features["gpr_change_shock_expanding"] = gpr_features[
+        "gpr_change_shock_expanding"
+    ].map(_coerce_shock_to_int)
+
+    drop_columns = [
+        column
+        for column in ["gpr_change", "gpr_change_z", "gpr_change_shock_expanding"]
+        if column in data.columns
+    ]
+    data = data.drop(columns=drop_columns)
+    return data.merge(gpr_features, on="date", how="left")
+
+
+def _unique_daily_gpr_frame(data: pd.DataFrame) -> pd.DataFrame:
+    gpr_columns = [
+        column
+        for column in [
+            "date",
+            "gpr",
+            "gpr_change",
+            "gpr_change_shock_expanding",
+            "gpr_shock_expanding",
+        ]
+        if column in data.columns
+    ]
+    daily_gpr = data[gpr_columns].drop_duplicates().copy()
+    for column in gpr_columns:
+        if column == "date":
+            continue
+        value_counts = daily_gpr.dropna(subset=[column]).groupby("date")[column].nunique()
+        if value_counts.gt(1).any():
+            raise ValueError(f"{column} must be unique within each date.")
+
+    return (
+        daily_gpr.sort_values("date")
+        .drop_duplicates(subset=["date"], keep="first")
+        .reset_index(drop=True)
+    )
+
+
+def _expanding_z_score(values: pd.Series) -> pd.Series:
+    expanding_mean = values.expanding(min_periods=2).mean()
+    expanding_std = values.expanding(min_periods=2).std(ddof=0)
+    z_score = (values - expanding_mean) / expanding_std
+    return z_score.replace([np.inf, -np.inf], np.nan).fillna(0.0)
+
+
+def _drawdown_model_specs(
+    feature_columns: list[str] | None,
+) -> list[tuple[str, list[str]]]:
+    if feature_columns is not None:
+        return [("full_features", feature_columns)]
+
+    return [
+        ("constant_baseline", []),
+        ("volatility_only", VOLATILITY_FEATURE_COLUMNS),
+        ("full_features", DEFAULT_FEATURE_COLUMNS),
+    ]
+
+
+def _predict_probabilities(
+    train: pd.DataFrame,
+    test: pd.DataFrame,
+    feature_columns: list[str],
+) -> np.ndarray:
+    baseline_probability = train["drawdown_risk"].mean()
+    if not feature_columns or train["drawdown_risk"].nunique() < 2:
+        return np.repeat(baseline_probability, len(test))
+
+    model = _make_classifier()
+    model.fit(train[feature_columns], train["drawdown_risk"])
+    return model.predict_proba(test[feature_columns])[:, 1]
 
 
 def _coerce_shock_to_int(value) -> int:

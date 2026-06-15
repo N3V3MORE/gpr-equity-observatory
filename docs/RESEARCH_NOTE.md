@@ -29,7 +29,8 @@ The project tests this question through several complementary views:
 - Event studies: what happens around large daily GPR jumps?
 - Panel regressions: how are returns associated with GPR jumps after controls?
 - Quantile regressions: does GPR matter more in the left tail of returns?
-- Local projections: how does the response path evolve over later horizons?
+- Local projections: how does the market-adjusted response path evolve over
+  later horizons?
 - Drawdown classification: do current risk conditions help identify future
   downside-risk episodes?
 
@@ -111,9 +112,11 @@ research question is about downside asymmetry, not only average returns.
 
 ### Local Projections
 
-Local projections estimate cumulative return responses at horizons from 0 to 20
-trading days after a GPR shock. This provides a response path rather than a
-single event-window average.
+Local projections estimate cumulative market-model abnormal return responses at
+horizons from 0 to 20 trading days after a GPR shock. For each ticker and base
+date, the expected return path is estimated from pre-date ETF sensitivity to the
+global market return, then subtracted from the forward ETF return path. This
+keeps the response path aligned with the abnormal-return event-study design.
 
 ### Drawdown Classifier
 
@@ -151,10 +154,11 @@ The quantile regression results are more suggestive than conclusive. The
 directionally consistent with downside concentration. However, the p-value is
 around `0.280`, so this is not a firm result.
 
-The local projection estimates show small cumulative responses and wide
-confidence intervals. Emerging-market response estimates are often larger but
-less precise. This is useful as a diagnostic response path, not as a standalone
-claim.
+The abnormal-return local projection estimates now line up better with the
+event-study framing. At the 20-day horizon, the developed-market estimate is
+near zero at about `0.01%`, while the emerging-market estimate is negative at
+about `-0.11%`. This is useful as a diagnostic response path, not as a
+standalone claim.
 
 The drawdown classifier has a mean ROC AUC of about `0.614` and average
 precision of about `0.370`, compared with a mean event rate of about `28.5%`.
@@ -184,8 +188,9 @@ The current evidence supports a cautious interpretation:
   depend on model specification.
 - The emerging-market asymmetry hypothesis is not yet strongly supported in the
   average controlled or date-fixed-effects panel regression.
-- Tail-risk, local-projection, and event-study robustness results are useful
-  diagnostics, but they do not yet carry the main conclusion alone.
+- Tail-risk, abnormal-return local-projection, and event-study robustness
+  results are useful diagnostics, but they do not yet carry the main conclusion
+  alone.
 - The ML model is useful for disciplined risk classification practice, but it is
   not a strong prediction engine.
 

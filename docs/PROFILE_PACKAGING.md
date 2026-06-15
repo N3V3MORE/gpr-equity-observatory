@@ -87,7 +87,8 @@ and reproducible empirical workflow.
   same time as oil shocks, dollar moves, VIX spikes, and macro news.
 - I used several methods because no single model answers the whole question:
   event studies for timing, panel regressions for average association, quantile
-  regression for downside asymmetry, and local projections for response paths.
+  regression for downside asymmetry, and local projections for abnormal-return
+  response paths.
 - The ML model is deliberately simple and time-aware. It is exploratory, not a
   trading signal.
 

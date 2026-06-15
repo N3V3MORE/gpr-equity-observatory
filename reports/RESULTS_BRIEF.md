@@ -13,9 +13,11 @@ The older controlled interaction alone is not strong evidence of a reliably larg
 | Controlled emerging interaction | -0.6 bps | 0.551 |
 | Date fixed-effects emerging interaction | -0.6 bps | 0.557 |
 | Tail-risk quantile regression | -0.8 bps | 0.280 |
-| Local projection developed | 0.246% | <0.001 |
-| Local projection emerging | 0.128% | 0.128 |
-| Drawdown classifier | 0.612 | n/a |
+| Local projection developed | 0.008% | 0.681 |
+| Local projection emerging | -0.112% | 0.031 |
+| Drawdown classifier | 0.616 | n/a |
+
+Local projection rows are market-model abnormal return responses, not raw cumulative ETF returns.
 
 ## Sample Robustness
 

@@ -66,3 +66,58 @@ def test_build_event_robustness_table_returns_grid_summary():
     assert set(robustness["market_group"]) == {"developed", "emerging"}
     assert robustness["shock_quantile"].tolist() == [0.80, 0.80]
     assert robustness["window"].tolist() == [1, 1]
+
+
+def test_build_event_robustness_uses_peak_cluster_selector(monkeypatch):
+    calls = []
+
+    def fake_selector(gpr, shock_column, value_column, min_gap_days):
+        calls.append(
+            {
+                "shock_column": shock_column,
+                "value_column": value_column,
+                "min_gap_days": min_gap_days,
+            }
+        )
+        return pd.Series(pd.to_datetime(["2024-01-05"]), name="event_date")
+
+    monkeypatch.setattr(
+        "gprobs.analysis.event_robustness.select_peak_cluster_events",
+        fake_selector,
+    )
+    panel = pd.DataFrame(
+        {
+            "date": pd.date_range("2024-01-01", periods=8),
+            "ticker": ["SPY"] * 8,
+            "country": ["United States"] * 8,
+            "market_group": ["developed"] * 8,
+            "region": ["North America"] * 8,
+            "return": [0.01, 0.02, 0.01, -0.01, 0.02, 0.03, 0.01, -0.02],
+            "global_market_return": [0.01, 0.01, 0.02, -0.01, 0.01, 0.02, 0.01, -0.01],
+        }
+    )
+    gpr = pd.DataFrame(
+        {
+            "date": pd.date_range("2024-01-01", periods=8),
+            "gpr": [10, 20, 30, 100, 90, 80, 70, 60],
+        }
+    )
+
+    build_event_robustness_table(
+        panel,
+        gpr,
+        shock_quantiles=[0.80],
+        windows=[1],
+        min_gap_days=5,
+        estimation_window=2,
+        estimation_gap=1,
+        min_estimation_obs=2,
+    )
+
+    assert calls == [
+        {
+            "shock_column": "gpr_change_shock",
+            "value_column": "gpr_change",
+            "min_gap_days": 5,
+        }
+    ]

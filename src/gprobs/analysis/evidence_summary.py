@@ -159,10 +159,10 @@ def build_evidence_summary(
         _add_row(
             rows,
             f"Local projection {market_group}",
-            f"{horizon}-day cumulative response",
+            f"{horizon}-day cumulative abnormal response",
             lp_row["estimate"],
             float(lp_row["p_value"]),
-            "This is the cumulative return response after a GPR shock.",
+            "This is the cumulative market-model abnormal return response after a GPR shock.",
         )
 
     for market_group in ["developed", "emerging"]:
@@ -183,9 +183,17 @@ def build_evidence_summary(
 
     if drawdown_metrics.empty:
         raise ValueError("Missing drawdown metrics in evidence summary inputs.")
-    mean_auc = round(float(drawdown_metrics["roc_auc"].mean()), 6)
-    mean_ap = float(drawdown_metrics["average_precision"].mean())
-    mean_base_rate = float(drawdown_metrics["base_rate"].mean())
+    drawdown_headline = drawdown_metrics
+    if "model_name" in drawdown_metrics.columns:
+        drawdown_headline = drawdown_metrics.loc[
+            drawdown_metrics["model_name"] == "full_features"
+        ]
+        if drawdown_headline.empty:
+            raise ValueError("Missing full_features rows in drawdown metrics.")
+
+    mean_auc = round(float(drawdown_headline["roc_auc"].mean()), 6)
+    mean_ap = float(drawdown_headline["average_precision"].mean())
+    mean_base_rate = float(drawdown_headline["base_rate"].mean())
     _add_row(
         rows,
         "Drawdown classifier",

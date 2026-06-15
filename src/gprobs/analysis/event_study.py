@@ -64,6 +64,55 @@ def select_spaced_events(
     return pd.Series(selected_dates, name="event_date")
 
 
+def select_peak_cluster_events(
+    gpr: pd.DataFrame,
+    shock_column: str = "gpr_shock",
+    value_column: str = "gpr_change",
+    min_gap_days: int = EVENT_MIN_GAP_DAYS,
+) -> pd.Series:
+    """Select the largest shock inside each cluster of nearby shock days."""
+    missing_columns = [
+        column for column in ["date", shock_column, value_column] if column not in gpr.columns
+    ]
+    if missing_columns:
+        raise ValueError(f"GPR data is missing columns: {missing_columns}")
+    if min_gap_days < 1:
+        raise ValueError("min_gap_days must be at least 1.")
+
+    shock_rows = (
+        gpr.loc[gpr[shock_column], ["date", value_column]]
+        .sort_values("date")
+        .reset_index(drop=True)
+    )
+    if shock_rows.empty:
+        return pd.Series([], name="event_date", dtype="datetime64[ns]")
+
+    selected_dates = []
+    cluster_start = 0
+    previous_date = pd.Timestamp(shock_rows.loc[0, "date"])
+
+    for row_number in range(1, len(shock_rows)):
+        current_date = pd.Timestamp(shock_rows.loc[row_number, "date"])
+        if (current_date - previous_date).days >= min_gap_days:
+            selected_dates.append(_cluster_peak_date(shock_rows, cluster_start, row_number, value_column))
+            cluster_start = row_number
+        previous_date = current_date
+
+    selected_dates.append(_cluster_peak_date(shock_rows, cluster_start, len(shock_rows), value_column))
+    return pd.Series(sorted(selected_dates), name="event_date")
+
+
+def _cluster_peak_date(
+    shock_rows: pd.DataFrame,
+    start: int,
+    end: int,
+    value_column: str,
+) -> pd.Timestamp:
+    cluster = shock_rows.iloc[start:end]
+    peak_row = cluster[value_column].idxmax()
+    return pd.Timestamp(shock_rows.loc[peak_row, "date"])
+
+
 def build_event_windows(
     panel: pd.DataFrame,
     event_dates: pd.Series,

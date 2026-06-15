@@ -54,3 +54,38 @@ def test_mark_top_quantile_shocks_flags_large_positive_gpr_jumps():
     assert marked["gpr_shock"].tolist() == [False, True, False, False, False]
     assert marked["gpr_shock_threshold"].nunique() == 1
     assert marked["gpr_shock_threshold"].iloc[0] > 58.0
+
+
+def test_mark_top_quantile_shocks_names_full_sample_and_expanding_change_shocks():
+    gpr = pd.DataFrame(
+        {
+            "date": pd.to_datetime(
+                ["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05"]
+            ),
+            "gpr": [100.0, 110.0, 130.0, 230.0, 260.0],
+        }
+    )
+
+    marked = mark_top_quantile_shocks(
+        gpr,
+        quantile=0.80,
+        expanding_min_periods=2,
+    )
+
+    expected_columns = {
+        "gpr_change",
+        "gpr_change_z",
+        "gpr_change_shock",
+        "gpr_change_shock_expanding",
+        "gpr_shock_full_sample",
+        "gpr_shock_expanding",
+        "gpr_shock",
+        "gpr_shock_threshold",
+    }
+    assert expected_columns.issubset(marked.columns)
+    assert marked["gpr_change"].tolist()[1:] == [10.0, 20.0, 100.0, 30.0]
+    assert marked["gpr_change_shock"].tolist() == [False, False, False, True, False]
+    assert marked["gpr_shock_full_sample"].equals(marked["gpr_change_shock"])
+    assert marked["gpr_shock"].equals(marked["gpr_change_shock"])
+    assert marked["gpr_change_shock_expanding"].tolist() == [False, False, False, True, False]
+    assert marked["gpr_shock_expanding"].equals(marked["gpr_change_shock_expanding"])

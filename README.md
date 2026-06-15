@@ -72,6 +72,12 @@ For local development and CI-style checks, install the dev extra:
 python -m pip install -r requirements.txt
 ```
 
+For an exact resolved environment, use the committed lock file:
+
+```powershell
+uv sync --all-extras
+```
+
 Rebuild the data and results:
 
 ```powershell
@@ -94,6 +100,9 @@ pytest --cov=gprobs --cov=app --cov-report=term-missing -q
 The build command downloads public data and writes generated files into
 `data/raw/`, `data/processed/`, and `reports/figures/`. Those generated folders
 are intentionally not committed to Git.
+
+`requirements.txt` is the editable development install. `uv.lock` is the exact
+resolved dependency graph for reproducible rebuilds.
 
 ## Repository Map
 
@@ -122,7 +131,7 @@ docs/PROFILE_PACKAGING.md      CV, LinkedIn, and interview materials
 - Panel regressions with market controls
 - Sample robustness checks
 - Quantile regressions for downside-risk analysis
-- Local projections for response paths
+- Local projections for abnormal-return response paths
 - Rolling GPR sensitivity estimates
 - Time-aware drawdown-risk classification
 

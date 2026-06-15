@@ -23,7 +23,7 @@ For a requirement-by-requirement audit against the original project plan, see
 - Baseline, market-controlled, and date fixed-effects panel regressions.
 - Panel sample-robustness checks excluding major crisis windows.
 - Quantile regressions for tail-risk analysis.
-- Local projections for dynamic response paths.
+- Local projections for dynamic abnormal-return response paths.
 - Rolling GPR sensitivity by country.
 - Simple drawdown-risk classifier with chronological validation.
 - Compact evidence summary table for comparing methods.
@@ -55,9 +55,10 @@ The quantile regressions are directionally interesting but not decisive. The
 10th-percentile GPR-jump coefficient is about `-0.8` basis points with a p-value
 near `0.280`, so it should not be presented as proof.
 
-The local projections show small cumulative response estimates. Confidence
-intervals are wide, especially for emerging markets, so these should be treated
-as response-path diagnostics rather than headline conclusions.
+The local projections now use cumulative market-model abnormal returns. At the
+20-day horizon, the developed-market response is near zero while the
+emerging-market response is negative. These should still be treated as
+response-path diagnostics rather than headline conclusions.
 
 The drawdown classifier is exploratory. Mean ROC AUC is about `0.614`, average
 precision is about `0.370`, and the mean drawdown event rate is about `28.5%`.

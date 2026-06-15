@@ -4,7 +4,12 @@ import pandas as pd
 import statsmodels.formula.api as smf
 
 from gprobs.analysis.panel_regression import CONTROL_COLUMNS
-from gprobs.config import LOCAL_PROJECTION_MAX_HORIZON
+from gprobs.config import (
+    EVENT_ESTIMATION_GAP_DAYS,
+    EVENT_ESTIMATION_WINDOW_DAYS,
+    EVENT_MIN_ESTIMATION_OBS,
+    LOCAL_PROJECTION_MAX_HORIZON,
+)
 
 LOCAL_PROJECTION_COLUMNS = [
     "horizon",
@@ -12,7 +17,7 @@ LOCAL_PROJECTION_COLUMNS = [
     "ticker",
     "country",
     "market_group",
-    "cumulative_return",
+    "cumulative_abnormal_return",
     "gpr_shock",
     "emerging_market",
 ]
@@ -32,36 +37,57 @@ def build_local_projection_data(
     panel: pd.DataFrame,
     max_horizon: int = LOCAL_PROJECTION_MAX_HORIZON,
     include_controls: bool = False,
+    estimation_window: int = EVENT_ESTIMATION_WINDOW_DAYS,
+    estimation_gap: int = EVENT_ESTIMATION_GAP_DAYS,
+    min_estimation_obs: int = EVENT_MIN_ESTIMATION_OBS,
 ) -> pd.DataFrame:
-    """Build cumulative future returns for local projection regressions."""
+    """Build cumulative future abnormal returns for local projection regressions."""
     if max_horizon < 0:
         raise ValueError("max_horizon must be non-negative.")
+    if estimation_window < 2:
+        raise ValueError("estimation_window must be at least 2.")
+    if estimation_gap < 0:
+        raise ValueError("estimation_gap must be non-negative.")
+    if min_estimation_obs < 2:
+        raise ValueError("min_estimation_obs must be at least 2.")
 
-    base_columns = ["date", "ticker", "country", "market_group", "return", "gpr_shock"]
+    base_columns = [
+        "date",
+        "ticker",
+        "country",
+        "market_group",
+        "return",
+        "global_market_return",
+        "gpr_shock",
+    ]
     if include_controls:
-        base_columns = base_columns + CONTROL_COLUMNS
+        base_columns = base_columns + [column for column in CONTROL_COLUMNS if column not in base_columns]
 
-    data = panel[base_columns].dropna(subset=["date", "ticker", "return", "gpr_shock"]).copy()
+    missing_columns = [column for column in base_columns if column not in panel.columns]
+    if missing_columns:
+        raise ValueError(f"Local projection panel is missing columns: {missing_columns}")
+
+    data = panel[base_columns].dropna(subset=["date", "ticker", "return", "global_market_return", "gpr_shock"]).copy()
     data["gpr_shock"] = data["gpr_shock"].map(_coerce_shock_to_int)
     data["emerging_market"] = (data["market_group"] == "emerging").astype(int)
 
     frames = []
     for _, ticker_data in data.groupby("ticker"):
         ticker_data = ticker_data.sort_values("date").reset_index(drop=True)
-        for horizon in range(max_horizon + 1):
-            frame = ticker_data.copy()
-            frame["horizon"] = horizon
-            frame["cumulative_return"] = _forward_cumulative_return(
-                ticker_data["return"],
-                horizon,
+        frames.extend(
+            _ticker_projection_rows(
+                ticker_data,
+                max_horizon=max_horizon,
+                estimation_window=estimation_window,
+                estimation_gap=estimation_gap,
+                min_estimation_obs=min_estimation_obs,
             )
-            frames.append(frame)
+        )
 
     if not frames:
         return pd.DataFrame(columns=_projection_columns(include_controls))
 
-    projection_data = pd.concat(frames, ignore_index=True)
-    projection_data = projection_data.dropna(subset=["cumulative_return"])
+    projection_data = pd.DataFrame(frames)
     return projection_data[_projection_columns(include_controls)].reset_index(drop=True)
 
 
@@ -69,13 +95,19 @@ def estimate_local_projections(
     panel: pd.DataFrame,
     max_horizon: int = LOCAL_PROJECTION_MAX_HORIZON,
     include_controls: bool = False,
+    estimation_window: int = EVENT_ESTIMATION_WINDOW_DAYS,
+    estimation_gap: int = EVENT_ESTIMATION_GAP_DAYS,
+    min_estimation_obs: int = EVENT_MIN_ESTIMATION_OBS,
     cluster_by_ticker: bool = True,
 ) -> pd.DataFrame:
-    """Estimate GPR shock response paths for developed and emerging ETFs."""
+    """Estimate GPR shock response paths using market-model abnormal returns."""
     data = build_local_projection_data(
         panel,
         max_horizon=max_horizon,
         include_controls=include_controls,
+        estimation_window=estimation_window,
+        estimation_gap=estimation_gap,
+        min_estimation_obs=min_estimation_obs,
     )
 
     rows = []
@@ -103,11 +135,85 @@ def _coerce_shock_to_int(value) -> int:
     return int(bool(value))
 
 
-def _forward_cumulative_return(returns: pd.Series, horizon: int) -> pd.Series:
-    cumulative = pd.Series(0.0, index=returns.index)
-    for offset in range(horizon + 1):
-        cumulative = cumulative + returns.shift(-offset)
-    return cumulative
+def _ticker_projection_rows(
+    ticker_data: pd.DataFrame,
+    max_horizon: int,
+    estimation_window: int,
+    estimation_gap: int,
+    min_estimation_obs: int,
+) -> list[dict]:
+    ticker_data = _add_market_model_parameters(
+        ticker_data,
+        estimation_window=estimation_window,
+        estimation_gap=estimation_gap,
+        min_estimation_obs=min_estimation_obs,
+    )
+
+    rows = []
+    for horizon in range(max_horizon + 1):
+        horizon_data = ticker_data.copy()
+        return_sum = _forward_sum(horizon_data["return"], horizon)
+        market_sum = _forward_sum(horizon_data["global_market_return"], horizon)
+        horizon_data["horizon"] = horizon
+        horizon_data["cumulative_abnormal_return"] = (
+            return_sum
+            - horizon_data["_market_alpha"] * (horizon + 1)
+            - horizon_data["_market_beta"] * market_sum
+        )
+        horizon_data = horizon_data.dropna(
+            subset=["_market_alpha", "_market_beta", "cumulative_abnormal_return"]
+        )
+        horizon_data = horizon_data.drop(
+            columns=[
+                "_market_mean",
+                "_return_mean",
+                "_market_variance",
+                "_market_covariance",
+                "_market_alpha",
+                "_market_beta",
+            ]
+        )
+        rows.extend(horizon_data.to_dict("records"))
+
+    return rows
+
+
+def _add_market_model_parameters(
+    ticker_data: pd.DataFrame,
+    estimation_window: int,
+    estimation_gap: int,
+    min_estimation_obs: int,
+) -> pd.DataFrame:
+    model_data = ticker_data.copy()
+    shift_periods = estimation_gap + 1
+    rolling_market = model_data["global_market_return"].rolling(
+        estimation_window,
+        min_periods=min_estimation_obs,
+    )
+    rolling_return = model_data["return"].rolling(
+        estimation_window,
+        min_periods=min_estimation_obs,
+    )
+    model_data["_market_mean"] = rolling_market.mean().shift(shift_periods)
+    model_data["_return_mean"] = rolling_return.mean().shift(shift_periods)
+    model_data["_market_variance"] = rolling_market.var().shift(shift_periods)
+    model_data["_market_covariance"] = rolling_return.cov(
+        model_data["global_market_return"]
+    ).shift(shift_periods)
+    model_data["_market_beta"] = (
+        model_data["_market_covariance"] / model_data["_market_variance"]
+    )
+    model_data.loc[model_data["_market_variance"] == 0, "_market_beta"] = pd.NA
+    model_data["_market_alpha"] = (
+        model_data["_return_mean"]
+        - model_data["_market_beta"] * model_data["_market_mean"]
+    )
+    return model_data
+
+
+def _forward_sum(values: pd.Series, horizon: int) -> pd.Series:
+    forward_values = [values.shift(-offset) for offset in range(horizon + 1)]
+    return pd.concat(forward_values, axis=1).sum(axis=1, min_count=horizon + 1)
 
 
 def _fit_horizon_model(
@@ -115,15 +221,15 @@ def _fit_horizon_model(
     include_controls: bool,
     cluster_by_ticker: bool,
 ):
-    formula = "cumulative_return ~ gpr_shock + gpr_shock:emerging_market + C(ticker)"
+    formula = "cumulative_abnormal_return ~ gpr_shock + gpr_shock:emerging_market + C(ticker)"
     if include_controls:
         controls = " + ".join(CONTROL_COLUMNS)
         formula = (
-            "cumulative_return ~ gpr_shock + gpr_shock:emerging_market + "
+            "cumulative_abnormal_return ~ gpr_shock + gpr_shock:emerging_market + "
             f"{controls} + C(ticker)"
         )
 
-    model_columns = ["cumulative_return", "gpr_shock", "emerging_market", "ticker"]
+    model_columns = ["cumulative_abnormal_return", "gpr_shock", "emerging_market", "ticker"]
     if include_controls:
         model_columns.extend(CONTROL_COLUMNS)
     data = data.dropna(subset=model_columns)

@@ -115,6 +115,8 @@ def build_results_brief(
             ]
         ),
         "",
+        "Local projection rows are market-model abnormal return responses, not raw cumulative ETF returns.",
+        "",
         "## Sample Robustness",
         "",
         f"Under `{robustness_scenario}`, the controlled one-SD GPR-jump coefficient is "

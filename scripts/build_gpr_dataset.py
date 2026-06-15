@@ -35,11 +35,14 @@ def main():
 
     first_date = gpr["date"].min().date()
     last_date = gpr["date"].max().date()
-    shock_count = int(gpr["gpr_shock"].sum())
+    shock_count = int(gpr["gpr_change_shock"].sum())
 
     print(f"Saved {len(gpr):,} daily GPR observations from {first_date} to {last_date}.")
     percentile = f"{DEFAULT_GPR_SHOCK_QUANTILE:.0%}"
-    print(f"Flagged {shock_count:,} days at or above the {percentile} percentile of GPR.")
+    print(
+        f"Flagged {shock_count:,} days at or above the {percentile} percentile "
+        "of daily GPR changes."
+    )
 
 
 if __name__ == "__main__":

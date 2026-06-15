@@ -19,7 +19,8 @@ def test_build_drawdown_dataset_uses_future_returns_for_target():
             "market_group": ["developed"] * 4,
             "return": [0.01, -0.03, -0.04, 0.02],
             "gpr": [100.0, 120.0, 130.0, 110.0],
-            "gpr_shock": [False, True, False, False],
+            "gpr_change": [0.0, 20.0, 10.0, -20.0],
+            "gpr_change_shock_expanding": [False, True, False, False],
             "global_market_return": [0.01, -0.01, -0.02, 0.01],
             "vix_change": [0.1, 1.0, 0.5, -0.2],
             "oil_change": [1.0, -1.0, -0.5, 0.2],
@@ -39,6 +40,9 @@ def test_build_drawdown_dataset_uses_future_returns_for_target():
     assert second_row["drawdown_risk"] == 0
     assert "lag_return_1d" in dataset.columns
     assert "rolling_volatility" in dataset.columns
+    assert "gpr_change_z" in dataset.columns
+    assert "gpr_z" not in dataset.columns
+    assert "gpr_change_shock_expanding" in dataset.columns
 
 
 def test_evaluate_drawdown_classifier_uses_chronological_folds():
@@ -57,8 +61,8 @@ def test_evaluate_drawdown_classifier_uses_chronological_folds():
                 ]
             ),
             "drawdown_risk": [0, 1, 0, 1, 0, 1, 0, 1],
-            "gpr_z": [-1.0, 0.2, -0.8, 0.4, -0.5, 0.8, -0.2, 1.0],
-            "gpr_shock": [0, 1, 0, 1, 0, 1, 0, 1],
+            "gpr_change_z": [-1.0, 0.2, -0.8, 0.4, -0.5, 0.8, -0.2, 1.0],
+            "gpr_change_shock_expanding": [0, 1, 0, 1, 0, 1, 0, 1],
             "global_market_return": [0.01, -0.01, 0.02, -0.02, 0.01, -0.01, 0.02, -0.02],
             "vix_change": [-1.0, 1.0, -0.5, 0.5, -1.0, 1.0, -0.5, 0.5],
             "oil_change": [1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0],
@@ -74,6 +78,7 @@ def test_evaluate_drawdown_classifier_uses_chronological_folds():
 
     assert metrics.columns.tolist() == [
         "fold",
+        "model_name",
         "train_start",
         "train_end",
         "test_start",
@@ -83,6 +88,7 @@ def test_evaluate_drawdown_classifier_uses_chronological_folds():
         "base_rate",
         "observation_count",
     ]
+    assert set(metrics["model_name"]) == {"constant_baseline", "volatility_only", "full_features"}
     assert (metrics["train_end"] < metrics["test_start"]).all()
 
 
@@ -91,8 +97,8 @@ def test_fit_drawdown_feature_importance_returns_one_row_per_feature():
         {
             "date": pd.date_range("2024-01-01", periods=12),
             "drawdown_risk": [0, 1] * 6,
-            "gpr_z": [-1.0, 1.0] * 6,
-            "gpr_shock": [0, 1] * 6,
+            "gpr_change_z": [-1.0, 1.0] * 6,
+            "gpr_change_shock_expanding": [0, 1] * 6,
             "global_market_return": [0.01, -0.01] * 6,
             "vix_change": [-1.0, 1.0] * 6,
             "oil_change": [1.0, -1.0] * 6,

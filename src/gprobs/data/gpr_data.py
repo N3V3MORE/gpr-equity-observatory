@@ -8,6 +8,7 @@ from gprobs.config import (
     DEFAULT_DOWNLOAD_TIMEOUT_SECONDS,
     DEFAULT_GPR_SHOCK_QUANTILE,
     DEFAULT_RETRY_BACKOFF_SECONDS,
+    GPR_EXPANDING_SHOCK_MIN_PERIODS,
     RAW_DATA_DIR,
 )
 from gprobs.data.download_cache import download_url_to_cache, fetch_url_bytes, retry
@@ -31,6 +32,23 @@ def _add_gpr_change(gpr: pd.DataFrame) -> pd.DataFrame:
     """Add the daily GPR jump used by shock/event specifications."""
     changed = gpr.sort_values("date").reset_index(drop=True).copy()
     changed["gpr_change"] = changed["gpr"].diff()
+    return changed
+
+
+def _add_gpr_change_z(gpr: pd.DataFrame) -> pd.DataFrame:
+    """Add a full-sample z-score for daily GPR changes."""
+    changed = gpr.copy()
+    change_std = changed["gpr_change"].std(ddof=0)
+    if pd.isna(change_std) or change_std == 0:
+        changed["gpr_change_z"] = changed["gpr_change"].where(
+            changed["gpr_change"].isna(),
+            0.0,
+        )
+        return changed
+
+    changed["gpr_change_z"] = (
+        changed["gpr_change"] - changed["gpr_change"].mean()
+    ) / change_std
     return changed
 
 
@@ -105,17 +123,40 @@ def mark_top_quantile_shocks(
     gpr: pd.DataFrame,
     quantile: float = DEFAULT_GPR_SHOCK_QUANTILE,
     value_column: str = "gpr_change",
+    expanding_min_periods: int = GPR_EXPANDING_SHOCK_MIN_PERIODS,
 ) -> pd.DataFrame:
-    """Flag days where GPR has an unusually large positive daily jump."""
+    """Flag full-sample and expanding-window GPR shock definitions."""
     if not 0 < quantile < 1:
         raise ValueError("quantile must be between 0 and 1.")
+    if expanding_min_periods < 1:
+        raise ValueError("expanding_min_periods must be at least 1.")
     if value_column == "gpr_change" and value_column not in gpr.columns:
         gpr = _add_gpr_change(gpr)
     if value_column not in gpr.columns:
         raise ValueError(f"GPR data is missing column: {value_column}")
 
-    marked = gpr.copy()
-    threshold = marked[value_column].quantile(quantile)
-    marked["gpr_shock"] = marked[value_column] >= threshold
-    marked["gpr_shock_threshold"] = threshold
+    marked = gpr.sort_values("date").reset_index(drop=True).copy()
+    if "gpr_change" in marked.columns and "gpr_change_z" not in marked.columns:
+        marked = _add_gpr_change_z(marked)
+
+    full_sample_threshold = marked[value_column].quantile(quantile)
+    full_sample_shock = (marked[value_column] >= full_sample_threshold).fillna(False)
+    expanding_threshold = (
+        marked[value_column]
+        .shift(1)
+        .expanding(min_periods=expanding_min_periods)
+        .quantile(quantile)
+    )
+    expanding_shock = (marked[value_column] >= expanding_threshold).fillna(False)
+
+    marked["gpr_shock_full_sample"] = full_sample_shock
+    marked["gpr_shock_expanding"] = expanding_shock
+    marked["gpr_shock"] = full_sample_shock
+    marked["gpr_shock_threshold"] = full_sample_threshold
+    marked["gpr_shock_expanding_threshold"] = expanding_threshold
+
+    if value_column == "gpr_change":
+        marked["gpr_change_shock"] = full_sample_shock
+        marked["gpr_change_shock_expanding"] = expanding_shock
+
     return marked

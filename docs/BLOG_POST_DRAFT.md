@@ -49,7 +49,7 @@ Quantile regressions ask whether GPR matters more during bad return states than
 during normal days. This is important because the research question is about
 asymmetry, not just average returns.
 
-Local projections estimate the response path over later horizons after GPR
+Local projections estimate the abnormal-return response path over later horizons after GPR
 shock days.
 
 Robustness checks rerun the event-study logic under different GPR shock
@@ -77,8 +77,9 @@ at the 10th percentile is negative, which is consistent with downside
 concentration. But the p-values are not strong enough to treat this as a firm
 result.
 
-The local projections show small response estimates with wide confidence
-intervals, especially for emerging markets.
+The local projections now use market-model abnormal returns. The 20-day
+developed-market response is near zero, while the emerging-market response is
+negative, which is more consistent with the event-study framing.
 
 The robustness results are useful but still cautious. Under the 90th-percentile
 shock definition, emerging-market abnormal returns are more negative than

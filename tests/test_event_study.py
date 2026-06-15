@@ -3,6 +3,7 @@ import pandas as pd
 from gprobs.analysis.event_study import (
     build_event_windows,
     build_market_model_event_windows,
+    select_peak_cluster_events,
     select_spaced_events,
     summarize_abnormal_event_windows,
     summarize_event_windows,
@@ -25,6 +26,20 @@ def test_select_spaced_events_keeps_shocks_at_least_gap_days_apart():
         pd.Timestamp("2024-01-01"),
         pd.Timestamp("2024-01-25"),
     ]
+
+
+def test_select_peak_cluster_events_keeps_largest_gpr_change_in_nearby_cluster():
+    gpr = pd.DataFrame(
+        {
+            "date": pd.to_datetime(["2024-01-01", "2024-01-05", "2024-01-10", "2024-01-30"]),
+            "gpr_shock": [True, True, True, True],
+            "gpr_change": [20.0, 80.0, 40.0, 30.0],
+        }
+    )
+
+    events = select_peak_cluster_events(gpr, min_gap_days=20)
+
+    assert events.tolist() == [pd.Timestamp("2024-01-05"), pd.Timestamp("2024-01-30")]
 
 
 def test_build_event_windows_aligns_weekend_event_to_next_trading_date():

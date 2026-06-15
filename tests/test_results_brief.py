@@ -25,8 +25,8 @@ def test_build_results_brief_summarizes_mixed_evidence_cautiously():
                 "Extra emerging-market GPR coefficient",
                 "Extra emerging-market GPR coefficient with date FE",
                 "10th-percentile GPR coefficient",
-                "20-day cumulative response",
-                "20-day cumulative response",
+                "20-day cumulative abnormal response",
+                "20-day cumulative abnormal response",
                 "Mean ROC AUC",
             ],
             "estimate": [-0.000064, 0.000090, -0.000044, -0.000117, 0.0022, 0.0037, 0.614],
@@ -56,5 +56,6 @@ def test_build_results_brief_summarizes_mixed_evidence_cautiously():
     assert "Date fixed-effects emerging interaction" in brief
     assert "-0.6 bps" in brief
     assert "| Drawdown classifier | 0.614 | n/a |" in brief
+    assert "market-model abnormal return responses" in brief
     assert "not strong evidence" in brief
     assert "Excluding COVID and Russia windows" in brief

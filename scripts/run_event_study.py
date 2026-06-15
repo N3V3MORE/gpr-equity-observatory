@@ -5,7 +5,7 @@ import pandas as pd
 from gprobs.analysis.event_study import (
     build_event_windows,
     build_market_model_event_windows,
-    select_spaced_events,
+    select_peak_cluster_events,
     summarize_abnormal_event_windows,
     summarize_event_windows,
 )
@@ -33,7 +33,12 @@ def main():
 
     controls = pd.read_csv(processed_dir / "market_controls.csv", parse_dates=["date"])
 
-    event_dates = select_spaced_events(gpr, min_gap_days=EVENT_MIN_GAP_DAYS)
+    event_dates = select_peak_cluster_events(
+        gpr,
+        shock_column="gpr_change_shock",
+        value_column="gpr_change",
+        min_gap_days=EVENT_MIN_GAP_DAYS,
+    )
     windows = build_event_windows(panel, event_dates, window=EVENT_WINDOW_DAYS)
     summary = summarize_event_windows(windows)
 
@@ -53,7 +58,7 @@ def main():
     abnormal_windows.to_csv(processed_dir / "event_windows_abnormal.csv", index=False)
     abnormal_summary.to_csv(processed_dir / "event_study_abnormal_summary.csv", index=False)
 
-    print(f"Selected {len(event_dates):,} spaced GPR shock dates.")
+    print(f"Selected {len(event_dates):,} peak GPR-change shock dates.")
     print(f"Saved {len(windows):,} event-window observations.")
     print(f"Saved {len(summary):,} event-study summary rows.")
     print(f"Saved {len(abnormal_windows):,} abnormal event-window observations.")

@@ -8,6 +8,15 @@ Install dependencies:
 python -m pip install -r requirements.txt
 ```
 
+For an exact resolver-locked environment, use:
+
+```powershell
+uv sync --all-extras
+```
+
+`requirements.txt` installs the editable project with development tools.
+`uv.lock` records the exact resolved package graph.
+
 Run tests:
 
 ```powershell
@@ -40,7 +49,8 @@ streamlit run app.py
 - `src/gprobs/analysis/panel_regression.py`: mean panel regressions.
 - `src/gprobs/analysis/panel_sample_robustness.py`: sample-exclusion checks.
 - `src/gprobs/analysis/quantile_regression.py`: lower-tail regressions.
-- `src/gprobs/analysis/local_projection.py`: dynamic response paths.
+- `src/gprobs/analysis/local_projection.py`: dynamic abnormal-return response
+  paths.
 - `src/gprobs/analysis/drawdown_model.py`: drawdown-risk classifier.
 - `src/gprobs/analysis/evidence_summary.py`: compact model comparison table.
 - `src/gprobs/analysis/rolling_sensitivity.py`: rolling GPR beta.
@@ -68,6 +78,7 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `data/processed/panel_regression_baseline.csv`
 - `data/processed/panel_regression_controlled.csv`
 - `data/processed/panel_regression_date_fe.csv`
+- `data/processed/panel_regression_two_way_fe.csv`
 - `data/processed/panel_sample_robustness.csv`
 - `data/processed/quantile_regression_results.csv`
 - `data/processed/local_projection_results.csv`
@@ -88,7 +99,13 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `gpr`: daily geopolitical risk index.
 - `gpr_change`: daily change in the geopolitical risk index.
 - `gpr_change_z`: standardized daily GPR change.
-- `gpr_shock`: indicator for top-decile positive GPR jumps.
+- `gpr_change_shock`: full-sample top-quantile positive daily GPR-change
+  indicator.
+- `gpr_change_shock_expanding`: expanding-window top-quantile positive daily
+  GPR-change indicator using only prior observations for the threshold.
+- `gpr_shock_full_sample`: full-sample GPR-change shock indicator.
+- `gpr_shock_expanding`: expanding-window GPR-change shock indicator.
+- `gpr_shock`: compatibility alias for `gpr_change_shock`.
 - `gpr_act`: GPR act subindex.
 - `gpr_threat`: GPR threat subindex.
 - `global_market_return`: daily ACWI log return.
@@ -117,16 +134,25 @@ together. Date windows are removed inclusively.
 Quantile regressions use the same GPR-change terms as the panel regression and
 estimate coefficients at the 10th, 25th, and 50th percentiles.
 
-Local projections estimate cumulative ETF return responses for horizons 0
-through 20 trading days after a GPR shock.
+Local projections estimate cumulative market-model abnormal ETF return responses
+for horizons 0 through 20 trading days after a GPR shock. For each ticker and
+base date, the expected return path comes from a trailing pre-date market model
+using `global_market_return`; the projection dependent variable is the forward
+sum of observed ETF returns minus those expected returns.
+
+Event studies use daily GPR-change shocks. When multiple shock days occur inside
+the minimum-gap window, the event date is the largest `gpr_change` in that
+cluster rather than the first shock day.
 
 Event-study robustness compares end-of-window cumulative abnormal returns across
-90th- and 95th-percentile GPR-jump shock definitions and 3-, 5-, and
+90th- and 95th-percentile GPR-change shock definitions and 3-, 5-, and
 10-trading-day post-shock windows.
 
-The drawdown classifier uses logistic regression with standardized features and
-class balancing. Validation folds are chronological. No random time-series split
-is used.
+The drawdown classifier compares three chronological-validation rows per fold:
+a constant baseline, a rolling-volatility-only logistic regression, and the full
+feature logistic regression. Its GPR inputs use an expanding daily GPR-change
+z-score and the expanding-window GPR-change shock flag. No random time-series
+split is used.
 
 The evidence summary table is not a new model. It gathers headline rows from
 the existing event-study, regression, quantile, local-projection, and ML outputs

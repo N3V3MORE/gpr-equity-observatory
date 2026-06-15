@@ -2,7 +2,7 @@ import pandas as pd
 
 from gprobs.analysis.event_study import (
     build_market_model_event_windows,
-    select_spaced_events,
+    select_peak_cluster_events,
     summarize_abnormal_event_windows,
 )
 from gprobs.config import (
@@ -64,7 +64,12 @@ def build_event_robustness_table(
     results = []
     for shock_quantile in shock_quantiles:
         shocked_gpr = mark_top_quantile_shocks(gpr, quantile=shock_quantile)
-        event_dates = select_spaced_events(shocked_gpr, min_gap_days=min_gap_days)
+        event_dates = select_peak_cluster_events(
+            shocked_gpr,
+            shock_column="gpr_change_shock",
+            value_column="gpr_change",
+            min_gap_days=min_gap_days,
+        )
 
         for window in windows:
             event_windows = build_market_model_event_windows(

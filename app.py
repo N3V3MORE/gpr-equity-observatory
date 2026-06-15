@@ -28,7 +28,7 @@ OUTPUT_SPECS = {
     "event_robustness": OutputSpec(DATA_DIR / "event_robustness_summary.csv"),
     "regression": OutputSpec(DATA_DIR / "panel_regression_baseline.csv"),
     "controlled_regression": OutputSpec(DATA_DIR / "panel_regression_controlled.csv"),
-    "date_fe_regression": OutputSpec(DATA_DIR / "panel_regression_date_fe.csv"),
+    "date_fe_regression": OutputSpec(DATA_DIR / "panel_regression_two_way_fe.csv"),
     "panel_sample_robustness": OutputSpec(DATA_DIR / "panel_sample_robustness.csv"),
     "quantile_regression": OutputSpec(DATA_DIR / "quantile_regression_results.csv"),
     "local_projections": OutputSpec(DATA_DIR / "local_projection_results.csv"),
@@ -142,7 +142,7 @@ def main():
         start_date = panel["date"].min().date()
         end_date = panel["date"].max().date()
         country_count = panel["country"].nunique()
-        shock_count = int(gpr["gpr_shock"].sum())
+        shock_count = int(gpr["gpr_change_shock"].sum())
 
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Countries", country_count)
@@ -287,7 +287,7 @@ def main():
             y="estimate",
             color="market_group",
             markers=True,
-            title="Local Projection Response to GPR Shock",
+            title="Local Projection Abnormal Return Response to GPR Shock",
         )
         for group, group_data in local_projections.groupby("market_group"):
             fig.add_scatter(
@@ -312,9 +312,14 @@ def main():
         st.dataframe(local_projections, use_container_width=True, hide_index=True)
 
     with tab_ml:
-        mean_auc = drawdown_metrics["roc_auc"].mean()
-        mean_ap = drawdown_metrics["average_precision"].mean()
-        mean_base_rate = drawdown_metrics["base_rate"].mean()
+        headline_metrics = drawdown_metrics
+        if "model_name" in drawdown_metrics.columns:
+            headline_metrics = drawdown_metrics.loc[
+                drawdown_metrics["model_name"] == "full_features"
+            ]
+        mean_auc = headline_metrics["roc_auc"].mean()
+        mean_ap = headline_metrics["average_precision"].mean()
+        mean_base_rate = headline_metrics["base_rate"].mean()
 
         col1, col2, col3 = st.columns(3)
         col1.metric("Mean ROC AUC", f"{mean_auc:.3f}")
