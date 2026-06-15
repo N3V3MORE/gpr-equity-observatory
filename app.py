@@ -16,30 +16,154 @@ DATA_DIR = PROJECT_ROOT / "data" / "processed"
 class OutputSpec:
     path: Path
     date_columns: tuple[str, ...] = ()
+    required_columns: tuple[str, ...] = ()
     low_memory: bool | None = None
 
 
 OUTPUT_SPECS = {
-    "analysis_panel": OutputSpec(DATA_DIR / "analysis_panel.csv", date_columns=("date",), low_memory=False),
-    "gpr": OutputSpec(DATA_DIR / "gpr_daily.csv", date_columns=("date",)),
-    "group_returns": OutputSpec(DATA_DIR / "group_return_summary.csv", date_columns=("date",)),
-    "event_study": OutputSpec(DATA_DIR / "event_study_summary.csv"),
-    "abnormal_event_study": OutputSpec(DATA_DIR / "event_study_abnormal_summary.csv"),
-    "event_robustness": OutputSpec(DATA_DIR / "event_robustness_summary.csv"),
-    "regression": OutputSpec(DATA_DIR / "panel_regression_baseline.csv"),
-    "controlled_regression": OutputSpec(DATA_DIR / "panel_regression_controlled.csv"),
-    "date_fe_regression": OutputSpec(DATA_DIR / "panel_regression_two_way_fe.csv"),
-    "panel_sample_robustness": OutputSpec(DATA_DIR / "panel_sample_robustness.csv"),
-    "quantile_regression": OutputSpec(DATA_DIR / "quantile_regression_results.csv"),
-    "local_projections": OutputSpec(DATA_DIR / "local_projection_results.csv"),
+    "analysis_panel": OutputSpec(
+        DATA_DIR / "analysis_panel.csv",
+        date_columns=("date",),
+        required_columns=(
+            "date",
+            "ticker",
+            "country",
+            "market_group",
+            "region",
+            "return",
+            "gpr",
+            "gpr_change",
+            "gpr_change_z",
+            "gpr_change_shock",
+            "gpr_change_shock_expanding",
+        ),
+        low_memory=False,
+    ),
+    "gpr": OutputSpec(
+        DATA_DIR / "gpr_daily.csv",
+        date_columns=("date",),
+        required_columns=(
+            "date",
+            "gpr",
+            "gpr_change",
+            "gpr_change_z",
+            "gpr_shock_full_sample",
+            "gpr_shock_expanding",
+            "gpr_change_shock",
+            "gpr_change_shock_expanding",
+        ),
+    ),
+    "group_returns": OutputSpec(
+        DATA_DIR / "group_return_summary.csv",
+        date_columns=("date",),
+        required_columns=("date", "market_group", "average_return", "country_count"),
+    ),
+    "event_study": OutputSpec(
+        DATA_DIR / "event_study_summary.csv",
+        required_columns=(
+            "market_group",
+            "relative_day",
+            "average_return",
+            "cumulative_average_return",
+            "observation_count",
+            "event_count",
+        ),
+    ),
+    "abnormal_event_study": OutputSpec(
+        DATA_DIR / "event_study_abnormal_summary.csv",
+        required_columns=(
+            "market_group",
+            "relative_day",
+            "average_abnormal_return",
+            "cumulative_average_abnormal_return",
+            "observation_count",
+            "event_count",
+        ),
+    ),
+    "event_robustness": OutputSpec(
+        DATA_DIR / "event_robustness_summary.csv",
+        required_columns=(
+            "shock_quantile",
+            "window",
+            "market_group",
+            "cumulative_average_abnormal_return",
+            "event_count",
+        ),
+    ),
+    "regression": OutputSpec(
+        DATA_DIR / "panel_regression_baseline.csv",
+        required_columns=("term", "estimate", "std_error", "t_stat", "p_value"),
+    ),
+    "controlled_regression": OutputSpec(
+        DATA_DIR / "panel_regression_controlled.csv",
+        required_columns=("term", "estimate", "std_error", "t_stat", "p_value"),
+    ),
+    "date_fe_regression": OutputSpec(
+        DATA_DIR / "panel_regression_two_way_fe.csv",
+        required_columns=("term", "estimate", "std_error", "t_stat", "p_value"),
+    ),
+    "panel_sample_robustness": OutputSpec(
+        DATA_DIR / "panel_sample_robustness.csv",
+        required_columns=(
+            "scenario",
+            "term",
+            "estimate",
+            "std_error",
+            "t_stat",
+            "p_value",
+            "observation_count",
+        ),
+    ),
+    "quantile_regression": OutputSpec(
+        DATA_DIR / "quantile_regression_results.csv",
+        required_columns=("quantile", "term", "estimate", "std_error", "t_stat", "p_value"),
+    ),
+    "local_projections": OutputSpec(
+        DATA_DIR / "local_projection_results.csv",
+        required_columns=(
+            "horizon",
+            "market_group",
+            "estimate",
+            "std_error",
+            "ci_low",
+            "ci_high",
+            "p_value",
+        ),
+    ),
     "drawdown_metrics": OutputSpec(
         DATA_DIR / "drawdown_model_metrics.csv",
         date_columns=("train_start", "train_end", "test_start", "test_end"),
+        required_columns=(
+            "fold",
+            "model_name",
+            "train_start",
+            "train_end",
+            "test_start",
+            "test_end",
+            "roc_auc",
+            "average_precision",
+            "base_rate",
+            "observation_count",
+        ),
     ),
-    "drawdown_importance": OutputSpec(DATA_DIR / "drawdown_feature_importance.csv"),
-    "evidence_summary": OutputSpec(DATA_DIR / "evidence_summary.csv"),
-    "rolling_beta": OutputSpec(DATA_DIR / "rolling_gpr_beta.csv", date_columns=("date",)),
-    "large_returns": OutputSpec(DATA_DIR / "large_return_flags.csv", date_columns=("date",)),
+    "drawdown_importance": OutputSpec(
+        DATA_DIR / "drawdown_feature_importance.csv",
+        required_columns=("feature", "coefficient", "abs_coefficient"),
+    ),
+    "evidence_summary": OutputSpec(
+        DATA_DIR / "evidence_summary.csv",
+        required_columns=("method", "focus", "estimate", "p_value", "plain_english"),
+    ),
+    "rolling_beta": OutputSpec(
+        DATA_DIR / "rolling_gpr_beta.csv",
+        date_columns=("date",),
+        required_columns=("date", "ticker", "country", "market_group", "rolling_gpr_beta"),
+    ),
+    "large_returns": OutputSpec(
+        DATA_DIR / "large_return_flags.csv",
+        date_columns=("date",),
+        required_columns=("date", "ticker", "country", "return", "abs_return"),
+    ),
 }
 
 REQUIRED_FILES = {name: spec.path for name, spec in OUTPUT_SPECS.items()}
@@ -54,8 +178,20 @@ def load_outputs():
             read_options["parse_dates"] = list(spec.date_columns)
         if spec.low_memory is not None:
             read_options["low_memory"] = spec.low_memory
-        outputs[name] = pd.read_csv(spec.path, **read_options)
+        output = pd.read_csv(spec.path, **read_options)
+        validate_output_schema(output, spec)
+        outputs[name] = output
     return outputs
+
+
+def validate_output_schema(output: pd.DataFrame, spec: OutputSpec) -> None:
+    missing_columns = [
+        column for column in spec.required_columns if column not in output.columns
+    ]
+    if missing_columns:
+        raise ValueError(
+            f"{spec.path.name} is missing required columns: {missing_columns}"
+        )
 
 
 def missing_files():
