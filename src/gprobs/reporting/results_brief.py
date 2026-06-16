@@ -5,11 +5,15 @@ import pandas as pd
 
 def format_percent(value: float, digits: int = 3) -> str:
     """Format a decimal return or coefficient as percentage text."""
+    if value is None or math.isnan(float(value)):
+        return "n/a"
     return f"{float(value) * 100:.{digits}f}%"
 
 
 def format_basis_points(value: float, digits: int = 1) -> str:
     """Format a decimal return or coefficient as basis points."""
+    if value is None or math.isnan(float(value)):
+        return "n/a"
     return f"{float(value) * 10000:.{digits}f} bps"
 
 

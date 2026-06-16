@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from gprobs.config import ROLLING_BETA_MIN_PERIODS, ROLLING_BETA_WINDOW_DAYS
@@ -39,6 +40,7 @@ def calculate_rolling_gpr_beta(
         ).var()
 
         country_data["rolling_gpr_beta"] = rolling_covariance / rolling_variance
+        country_data["rolling_gpr_beta"] = country_data["rolling_gpr_beta"].replace([np.inf, -np.inf], np.nan)
         frames.append(country_data[ROLLING_COLUMNS])
 
     if not frames:

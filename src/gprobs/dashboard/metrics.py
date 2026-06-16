@@ -1,19 +1,8 @@
 import pandas as pd
 
+from gprobs.data.diagnostics import summarize_country_coverage as build_country_coverage  # noqa: F401
 
-def build_country_coverage(panel: pd.DataFrame) -> pd.DataFrame:
-    """Summarize available return observations by country ETF."""
-    coverage = (
-        panel.groupby(["country", "ticker", "market_group"], as_index=False)
-        .agg(
-            first_date=("date", "min"),
-            last_date=("date", "max"),
-            observation_count=("return", "count"),
-        )
-        .sort_values(["market_group", "country"])
-        .reset_index(drop=True)
-    )
-    return coverage
+__all__ = ["build_country_coverage", "select_key_regression_terms"]
 
 
 def select_key_regression_terms(table: pd.DataFrame) -> pd.DataFrame:

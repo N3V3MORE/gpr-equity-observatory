@@ -1,5 +1,6 @@
 import warnings
 
+import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
 from linearmodels.panel import PanelOLS
@@ -85,8 +86,8 @@ def prepare_panel_regression_data(
         gpr_change_mean = data["gpr_change"].mean()
     if gpr_change_std is None:
         gpr_change_std = data["gpr_change"].std(ddof=0)
-    if gpr_change_std == 0:
-        raise ValueError("GPR change has no variation, so it cannot be standardized.")
+    if not np.isfinite(1 / gpr_change_std):
+        raise ValueError("GPR change has no (or near-zero) variation, so it cannot be standardized.")
 
     data["gpr_change_z"] = (data["gpr_change"] - gpr_change_mean) / gpr_change_std
     return data

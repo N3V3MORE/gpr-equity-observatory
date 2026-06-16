@@ -20,7 +20,7 @@ TRANSIENT_DOWNLOAD_ERRORS = (
 
 
 def retry(
-    operation: Callable[[], bytes],
+    operation: Callable[[], object],
     *,
     retries: int = DEFAULT_DOWNLOAD_RETRIES,
     backoff_seconds: float = DEFAULT_RETRY_BACKOFF_SECONDS,

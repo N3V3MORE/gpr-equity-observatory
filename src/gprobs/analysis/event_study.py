@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from scipy import stats
 
@@ -290,6 +291,6 @@ def _abnormal_car_inference(windows: pd.DataFrame) -> pd.DataFrame:
 
 
 def _two_sided_t_p_value(row: pd.Series) -> float:
-    if row["car_count"] <= 1 or pd.isna(row["t_stat"]):
+    if row["car_count"] <= 1 or pd.isna(row["t_stat"]) or np.isinf(row["t_stat"]):
         return float("nan")
     return float(2 * stats.t.sf(abs(row["t_stat"]), df=row["car_count"] - 1))
