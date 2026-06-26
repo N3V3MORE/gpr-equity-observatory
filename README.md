@@ -123,8 +123,20 @@ To run the monthly real benchmark, copy `config/sources.sample.yml` to
 run:
 
 ```powershell
+python scripts/run_task.py monthly-real
+```
+
+That local-only pipeline builds the real monthly panel, validates source
+overlap, runs the HAC spread regressions, runs expanding-window forecast
+comparisons, and validates the result tables the dashboard displays. To run the
+steps individually:
+
+```powershell
 python scripts/run_task.py build-monthly-real
 python scripts/run_task.py validate-monthly-real
+python scripts/run_task.py run-monthly-regressions-real
+python scripts/run_task.py run-monthly-forecasts-real
+python scripts/run_task.py validate-monthly-real-results
 ```
 
 `config/sources.yml`, raw files, and real generated outputs are local-only and

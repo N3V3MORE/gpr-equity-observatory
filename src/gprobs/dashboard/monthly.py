@@ -16,7 +16,18 @@ from gprobs.dashboard.outputs import PROJECT_ROOT, OutputSpec, validate_output_s
 MONTHLY_SAMPLE_NOTICE = "Sample mode is not empirical evidence. It only proves the monthly benchmark workflow runs."
 MONTHLY_REAL_NOTICE = "Real monthly aggregate mode is a benchmark, not a country-panel proof."
 MONTHLY_CLUSTER_NOTICE = "The two-market aggregate design cannot support country-clustered inference."
-MONTHLY_MODE_PRIORITY_NOTICE = "If real monthly outputs are present, the dashboard shows real mode before sample mode."
+MONTHLY_MODE_PRIORITY_NOTICE = (
+    "No mode selector is shown; if real monthly outputs are present, "
+    "the dashboard shows real mode before sample mode."
+)
+MONTHLY_EMPTY_STATE_COMMANDS = [
+    "python scripts/run_task.py monthly-sample --min-train-months 24",
+    "python scripts/run_task.py monthly-real",
+]
+MONTHLY_EMPTY_STATE_NOTE = (
+    "Real monthly mode requires config/sources.yml and local-only source files. "
+    "The dashboard prefers real monthly outputs when both real and sample outputs are present."
+)
 
 
 @dataclass(frozen=True)
@@ -181,15 +192,8 @@ def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
     render_how_to_read("monthly_benchmark")
     if bundle is None:
         st.info("Monthly benchmark outputs are not available yet.")
-        st.code(
-            "\n".join(
-                [
-                    "python scripts/run_task.py monthly-sample --min-train-months 24",
-                    "python scripts/run_task.py build-monthly-real",
-                    "python scripts/run_task.py validate-monthly-real",
-                ]
-            )
-        )
+        st.code("\n".join(MONTHLY_EMPTY_STATE_COMMANDS))
+        st.caption(MONTHLY_EMPTY_STATE_NOTE)
         st.caption(f"{MONTHLY_SAMPLE_NOTICE} {MONTHLY_REAL_NOTICE} {MONTHLY_CLUSTER_NOTICE}")
         return
 

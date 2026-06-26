@@ -53,6 +53,27 @@ python scripts/run_task.py monthly-sample --min-train-months 24
 The monthly sample pipeline is deterministic software validation. It is not
 empirical evidence.
 
+- To rebuild the real monthly benchmark locally, copy
+  `config/sources.sample.yml` to `config/sources.yml`, point it at local GPR and
+  Kenneth French factor files, then run:
+
+```powershell
+python scripts/run_task.py monthly-real
+```
+
+The local-only `monthly-real` pipeline builds the real monthly panel, validates
+source overlap, runs the HAC spread regressions, runs expanding-window forecast
+comparisons, and validates the result tables used by the dashboard. To run the
+steps individually:
+
+```powershell
+python scripts/run_task.py build-monthly-real
+python scripts/run_task.py validate-monthly-real
+python scripts/run_task.py run-monthly-regressions-real
+python scripts/run_task.py run-monthly-forecasts-real
+python scripts/run_task.py validate-monthly-real-results
+```
+
 ## Dashboard
 
 - Run the Streamlit dashboard:

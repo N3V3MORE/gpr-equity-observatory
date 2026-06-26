@@ -207,6 +207,26 @@ def test_public_setup_docs_share_core_commands():
             assert command in contents, f"{command} missing from {doc_path}"
 
 
+def test_monthly_real_workflow_docs_cover_full_local_pipeline():
+    docs_to_check = [
+        Path("README.md"),
+        DOCS / "REPRODUCIBILITY_CHECKLIST.md",
+    ]
+    required_phrases = [
+        "python scripts/run_task.py monthly-real",
+        "python scripts/run_task.py run-monthly-regressions-real",
+        "python scripts/run_task.py run-monthly-forecasts-real",
+        "python scripts/run_task.py validate-monthly-real-results",
+        "config/sources.yml",
+        "local-only",
+    ]
+
+    for doc_path in docs_to_check:
+        contents = doc_path.read_text(encoding="utf-8").lower()
+        for phrase in required_phrases:
+            assert phrase in contents, f"{phrase} missing from {doc_path}"
+
+
 def test_public_reviewer_path_avoids_internal_ai_workflow_docs():
     for doc_path in PUBLIC_REVIEWER_DOCS:
         contents = doc_path.read_text(encoding="utf-8").lower()

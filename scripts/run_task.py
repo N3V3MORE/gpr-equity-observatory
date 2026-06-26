@@ -23,8 +23,14 @@ TASK_COMMANDS = {
     "run-monthly-regressions-sample": [
         [sys.executable, "scripts/run_monthly_benchmark_regressions.py", "--dataset", MONTHLY_BENCHMARK_SAMPLE]
     ],
+    "run-monthly-regressions-real": [
+        [sys.executable, "scripts/run_monthly_benchmark_regressions.py", "--dataset", MONTHLY_BENCHMARK_REAL]
+    ],
     "run-monthly-forecasts-sample": [
         [sys.executable, "scripts/run_monthly_benchmark_forecasts.py", "--dataset", MONTHLY_BENCHMARK_SAMPLE]
+    ],
+    "run-monthly-forecasts-real": [
+        [sys.executable, "scripts/run_monthly_benchmark_forecasts.py", "--dataset", MONTHLY_BENCHMARK_REAL]
     ],
     "validate-monthly-sample-results": [
         [
@@ -32,6 +38,15 @@ TASK_COMMANDS = {
             "scripts/validate_monthly_benchmark.py",
             "--dataset",
             MONTHLY_BENCHMARK_SAMPLE,
+            "--check-results",
+        ]
+    ],
+    "validate-monthly-real-results": [
+        [
+            sys.executable,
+            "scripts/validate_monthly_benchmark.py",
+            "--dataset",
+            MONTHLY_BENCHMARK_REAL,
             "--check-results",
         ]
     ],
@@ -57,6 +72,13 @@ PIPELINES = {
         "run-monthly-regressions-sample",
         "run-monthly-forecasts-sample",
         "validate-monthly-sample-results",
+    ],
+    "monthly-real": [
+        "build-monthly-real",
+        "validate-monthly-real",
+        "run-monthly-regressions-real",
+        "run-monthly-forecasts-real",
+        "validate-monthly-real-results",
     ],
 }
 

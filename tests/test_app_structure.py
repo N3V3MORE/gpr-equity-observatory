@@ -68,6 +68,18 @@ def test_monthly_tab_uses_required_limitation_wording():
     assert "not empirical evidence" in app.MONTHLY_SAMPLE_NOTICE
     assert "benchmark" in app.MONTHLY_REAL_NOTICE
     assert "country-clustered" in app.MONTHLY_CLUSTER_NOTICE
+    assert "No mode selector" in app.MONTHLY_MODE_PRIORITY_NOTICE
+
+
+def test_monthly_empty_state_guides_full_sample_and_real_pipelines():
+    from gprobs.dashboard import monthly
+
+    assert monthly.MONTHLY_EMPTY_STATE_COMMANDS == [
+        "python scripts/run_task.py monthly-sample --min-train-months 24",
+        "python scripts/run_task.py monthly-real",
+    ]
+    assert "config/sources.yml" in monthly.MONTHLY_EMPTY_STATE_NOTE
+    assert "local-only" in monthly.MONTHLY_EMPTY_STATE_NOTE
 
 
 def test_dashboard_intro_keeps_cautious_project_framing():
