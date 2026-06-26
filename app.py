@@ -573,6 +573,18 @@ def build_gpr_shock_timeline(gpr: pd.DataFrame):
     return fig
 
 
+def render_missing_data_message(missing: list[Path]) -> None:
+    st.error("Processed data files are missing.")
+    st.write("To rebuild everything, run:")
+    st.code("python scripts/build_all.py")
+    with st.expander("Advanced: individual scripts"):
+        from gprobs.pipeline import PIPELINE_STEPS
+
+        st.code("\n".join(f"python scripts/{step.script_name}" for step in PIPELINE_STEPS))
+    st.write("Missing files:")
+    st.write([str(path) for path in missing])
+
+
 def render_overview_tab(
     panel: pd.DataFrame,
     gpr: pd.DataFrame,
@@ -969,12 +981,7 @@ def main():
 
     missing = missing_files()
     if missing:
-        st.error("Processed data files are missing.")
-        from gprobs.pipeline import PIPELINE_STEPS
-
-        st.code("\n".join(f"python scripts/{step.script_name}" for step in PIPELINE_STEPS))
-        st.write("Missing files:")
-        st.write([str(path) for path in missing])
+        render_missing_data_message(missing)
         return
 
     outputs = load_outputs()

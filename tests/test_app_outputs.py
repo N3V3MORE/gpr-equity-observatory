@@ -46,6 +46,10 @@ def test_missing_files_ignores_optional_monthly_outputs(monkeypatch, tmp_path):
     assert app.missing_files() == []
 
 
+def test_missing_data_message_helper_is_defined():
+    assert callable(app.render_missing_data_message)
+
+
 def test_load_monthly_outputs_returns_none_when_optional_files_are_missing(monkeypatch, tmp_path):
     monkeypatch.setattr(app, "MONTHLY_MODES", {"sample": app.MonthlyModeConfig(root=tmp_path)})
 
