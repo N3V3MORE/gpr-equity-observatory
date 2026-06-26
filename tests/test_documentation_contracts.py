@@ -132,3 +132,25 @@ def test_github_templates_preserve_feature_lock_guardrails():
     assert "no causal, trading, or strong emerging-market asymmetry claim" in (
         method_template
     )
+
+
+def test_public_setup_docs_share_core_commands():
+    setup_docs = [
+        Path("README.md"),
+        DOCS / "TECHNICAL_APPENDIX.md",
+        DOCS / "DEPLOYMENT_GUIDE.md",
+        DOCS / "REPRODUCIBILITY_CHECKLIST.md",
+    ]
+    required_commands = [
+        "python -m pip install -r requirements.txt",
+        "uv sync --all-extras",
+        "python scripts/build_all.py",
+        "streamlit run app.py",
+        "ruff check .",
+        "pytest --cov=gprobs --cov=app --cov-report=term-missing -q",
+    ]
+
+    for doc_path in setup_docs:
+        contents = doc_path.read_text(encoding="utf-8")
+        for command in required_commands:
+            assert command in contents, f"{command} missing from {doc_path}"

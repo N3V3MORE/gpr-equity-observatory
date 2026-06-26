@@ -30,6 +30,14 @@ the monthly tab. To populate the deterministic monthly sample tab locally, run:
 python scripts/run_task.py monthly-sample --min-train-months 24
 ```
 
+Before publishing screenshots, opening a pull request, or asking someone else
+to review the branch, run the same checks used elsewhere in the repo:
+
+```powershell
+ruff check .
+pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+```
+
 ## Local-First Portfolio Path
 
 The lowest-risk public presentation path is local-first:

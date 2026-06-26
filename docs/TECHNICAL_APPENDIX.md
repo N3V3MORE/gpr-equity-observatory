@@ -17,9 +17,10 @@ uv sync --all-extras
 `requirements.txt` installs the editable project with development tools.
 `uv.lock` records the exact resolved package graph.
 
-Run tests:
+Run checks:
 
 ```powershell
+ruff check .
 pytest --cov=gprobs --cov=app --cov-report=term-missing -q
 ```
 
