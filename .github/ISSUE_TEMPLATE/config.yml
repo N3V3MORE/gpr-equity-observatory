@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Reviewer guide
+    url: https://github.com/N3V3MORE/gpr-equity-observatory/blob/main/docs/REVIEWER_GUIDE.md
+    about: Start here for 5-minute, 15-minute, and 30-minute review paths.
+  - name: Roadmap and backlog
+    url: https://github.com/N3V3MORE/gpr-equity-observatory/blob/main/docs/ROADMAP.md
+    about: Check current feature-lock status and controlled future-work issues.
+  - name: Reproducibility checklist
+    url: https://github.com/N3V3MORE/gpr-equity-observatory/blob/main/docs/REPRODUCIBILITY_CHECKLIST.md
+    about: Use this for clean-clone setup, rebuild, and verification commands.

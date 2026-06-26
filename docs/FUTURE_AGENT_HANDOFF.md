@@ -19,9 +19,10 @@ A forward-plan packaging branch, `codex/polish-readme-reviewer-path`, now sits
 on top of the locked merge branch. It adds reviewer navigation, reproducibility
 checklists, local-first launch guidance, refreshed screenshots, screenshot
 refresh instructions, PR/issue template guardrails, a release-hardening issue
-template, setup-command alignment, documentation-contract tests for those
-release guardrails, local path hygiene, and links to the GitHub backlog issues.
-It does not add new research, data, model, dashboard, or product behavior.
+template, an issue-template chooser, setup-command alignment,
+documentation-contract tests for those release guardrails, local path hygiene,
+and links to the GitHub backlog issues. It does not add new research, data,
+model, dashboard, or product behavior.
 
 GPR Equity Observatory remains the destination repository and public Streamlit
 research product. GeoRiskLab has been absorbed selectively as reproducibility,
@@ -124,10 +125,10 @@ explicitly.
 - The packaging branch adds a reviewer guide, reproducibility checklist,
   screenshot refresh guide, local-first launch guidance, launch checklist,
   draft pull request text, refreshed dashboard screenshots, a feature-lock-aware
-  pull request template, feature-lock-aware issue templates, aligned setup
-  commands, documentation-contract coverage for release guardrails,
-  machine-specific local-path cleanup, and a roadmap section linking to the
-  controlled GitHub backlog.
+  pull request template, feature-lock-aware issue templates, an issue-template
+  chooser, aligned setup commands, documentation-contract coverage for release
+  guardrails, machine-specific local-path cleanup, and a roadmap section linking
+  to the controlled GitHub backlog.
 
 ## What Was Intentionally Not Done
 

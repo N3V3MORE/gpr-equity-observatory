@@ -29,6 +29,8 @@ dashboard, or product behavior.
   interpretation guardrails.
 - Tightened data-source, method, and release-hardening issue templates with
   feature-lock gates.
+- Added an issue-template chooser that disables blank issues and points
+  reviewers to the reviewer guide, roadmap, and reproducibility checklist.
 - Aligned setup commands across README, technical appendix, deployment guide,
   and reproducibility docs.
 - Added documentation-contract tests that keep GitHub template guardrails and

@@ -156,6 +156,26 @@ def test_release_hardening_issue_template_preserves_locked_scope():
         assert phrase in release_template
 
 
+def test_github_issue_template_config_routes_reviewers_to_docs():
+    issue_config = (GITHUB / "ISSUE_TEMPLATE" / "config.yml").read_text(
+        encoding="utf-8"
+    )
+
+    required_phrases = [
+        "blank_issues_enabled: false",
+        "contact_links:",
+        "Reviewer guide",
+        "docs/REVIEWER_GUIDE.md",
+        "Roadmap and backlog",
+        "docs/ROADMAP.md",
+        "Reproducibility checklist",
+        "docs/REPRODUCIBILITY_CHECKLIST.md",
+    ]
+
+    for phrase in required_phrases:
+        assert phrase in issue_config
+
+
 def test_public_setup_docs_share_core_commands():
     setup_docs = [
         Path("README.md"),
