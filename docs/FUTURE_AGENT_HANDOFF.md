@@ -18,8 +18,9 @@ The merge implementation is complete through Phases 0 through 9 on branch
 A forward-plan packaging branch, `codex/polish-readme-reviewer-path`, now sits
 on top of the locked merge branch. It adds reviewer navigation, reproducibility
 checklists, local-first launch guidance, refreshed screenshots, screenshot
-refresh instructions, and links to the GitHub backlog issues. It does not add
-new research, data, model, dashboard, or product behavior.
+refresh instructions, PR/issue template guardrails, setup-command alignment,
+local path hygiene, and links to the GitHub backlog issues. It does not add new
+research, data, model, dashboard, or product behavior.
 
 GPR Equity Observatory remains the destination repository and public Streamlit
 research product. GeoRiskLab has been absorbed selectively as reproducibility,
@@ -58,8 +59,16 @@ The merge branch is `codex/pre-merge-gpr-cleanup`.
 The current forward-plan packaging branch is
 `codex/polish-readme-reviewer-path`.
 
-Key packaging branch commits include:
+Key packaging branch commits include, newest first:
 
+- `1416412 docs: omit local GeoRiskLab path`
+- `f6e0d34 docs: align setup commands`
+- `e73bced docs: tighten issue templates`
+- `5e4b43b docs: tighten pull request template`
+- `5914430 docs: add pull request draft`
+- `4a2aebc docs: update implementation checklist`
+- `170c6e9 docs: update release next steps`
+- `8930695 docs: update handoff after screenshot refresh`
 - `41e060e docs: refresh dashboard screenshots`
 - `33305db docs: add launch checklist`
 - `655cc92 docs: add screenshot refresh guide`
@@ -112,8 +121,9 @@ explicitly.
 - The packaging branch adds a reviewer guide, reproducibility checklist,
   screenshot refresh guide, local-first launch guidance, launch checklist,
   draft pull request text, refreshed dashboard screenshots, a feature-lock-aware
-  pull request template, feature-lock-aware issue templates, and a roadmap
-  section linking to the controlled GitHub backlog.
+  pull request template, feature-lock-aware issue templates, aligned setup
+  commands, machine-specific local-path cleanup, and a roadmap section linking
+  to the controlled GitHub backlog.
 
 ## What Was Intentionally Not Done
 
@@ -199,6 +209,11 @@ The packaging branch screenshot refresh was also validated with:
 - page title `GPR Equity Observatory`
 - Monthly Benchmark tab visible in the rendered app
 - no browser console warnings or errors
+- `uv run --all-extras ruff check .`
+- `uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q`
+
+The latest setup-command and local-path hardening docs were validated with:
+
 - `uv run --all-extras ruff check .`
 - `uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q`
 

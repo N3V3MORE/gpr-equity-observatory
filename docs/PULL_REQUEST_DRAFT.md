@@ -28,6 +28,10 @@ dashboard, or product behavior.
 - Tightened `.github/PULL_REQUEST_TEMPLATE.md` with feature-lock and
   interpretation guardrails.
 - Tightened data-source and method issue templates with feature-lock gates.
+- Aligned setup commands across README, technical appendix, deployment guide,
+  and reproducibility docs.
+- Removed machine-specific GeoRiskLab local path details from committed handoff
+  and merge-plan docs.
 - Linked the controlled GitHub backlog issues from `docs/ROADMAP.md`.
 - Updated `docs/PROJECT_STATUS.md`, `docs/IMPLEMENTATION_CHECKLIST.md`, and
   `docs/FUTURE_AGENT_HANDOFF.md` to reflect the current release state.
