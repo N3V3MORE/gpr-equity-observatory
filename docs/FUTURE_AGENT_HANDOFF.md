@@ -17,9 +17,9 @@ The merge implementation is complete through Phases 0 through 9 on branch
 
 A forward-plan packaging branch, `codex/polish-readme-reviewer-path`, now sits
 on top of the locked merge branch. It adds reviewer navigation, reproducibility
-checklists, local-first launch guidance, screenshot refresh instructions, and
-links to the GitHub backlog issues. It does not add new research, data, model,
-dashboard, or product behavior.
+checklists, local-first launch guidance, refreshed screenshots, screenshot
+refresh instructions, and links to the GitHub backlog issues. It does not add
+new research, data, model, dashboard, or product behavior.
 
 GPR Equity Observatory remains the destination repository and public Streamlit
 research product. GeoRiskLab has been absorbed selectively as reproducibility,
@@ -59,6 +59,9 @@ The current forward-plan packaging branch is
 
 Packaging branch commits, newest first:
 
+- `41e060e docs: refresh dashboard screenshots`
+- `33305db docs: add launch checklist`
+- `dda1504 docs: refresh forward-plan handoff`
 - `655cc92 docs: add screenshot refresh guide`
 - `1cf8451 docs: link project backlog issues`
 - `76a2a45 docs: clarify local-first launch path`
@@ -107,8 +110,9 @@ explicitly.
 - Docs now explain daily/monthly separation, sample/real boundaries, current
   findings, limitations, deployment, reproducibility, and profile packaging.
 - The packaging branch adds a reviewer guide, reproducibility checklist,
-  screenshot refresh guide, local-first launch guidance, and a roadmap section
-  linking to the controlled GitHub backlog.
+  screenshot refresh guide, local-first launch guidance, launch checklist,
+  refreshed dashboard screenshots, and a roadmap section linking to the
+  controlled GitHub backlog.
 
 ## What Was Intentionally Not Done
 
