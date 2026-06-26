@@ -59,6 +59,10 @@ Start here:
   interpretation.
 - [docs/TECHNICAL_APPENDIX.md](docs/TECHNICAL_APPENDIX.md) for data, methods,
   and reproducibility details.
+- [docs/REVIEWER_GUIDE.md](docs/REVIEWER_GUIDE.md) for 5-minute, 15-minute, and
+  30-minute review paths.
+- [docs/REPRODUCIBILITY_CHECKLIST.md](docs/REPRODUCIBILITY_CHECKLIST.md) for a
+  clean-clone rebuild checklist.
 - [docs/PROFILE_PACKAGING.md](docs/PROFILE_PACKAGING.md) for CV, LinkedIn, and
   interview material.
 - [reports/screenshots](reports/screenshots) for dashboard images.
@@ -80,13 +84,7 @@ instead of forcing a dramatic result.
 
 ## Quick Start
 
-Install dependencies:
-
-```powershell
-python -m pip install -e .
-```
-
-For local development and CI-style checks, install the dev extra:
+Install the regular development environment:
 
 ```powershell
 python -m pip install -r requirements.txt
@@ -164,6 +162,8 @@ tests/                         Data and feature checks
 reports/RESULTS_BRIEF.md       Short generated findings summary
 reports/screenshots/           Dashboard screenshots for profile use
 docs/PROJECT_STATUS.md         Current implementation and results status
+docs/REVIEWER_GUIDE.md         5-minute, 15-minute, and 30-minute review paths
+docs/REPRODUCIBILITY_CHECKLIST.md  Clean-clone rebuild checklist
 docs/RESEARCH_NOTE.md          Applied economics research note draft
 docs/TECHNICAL_APPENDIX.md     Data, model, and reproducibility details
 docs/PROFILE_PACKAGING.md      CV, LinkedIn, and interview materials

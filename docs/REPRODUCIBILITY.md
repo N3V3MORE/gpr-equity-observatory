@@ -97,12 +97,15 @@ python scripts/run_task.py monthly-sample --min-train-months 24
 Run the dashboard:
 
 ```powershell
-python scripts/run_task.py dashboard
+streamlit run app.py
 ```
 
 The dashboard can run with daily ETF outputs only. If monthly benchmark outputs
 exist, it adds the Monthly Benchmark tab content. If monthly outputs are absent,
 the tab explains how to build them.
+
+For a concise clean-clone rebuild checklist, see
+[docs/REPRODUCIBILITY_CHECKLIST.md](REPRODUCIBILITY_CHECKLIST.md).
 
 ## What Is Committed
 

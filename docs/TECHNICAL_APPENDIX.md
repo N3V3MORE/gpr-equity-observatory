@@ -20,7 +20,7 @@ uv sync --all-extras
 Run tests:
 
 ```powershell
-pytest -q
+pytest --cov=gprobs --cov=app --cov-report=term-missing -q
 ```
 
 Rebuild all generated data and figures:
@@ -34,6 +34,10 @@ Run the dashboard:
 ```powershell
 streamlit run app.py
 ```
+
+For time-boxed review paths, see [docs/REVIEWER_GUIDE.md](REVIEWER_GUIDE.md).
+For a practical clean-clone rebuild sequence, see
+[docs/REPRODUCIBILITY_CHECKLIST.md](REPRODUCIBILITY_CHECKLIST.md).
 
 Unified task runner:
 
