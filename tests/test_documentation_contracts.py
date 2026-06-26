@@ -2,6 +2,13 @@ from pathlib import Path
 
 DOCS = Path("docs")
 GITHUB = Path(".github")
+PUBLIC_REVIEWER_DOCS = [
+    Path("README.md"),
+    DOCS / "PROJECT_STATUS.md",
+    DOCS / "REVIEWER_GUIDE.md",
+    DOCS / "TECHNICAL_APPENDIX.md",
+    DOCS / "REPRODUCIBILITY_CHECKLIST.md",
+]
 
 
 def test_phase8_documentation_files_exist():
@@ -12,9 +19,9 @@ def test_phase8_documentation_files_exist():
         "ROADMAP.md",
         "FUTURE_AGENT_HANDOFF.md",
         "FEATURE_LOCK.md",
-        "CHATGPT_WEB_ANALYSIS_GUIDE.md",
     ]:
         assert (DOCS / filename).exists()
+    assert (DOCS / "internal" / "REVIEW_CONTEXT_FOR_AI_TOOLS.md").exists()
 
 
 def test_core_docs_explain_daily_monthly_modes_and_claim_limits():
@@ -86,7 +93,6 @@ def test_feature_unlock_records_scope_and_preserves_guardrails():
 
     required_feature_unlock_phrases = [
         "status: lifted",
-        "explicit user request",
         "feature work is now unlocked",
         "record the chosen scope",
         "fred controls",
@@ -100,7 +106,8 @@ def test_feature_unlock_records_scope_and_preserves_guardrails():
         assert phrase in feature_lock
 
     assert "feature lock was lifted" in handoff
-    assert "feature lock was lifted" in roadmap
+    assert "future work is open" in roadmap
+    assert "explicit user request" not in roadmap
 
 
 def test_github_templates_preserve_scope_guardrails():
@@ -200,12 +207,19 @@ def test_public_setup_docs_share_core_commands():
             assert command in contents, f"{command} missing from {doc_path}"
 
 
-def test_chatgpt_web_analysis_guide_routes_safe_context():
-    guide = (DOCS / "CHATGPT_WEB_ANALYSIS_GUIDE.md").read_text(
+def test_public_reviewer_path_avoids_internal_ai_workflow_docs():
+    for doc_path in PUBLIC_REVIEWER_DOCS:
+        contents = doc_path.read_text(encoding="utf-8").lower()
+        assert "chatgpt" not in contents, f"internal AI review path leaked into {doc_path}"
+        assert "future_agent_handoff" not in contents, f"agent handoff leaked into {doc_path}"
+        assert "future-agent" not in contents, f"agent wording leaked into {doc_path}"
+        assert "explicit user request" not in contents, f"chat-history wording leaked into {doc_path}"
+
+
+def test_internal_ai_review_context_routes_safe_context():
+    guide = (DOCS / "internal" / "REVIEW_CONTEXT_FOR_AI_TOOLS.md").read_text(
         encoding="utf-8"
     ).lower()
-    readme = Path("README.md").read_text(encoding="utf-8").lower()
-    reviewer = (DOCS / "REVIEWER_GUIDE.md").read_text(encoding="utf-8").lower()
 
     required_phrases = [
         "best files to upload or paste",
@@ -223,5 +237,21 @@ def test_chatgpt_web_analysis_guide_routes_safe_context():
     for phrase in required_phrases:
         assert phrase in guide
 
-    assert "chatgpt_web_analysis_guide.md" in readme
-    assert "chatgpt_web_analysis_guide.md" in reviewer
+
+def test_committed_docs_do_not_leak_local_paths():
+    docs_to_scan = [
+        Path("README.md"),
+        Path("AGENTS.md"),
+        *DOCS.rglob("*.md"),
+        *DOCS.rglob("*.txt"),
+    ]
+    forbidden_patterns = [
+        "c:\\users\\",
+        "/users/",
+        "desktop\\code",
+    ]
+
+    for doc_path in docs_to_scan:
+        contents = doc_path.read_text(encoding="utf-8").lower()
+        for pattern in forbidden_patterns:
+            assert pattern not in contents, f"{pattern} leaked into {doc_path}"

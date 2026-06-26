@@ -17,7 +17,8 @@ Latest pushed merge commit when this file was updated:
 ## What Changed
 
 - Clarified the README reviewer path and cautious public claim.
-- Added `docs/CHATGPT_WEB_ANALYSIS_GUIDE.md` for efficient ChatGPT web review.
+- Added `docs/internal/REVIEW_CONTEXT_FOR_AI_TOOLS.md` for efficient internal
+  AI-assisted review.
 - Added `docs/REVIEWER_GUIDE.md` with 5-minute, 15-minute, and 30-minute review
   paths.
 - Added `docs/REPRODUCIBILITY_CHECKLIST.md` for clean-clone rebuild checks.
@@ -33,7 +34,7 @@ Latest pushed merge commit when this file was updated:
 - Aligned setup commands across README, technical appendix, deployment guide,
   and reproducibility docs.
 - Added documentation-contract tests that keep GitHub template guardrails,
-  ChatGPT web context guidance, and public setup commands from drifting.
+  internal AI review context guidance, and public setup commands from drifting.
 - Removed machine-specific GeoRiskLab local path details from committed handoff
   docs.
 - Linked the controlled GitHub backlog issues from `docs/ROADMAP.md`.
@@ -66,7 +67,7 @@ Recent post-push validation on `main` passed:
 
 Start with:
 
-- `docs/CHATGPT_WEB_ANALYSIS_GUIDE.md`
+- `docs/internal/REVIEW_CONTEXT_FOR_AI_TOOLS.md`
 - `README.md`
 - `reports/RESULTS_BRIEF.md`
 - `docs/PROJECT_STATUS.md`

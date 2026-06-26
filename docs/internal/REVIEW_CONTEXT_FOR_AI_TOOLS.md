@@ -1,6 +1,6 @@
-# ChatGPT Web Analysis Guide
+# Review Context For AI Tools
 
-Use this file when asking ChatGPT web or another general-purpose reviewer to
+Use this internal file when asking an AI tool or general-purpose reviewer to
 analyze the project. It gives a compact reading path and warns against common
 misreadings.
 
@@ -20,10 +20,10 @@ extension. As of 2026-06-26, `main` is pushed to `origin/main` at merge commit
 
 ## Best Files To Upload Or Paste
 
-If ChatGPT web has a file limit, use this order:
+If the review tool has a file limit, use this order:
 
 1. `README.md`
-2. `docs/CHATGPT_WEB_ANALYSIS_GUIDE.md`
+2. `docs/internal/REVIEW_CONTEXT_FOR_AI_TOOLS.md`
 3. `reports/RESULTS_BRIEF.md`
 4. `docs/PROJECT_STATUS.md`
 5. `docs/RESEARCH_NOTE.md`
@@ -57,7 +57,7 @@ Do not upload or paste:
 - generated real monthly outputs unless a publication policy is chosen
 
 Generated daily outputs under `data/processed/` can be rebuilt locally and are
-not committed by default. If you need ChatGPT to inspect output schemas, use
+not committed by default. If you need a reviewer to inspect output schemas, use
 `src/gprobs/dashboard/outputs.py` and `docs/TECHNICAL_APPENDIX.md` first.
 
 ## Architecture At A Glance
@@ -177,5 +177,5 @@ Use prompts like these:
 - "Review the dashboard output contracts and tests for missing schema coverage."
 - "Suggest documentation improvements without changing research conclusions."
 
-Avoid asking ChatGPT to invent new findings from sample monthly data or ignored
+Avoid asking review tools to invent new findings from sample monthly data or ignored
 generated files.

@@ -1,18 +1,20 @@
 # Future Agent Handoff
 
+Internal maintainer note. This file is for local agents and maintainers, not
+the public reviewer path.
+
 Last updated: 2026-06-26
 
 This is the entry point for a fresh agent picking up GPR Equity Observatory.
 Read this before changing code, docs, data, or Git state.
 
-For ChatGPT web or another external reviewer, start with
-`docs/CHATGPT_WEB_ANALYSIS_GUIDE.md`. It lists the smallest useful file bundle,
+For an AI-assisted internal review context, use
+`docs/internal/REVIEW_CONTEXT_FOR_AI_TOOLS.md`. It lists a compact file bundle,
 safe upload boundaries, current result snapshot, and review prompts.
 
-Feature lock was lifted on 2026-06-26 by explicit user request. Read
-`docs/FEATURE_LOCK.md` before making any change. New features are allowed only
-when their scope is recorded and the standing data and claim-safety guardrails
-are preserved.
+Feature lock was lifted on 2026-06-26. Read `docs/FEATURE_LOCK.md` before
+making any change. New features are allowed only when their scope is recorded
+and the standing data and claim-safety guardrails are preserved.
 
 ## Current State
 
@@ -44,10 +46,10 @@ commit or delete generated raw/processed data unless the user explicitly asks.
 
 ## Important Paths
 
-- Destination repo: `C:\Users\Sushmit\Desktop\Code\GPR_Observer`
+- Destination repo: `<local project root>`
 - GitHub remote:
   `https://github.com/N3V3MORE/gpr-equity-observatory.git`
-- ChatGPT web context guide: `docs/CHATGPT_WEB_ANALYSIS_GUIDE.md`
+- AI review context guide: `docs/internal/REVIEW_CONTEXT_FOR_AI_TOOLS.md`
 - Project status note: `docs/PROJECT_STATUS.md`
 - Reviewer guide: `docs/REVIEWER_GUIDE.md`
 - Reproducibility checklist: `docs/REPRODUCIBILITY_CHECKLIST.md`
@@ -59,7 +61,7 @@ commit or delete generated raw/processed data unless the user explicitly asks.
 - Historical merge plan: `docs/GEORISKLAB_GPR_MERGE_PLAN.txt`
 
 Read `docs/GEORISKLAB_GPR_MERGE_PLAN.txt` only when merge history matters. It
-is long and historical; it is not the shortest context path for ChatGPT web.
+is long and historical; it is not the shortest context path for review.
 
 ## What Is Implemented
 
@@ -87,8 +89,7 @@ is long and historical; it is not the shortest context path for ChatGPT web.
 - CI includes the existing lint/test matrix and a deterministic monthly sample
   pipeline job.
 - Docs explain daily/monthly separation, sample/real boundaries, current
-  findings, limitations, deployment, reproducibility, profile packaging, and
-  ChatGPT web analysis.
+  findings, limitations, deployment, reproducibility, and profile packaging.
 
 ## What Was Intentionally Not Done
 
@@ -244,8 +245,8 @@ research choices for the user:
 
 1. Run `git status -sb`.
 2. Read `AGENTS.md`, `docs/FEATURE_LOCK.md`, and this file.
-3. If the task involves external review or ChatGPT web, read
-   `docs/CHATGPT_WEB_ANALYSIS_GUIDE.md`.
+3. If the task involves AI-assisted internal review, read
+   `docs/internal/REVIEW_CONTEXT_FOR_AI_TOOLS.md`.
 4. Read `docs/PROJECT_STATUS.md` and `docs/ROADMAP.md` for user-facing status
    and backlog.
 5. Run focused checks for the requested change before editing.

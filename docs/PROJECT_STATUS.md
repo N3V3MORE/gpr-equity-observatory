@@ -8,20 +8,12 @@ separates what is implemented from what the evidence currently says.
 For a requirement-by-requirement audit against the original project plan, see
 `docs/IMPLEMENTATION_CHECKLIST.md`.
 
-For future-agent continuation context, including current `main` state,
-completed merge commits, verification commands, and remaining decisions, see
-`docs/FUTURE_AGENT_HANDOFF.md`.
-
-For ChatGPT web or another external reviewer, start with
-`docs/CHATGPT_WEB_ANALYSIS_GUIDE.md`.
-
 For the controlled future-work backlog, see `docs/ROADMAP.md` and the linked
 GitHub issues.
 
-Feature lock was lifted on 2026-06-26 by explicit user request. See
-`docs/FEATURE_LOCK.md`; new research, data, model, dashboard, or product
-features can proceed when their scope is recorded and the standing data and
-claim-safety guardrails are preserved.
+Future work is open, but new research, data, model, dashboard, or product
+features should be scoped before implementation and must preserve the standing
+data and claim-safety guardrails.
 
 ## Implemented
 
@@ -40,7 +32,7 @@ claim-safety guardrails are preserved.
 - Quantile regressions for tail-risk analysis.
 - Local projections for dynamic abnormal-return response paths.
 - Rolling GPR sensitivity by country.
-- Prediction Lab: simple drawdown-risk classifiers with purged chronological
+- Prediction Lab: drawdown-risk classification diagnostics with purged chronological
   validation, out-of-sample predictions, calibration, lift, threshold metrics,
   and country risk summaries.
 - Compact evidence summary table for comparing methods.
@@ -61,8 +53,9 @@ claim-safety guardrails are preserved.
   result tables.
 - Automated test workflow for GitHub Actions.
 - CI monthly sample pipeline job.
-- Refreshed profile screenshots that show the guided dashboard tab set,
-  including Prediction Lab and Monthly Benchmark tabs.
+- Guided dashboard tab set, including Prediction Lab and Monthly Benchmark.
+- Public screenshots currently cover the Overview, Robustness, and Panel
+  Regression tabs.
 
 ## Current Results
 
@@ -132,8 +125,8 @@ Good next options are:
 - Decide whether the project stays local-first for portfolio use or gets a
   documented public deployment snapshot.
 - Publish or adapt the blog draft for the chosen platform.
-- Keep the ChatGPT web analysis guide current when major docs or outputs
-  change.
+- Keep reviewer-facing docs and screenshots current when major outputs or
+  dashboard views change.
 
 Research extensions, such as FRED controls, country-specific GPR data, or a
 narrow GDELT extension, are now unlocked but still need scoped plans, source

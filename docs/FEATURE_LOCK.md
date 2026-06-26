@@ -2,8 +2,7 @@
 
 Last updated: 2026-06-26
 
-Status: lifted on 2026-06-26 by explicit user request: "Unlock feature lock"
-followed by "All of it."
+Status: lifted on 2026-06-26.
 
 The GeoRiskLab + GPR Equity Observatory merge completed Phases 0 through 9.
 Feature work is now unlocked across the roadmap, including dashboard
@@ -68,4 +67,4 @@ Lab extension. Good next moves include:
 - decide public deployment policy
 - decide whether real monthly benchmark outputs can be published
 - plan FRED, country-specific GPR, or GDELT work with source validation
-- keep `docs/CHATGPT_WEB_ANALYSIS_GUIDE.md` current for external review
+- keep reviewer-facing docs current when outputs or dashboard views change

@@ -44,7 +44,7 @@ It is written as a plain-English audit, not as a marketing summary.
 | GitHub Actions run tests | Done | `.github/workflows/tests.yml` |
 | Monthly sample pipeline runs in CI | Done | monthly sample job in `.github/workflows/tests.yml` |
 | Blog post is published | Drafted | `docs/BLOG_POST_DRAFT.md`; publishing is outside the repo |
-| Walkthrough video or demo script exists | Partial | Three-minute script and ChatGPT analysis guide exist; video is not recorded |
+| Walkthrough video or demo script exists | Partial | Three-minute script and internal AI review context exist; video is not recorded |
 
 Deployment details are documented in `docs/DEPLOYMENT_GUIDE.md`. External-data
 choices are documented in `docs/DATA_SOURCE_DECISIONS.md`.
@@ -86,12 +86,12 @@ These are the main choices that require a human decision:
 
 The project is already strong as a reproducible local research product on
 `main`. The public-facing docs, screenshots, reviewer guide, reproducibility
-checklist, ChatGPT web guide, launch checklist, guided dashboard, monthly
+checklist, internal AI review context, launch checklist, guided dashboard, monthly
 benchmark, and Prediction Lab are in place.
 
 1. Decide whether the dashboard stays local-first or needs a documented public
    deployment snapshot.
 2. Keep richer external data additions in the GitHub backlog until each scope is
    explicitly chosen and source validation is planned.
-3. Refresh screenshots or the ChatGPT guide only when visible dashboard content
+3. Refresh screenshots or the internal AI review context only when visible dashboard content
    or major output contracts change.

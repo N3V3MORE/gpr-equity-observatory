@@ -37,8 +37,6 @@ streamlit run app.py
 ```
 
 For time-boxed review paths, see [docs/REVIEWER_GUIDE.md](REVIEWER_GUIDE.md).
-For ChatGPT web or another external reviewer, see
-[docs/CHATGPT_WEB_ANALYSIS_GUIDE.md](CHATGPT_WEB_ANALYSIS_GUIDE.md).
 For a practical clean-clone rebuild sequence, see
 [docs/REPRODUCIBILITY_CHECKLIST.md](REPRODUCIBILITY_CHECKLIST.md).
 

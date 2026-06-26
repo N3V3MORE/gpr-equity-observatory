@@ -10,12 +10,12 @@ layer, and Prediction Lab extension are now merged into `main`.
 
 For current context, use:
 
-- docs/CHATGPT_WEB_ANALYSIS_GUIDE.md
+- docs/internal/REVIEW_CONTEXT_FOR_AI_TOOLS.md
 - docs/FUTURE_AGENT_HANDOFF.md
 - docs/PROJECT_STATUS.md
 - docs/TECHNICAL_APPENDIX.md
 
-Do not use this file as the primary ChatGPT web context unless you specifically
+Do not use this file as the primary AI review context unless you specifically
 need merge history. It is intentionally long and includes old branch-state
 observations that are superseded by the current docs above.
 
@@ -95,7 +95,7 @@ Local projects
 1. GPR Equity Observatory
 
    Local path:
-   C:\Users\Sushmit\Desktop\Code\GPR_Observer
+   <local project root>
 
    GitHub remote:
    https://github.com/N3V3MORE/gpr-equity-observatory.git
@@ -209,7 +209,7 @@ Findings
 3. Both repos already have local Serena project folders.
 
    GPR:
-   C:\Users\Sushmit\Desktop\Code\GPR_Observer\.serena
+   <local project root>\.serena
 
    GeoRiskLab:
    local GeoRiskLab .serena directory, with the machine-specific path omitted
@@ -219,7 +219,7 @@ Findings
 
 4. GPR also has an ignored Claude worktree snapshot:
 
-   C:\Users\Sushmit\Desktop\Code\GPR_Observer\.claude\worktrees\flamboyant-moser-daf04b
+   <local project root>\.claude\worktrees\flamboyant-moser-daf04b
 
    This is not canonical project setup and should not be merged or used as a
    source of truth.
@@ -266,7 +266,7 @@ Recommended project setup before implementation
 Add a committed AGENTS.md to GPR_Observer before the merge implementation starts.
 This file should be short and strict. It should tell future agents:
 
-- Use C:\Users\Sushmit\Desktop\Code\GPR_Observer as the destination repo unless
+- Use <local project root> as the destination repo unless
   the user explicitly chooses a different repo strategy.
 - Do not edit or delete generated raw/processed data without user approval.
 - Keep GPR's Streamlit dashboard and daily ETF panel as the public product.
@@ -299,7 +299,7 @@ Current architecture
 --------------------
 
 Repository root:
-C:\Users\Sushmit\Desktop\Code\GPR_Observer
+<local project root>
 
 Important files and directories:
 
@@ -696,7 +696,7 @@ Use GPR Equity Observatory as the destination repository and product identity.
 Port GeoRiskLab into GPR in phases as infrastructure and a monthly benchmark.
 
 Recommended destination:
-C:\Users\Sushmit\Desktop\Code\GPR_Observer
+<local project root>
 
 Recommended public repo after merge:
 https://github.com/N3V3MORE/gpr-equity-observatory
@@ -719,7 +719,7 @@ Why GPR should be the destination
 
    The GPR app covers more analysis modes and a 20-country ETF panel.
 
-3. It is already structured as the user's profile-ready output.
+3. It is already structured as the user's portfolio output.
 
    Renaming the public project to GeoRiskLab would make the existing docs and
    dashboard less coherent.
@@ -2294,7 +2294,7 @@ The merge should preserve:
 - GPR's Streamlit dashboard
 - GPR's daily 20-country ETF panel
 - GPR's broad empirical analysis suite
-- GPR's profile-ready docs and screenshots
+- GPR's portfolio docs and screenshots
 - GeoRiskLab's sample/real split
 - GeoRiskLab's source manifests
 - GeoRiskLab's validation guardrails

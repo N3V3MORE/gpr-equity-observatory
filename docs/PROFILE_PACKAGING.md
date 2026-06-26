@@ -45,9 +45,7 @@ The strongest honest claim is:
 > that geopolitical risk is associated with equity-market risk, while the
 > emerging-market asymmetry result remains mixed.
 
-## Optional Future Work In Plain English
-
-You said the future options were confusing, so here is the short version.
+## Optional Future Work
 
 - Public deployment means turning the dashboard into a shareable web link. This
   is optional.
@@ -82,21 +80,16 @@ comparisons. It is a benchmark layer, not the main country ETF panel.
 
 ## LinkedIn Summary
 
-I built GPR Equity Observatory, a reproducible quant economics project examining
-how equity markets respond to geopolitical risk shocks across emerging and
-developed economies. The project uses daily country ETF returns, the
+I built GPR Equity Observatory because geopolitical-risk claims are easy to make
+and hard to test. The project uses daily country ETF returns, the
 Caldara-Iacoviello GPR index, public market controls, event studies, panel
 regressions, quantile regressions, local projections, and a Prediction Lab for
-out-of-sample drawdown-risk classification. The output includes a tested Python
-pipeline, a Streamlit dashboard, a research note, and a technical appendix.
+out-of-sample drawdown-risk classification.
 
 It also includes a monthly benchmark layer that keeps sample mode and real mode
-separate and documents which outputs are local only.
-
-The current evidence is intentionally reported cautiously: GPR is associated
-with equity-market risk, but the emerging-market asymmetry result is not yet a
-strong statistical conclusion after controls. The main value is the transparent
-and reproducible empirical workflow.
+separate and documents which outputs are local only. The current result is
+cautious: GPR is associated with equity-market risk, but the emerging-market
+asymmetry result is not a strong statistical conclusion after controls.
 
 ## Interview Talking Points
 
@@ -196,7 +189,7 @@ main result. It is generated from the pipeline outputs, so rebuild it with
 
 ## Dashboard Screenshots
 
-Profile-ready screenshots are saved in `reports/screenshots/`:
+Screenshots are saved in `reports/screenshots/`:
 
 - `dashboard_overview.png`: data scope and main GPR chart.
 - `dashboard_robustness.png`: event-study robustness chart.

@@ -6,8 +6,8 @@ project. It keeps public launch work separate from future feature work.
 ## GitHub Repository
 
 - Pin the repository on the GitHub profile if this is the project to lead with.
-- Use [docs/CHATGPT_WEB_ANALYSIS_GUIDE.md](CHATGPT_WEB_ANALYSIS_GUIDE.md) when
-  asking ChatGPT web or another external reviewer to inspect the project.
+- Use [docs/REVIEWER_GUIDE.md](REVIEWER_GUIDE.md) when asking someone else to
+  inspect the project.
 - Use [docs/PULL_REQUEST_DRAFT.md](PULL_REQUEST_DRAFT.md) only as a merged
   update summary; it is no longer a pending pull-request draft.
 - Use this repository description:

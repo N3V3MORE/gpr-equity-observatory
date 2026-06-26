@@ -2,10 +2,10 @@
 
 This roadmap separates finished merge work from future research extensions.
 
-Feature lock was lifted on 2026-06-26 by explicit user request. V0.2 remains
-the completed merge baseline. V0.3 and V1.0 items are now selectable feature
-work, provided each change records scope and preserves the standing data and
-claim-safety guardrails in `docs/FEATURE_LOCK.md`.
+Future work is open. V0.2 remains the completed merge baseline. V0.3 and V1.0
+items are selectable feature work, provided each change records scope and
+preserves the standing data and claim-safety guardrails in
+`docs/FEATURE_LOCK.md`.
 
 ## Current Integrated State
 
@@ -35,7 +35,7 @@ Included:
 - monthly benchmark models added
 - CI monthly sample pipeline added
 - docs consolidated around the daily/monthly distinction
-- reviewer packaging, screenshot guidance, and ChatGPT web analysis guide added
+- reviewer packaging and screenshot guidance added
 
 ## V0.3 Completed Usability And Prediction Work
 

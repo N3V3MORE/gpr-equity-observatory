@@ -1,11 +1,10 @@
 # GPR Equity Observatory
 
-GPR Equity Observatory is a reproducible economics research project on how
-equity markets respond to geopolitical risk shocks.
+GPR Equity Observatory tests how far a simple question can be answered with
+public data: do equity markets react differently when geopolitical risk jumps?
 
-It is built as a profile-ready project: a tested Python data pipeline, empirical
-models, an interactive Streamlit dashboard, screenshots, and plain-English
-research notes.
+The project combines a tested Python data pipeline, empirical models, an
+interactive Streamlit dashboard, screenshots, and research notes.
 
 ![Dashboard overview](reports/screenshots/dashboard_overview.png)
 
@@ -21,7 +20,8 @@ country ETF proxies.
 - Adds the Caldara-Iacoviello geopolitical risk index.
 - Compares developed and emerging market ETF responses.
 - Runs event studies, panel regressions, quantile regressions, local
-  projections, rolling sensitivity estimates, and a simple drawdown-risk model.
+  projections, rolling sensitivity estimates, and Prediction Lab
+  risk-classification diagnostics.
 - Adds a separate monthly developed/emerging benchmark layer with deterministic
   sample mode, user-supplied real mode, source manifests, HAC regressions, and
   expanding-window forecast comparisons.
@@ -53,9 +53,6 @@ summary.
 
 Start here:
 
-- [docs/CHATGPT_WEB_ANALYSIS_GUIDE.md](docs/CHATGPT_WEB_ANALYSIS_GUIDE.md) for
-  the most efficient file bundle and review prompts for ChatGPT web or another
-  external reviewer.
 - [reports/RESULTS_BRIEF.md](reports/RESULTS_BRIEF.md) for the short generated
   result summary.
 - [docs/RESEARCH_NOTE.md](docs/RESEARCH_NOTE.md) for the research framing and
@@ -169,7 +166,6 @@ tests/                         Data and feature checks
 reports/RESULTS_BRIEF.md       Short generated findings summary
 reports/screenshots/           Dashboard screenshots for profile use
 docs/PROJECT_STATUS.md         Current implementation and results status
-docs/CHATGPT_WEB_ANALYSIS_GUIDE.md  Efficient context bundle for ChatGPT web
 docs/REVIEWER_GUIDE.md         5-minute, 15-minute, and 30-minute review paths
 docs/REPRODUCIBILITY_CHECKLIST.md  Clean-clone rebuild checklist
 docs/SCREENSHOT_REFRESH.md      Dashboard screenshot refresh process
@@ -229,4 +225,7 @@ Screenshots are already saved in [reports/screenshots](reports/screenshots).
   American Economic Review.
 - ETF and market proxy data are retrieved through `yfinance` for educational
   research use.
+- Monthly real benchmark mode uses user-supplied Caldara-Iacoviello monthly GPR
+  and Kenneth French developed/emerging factor files; those local source files
+  stay outside Git.
 - The dashboard is built with Streamlit.
