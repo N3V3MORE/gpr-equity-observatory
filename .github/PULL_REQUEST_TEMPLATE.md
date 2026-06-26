@@ -4,7 +4,7 @@ What changed?
 
 ## Type
 
-- [ ] Release hardening on the locked merge branch
+- [ ] Release hardening on a locked branch
 - [ ] Data ingestion or source metadata
 - [ ] Feature engineering
 - [ ] Econometrics or forecasting
