@@ -25,6 +25,8 @@ dashboard, or product behavior.
 - Added `docs/LAUNCH_CHECKLIST.md` for GitHub/profile launch steps.
 - Added `docs/SCREENSHOT_REFRESH.md` and refreshed the committed dashboard
   screenshots.
+- Tightened `.github/PULL_REQUEST_TEMPLATE.md` with feature-lock and
+  interpretation guardrails.
 - Linked the controlled GitHub backlog issues from `docs/ROADMAP.md`.
 - Updated `docs/PROJECT_STATUS.md`, `docs/IMPLEMENTATION_CHECKLIST.md`, and
   `docs/FUTURE_AGENT_HANDOFF.md` to reflect the current release state.
