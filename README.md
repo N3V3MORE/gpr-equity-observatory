@@ -66,6 +66,8 @@ Start here:
 - [docs/PROFILE_PACKAGING.md](docs/PROFILE_PACKAGING.md) for CV, LinkedIn, and
   interview material.
 - [reports/screenshots](reports/screenshots) for dashboard images.
+- [docs/SCREENSHOT_REFRESH.md](docs/SCREENSHOT_REFRESH.md) for the screenshot
+  refresh process.
 
 ## Why This Works As A Profile Project
 
@@ -164,6 +166,7 @@ reports/screenshots/           Dashboard screenshots for profile use
 docs/PROJECT_STATUS.md         Current implementation and results status
 docs/REVIEWER_GUIDE.md         5-minute, 15-minute, and 30-minute review paths
 docs/REPRODUCIBILITY_CHECKLIST.md  Clean-clone rebuild checklist
+docs/SCREENSHOT_REFRESH.md      Dashboard screenshot refresh process
 docs/RESEARCH_NOTE.md          Applied economics research note draft
 docs/TECHNICAL_APPENDIX.md     Data, model, and reproducibility details
 docs/PROFILE_PACKAGING.md      CV, LinkedIn, and interview materials

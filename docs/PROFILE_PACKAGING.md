@@ -194,3 +194,6 @@ Profile-ready screenshots are saved in `reports/screenshots/`:
 - `dashboard_overview.png`: data scope and main GPR chart.
 - `dashboard_robustness.png`: event-study robustness chart.
 - `dashboard_panel_regression.png`: regression and sample-robustness tables.
+
+Refresh them only when the visible dashboard changes materially. See
+`docs/SCREENSHOT_REFRESH.md` for the repeatable refresh process.
