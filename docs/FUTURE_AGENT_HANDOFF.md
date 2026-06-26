@@ -224,12 +224,17 @@ The packaging branch screenshot refresh was also validated with:
 - `uv run --all-extras ruff check .`
 - `uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q`
 
-The latest setup-command, GitHub-template, issue-template, and local-path
-hardening docs were validated with:
+The setup-command, GitHub-template, issue-template, and local-path hardening
+docs were validated with:
 
 - `uv run --all-extras pytest tests\test_documentation_contracts.py -q`
 - `uv run --all-extras ruff check .`
 - `uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q`
+
+Recent docs-only branch-state and template wording maintenance was checked with:
+
+- `git diff --check`
+- `uv run --all-extras pytest tests\test_documentation_contracts.py -q`
 
 ## Data And Output Policy
 
