@@ -8,6 +8,10 @@ separates what is implemented from what the evidence currently says.
 For a requirement-by-requirement audit against the original project plan, see
 `docs/IMPLEMENTATION_CHECKLIST.md`.
 
+For future-agent continuation context, including branch state, completed merge
+commits, verification commands, and remaining decisions, see
+`docs/FUTURE_AGENT_HANDOFF.md`.
+
 ## Implemented
 
 - 20-country ETF universe: 10 developed market proxies and 10 emerging market

@@ -46,6 +46,8 @@ It is written as a plain-English audit, not as a marketing summary.
 
 Deployment details are documented in `docs/DEPLOYMENT_GUIDE.md`. External-data
 choices are documented in `docs/DATA_SOURCE_DECISIONS.md`.
+Future-agent continuation context is documented in
+`docs/FUTURE_AGENT_HANDOFF.md`.
 
 ## Current Evidence Summary
 

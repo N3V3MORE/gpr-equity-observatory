@@ -17,7 +17,7 @@ benchmark pipeline into it in staged slices.
 Implementation status as of 2026-06-26
 ======================================
 
-Phases 0 through 8 are implemented on branch codex/pre-merge-gpr-cleanup.
+Phases 0 through 9 are implemented on branch codex/pre-merge-gpr-cleanup.
 
 Completed rollback commits:
 - 77369e4 chore: stabilize pre-merge cleanup
@@ -28,6 +28,8 @@ Completed rollback commits:
 - b7e20db feat: add monthly benchmark models
 - 10e411c chore: add unified monthly task runner
 - 7fe03c2 feat: add monthly benchmark dashboard tab
+- 8c2835c docs: consolidate merged observatory story
+- f34792d docs: refresh final result metrics
 
 Phase 6 is implemented:
 - scripts/run_task.py provides the documented Windows-friendly command path.
@@ -50,7 +52,20 @@ Phase 8 is implemented:
 - docs/RESEARCH_NOTE.md, docs/DEPLOYMENT_GUIDE.md, docs/PROFILE_PACKAGING.md,
   and docs/IMPLEMENTATION_CHECKLIST.md now include the monthly benchmark layer.
 
-Remaining planned work is Phase 9 final verification and release decision.
+Phase 9 is implemented:
+- uv run --all-extras ruff check . passed.
+- uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing
+  -q passed.
+- uv run --all-extras python scripts/run_task.py monthly-sample
+  --min-train-months 24 passed.
+- uv run --all-extras python scripts/run_task.py build-daily passed.
+- A headless Streamlit smoke test returned HTTP 200.
+- A direct dashboard-loader check found daily outputs and monthly sample
+  regression/forecast outputs.
+
+Current continuation guidance is in docs/FUTURE_AGENT_HANDOFF.md. Remaining
+work is optional release packaging: push/PR, refreshed screenshots, public
+deployment, and external-data decisions.
 
 
 1. Sources Inspected
