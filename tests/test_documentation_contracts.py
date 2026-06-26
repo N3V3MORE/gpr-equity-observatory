@@ -74,7 +74,7 @@ def test_future_agent_handoff_records_branch_checks_and_boundaries():
         assert phrase in handoff
 
 
-def test_feature_lock_blocks_new_scope_without_user_unlock():
+def test_feature_unlock_records_scope_and_preserves_guardrails():
     feature_lock = (DOCS / "FEATURE_LOCK.md").read_text(
         encoding="utf-8"
     ).lower()
@@ -83,25 +83,26 @@ def test_feature_lock_blocks_new_scope_without_user_unlock():
     ).lower()
     roadmap = (DOCS / "ROADMAP.md").read_text(encoding="utf-8").lower()
 
-    required_feature_lock_phrases = [
-        "feature locked",
-        "release-hardening mode",
-        "new features require an explicit user decision",
-        "add fred controls",
-        "add gdelt ingestion or analysis",
-        "add country-specific gpr data",
-        "commit raw third-party data",
+    required_feature_unlock_phrases = [
+        "status: lifted",
+        "explicit user request",
+        "feature work is now unlocked",
+        "record the chosen scope",
+        "fred controls",
+        "gdelt",
+        "country-specific gpr",
+        "raw third-party market data",
         "config/sources.yml",
     ]
 
-    for phrase in required_feature_lock_phrases:
+    for phrase in required_feature_unlock_phrases:
         assert phrase in feature_lock
 
-    assert "this branch is feature locked" in handoff
-    assert "post-lock work" in roadmap
+    assert "feature lock was lifted" in handoff
+    assert "feature lock was lifted" in roadmap
 
 
-def test_github_templates_preserve_feature_lock_guardrails():
+def test_github_templates_preserve_scope_guardrails():
     pr_template = (GITHUB / "PULL_REQUEST_TEMPLATE.md").read_text(
         encoding="utf-8"
     ).lower()
@@ -113,8 +114,8 @@ def test_github_templates_preserve_feature_lock_guardrails():
     ).lower()
 
     for template in [pr_template, data_template, method_template]:
-        assert "feature-lock" in template
-        assert "explicit unlock decision" in template
+        assert "scope" in template
+        assert "scoped plan, issue, or pr description" in template
 
     required_pr_phrases = [
         "daily etf outputs and monthly benchmark outputs remain separate",
@@ -134,17 +135,17 @@ def test_github_templates_preserve_feature_lock_guardrails():
     )
 
 
-def test_release_hardening_issue_template_preserves_locked_scope():
+def test_release_hardening_issue_template_preserves_release_scope():
     release_template = (
         GITHUB / "ISSUE_TEMPLATE" / "release_hardening.md"
     ).read_text(encoding="utf-8").lower()
 
     required_phrases = [
         "release hardening",
-        "feature-lock",
-        "preserves the current feature-locked scope",
+        "scope and guardrail check",
+        "preserves the current release baseline",
         "no new research, data, model, dashboard, or product behavior",
-        "explicit unlock decision",
+        "scoped plan, issue, or pr description",
         "config/sources.yml",
         "not framed as investment advice or a trading system",
         "sample-mode outputs are not presented as empirical evidence",

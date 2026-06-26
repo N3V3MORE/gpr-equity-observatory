@@ -1,6 +1,6 @@
 ---
 name: Release hardening task
-about: Docs, CI, review, screenshot, packaging, or validation work that preserves the locked scope
+about: Docs, CI, review, screenshot, packaging, or validation work
 labels: release-hardening
 ---
 
@@ -8,12 +8,12 @@ labels: release-hardening
 
 What needs to be hardened?
 
-## Feature-Lock Check
+## Scope and Guardrail Check
 
 - [ ] This is release hardening.
-- [ ] This preserves the current feature-locked scope.
+- [ ] This preserves the current release baseline.
 - [ ] No new research, data, model, dashboard, or product behavior is added.
-- [ ] Any scope change has an explicit unlock decision linked here:
+- [ ] Any scope change has a scoped plan, issue, or PR description linked here:
 
 ## Area
 

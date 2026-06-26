@@ -15,10 +15,10 @@ commits, verification commands, and remaining decisions, see
 For the controlled future-work backlog, see `docs/ROADMAP.md` and the linked
 GitHub issues.
 
-Feature lock is active on `codex/pre-merge-gpr-cleanup` and the current
-packaging branch, `codex/polish-readme-reviewer-path`. See
+Feature lock was lifted on 2026-06-26 by explicit user request. See
 `docs/FEATURE_LOCK.md`; new research, data, model, dashboard, or product
-features require an explicit user unlock.
+features can proceed when their scope is recorded and the standing data and
+claim-safety guardrails are preserved.
 
 ## Implemented
 
@@ -128,6 +128,6 @@ Good release-hardening options are:
   documented public deployment snapshot.
 - Publish or adapt the blog draft for the chosen platform.
 
-Post-lock research extensions, such as FRED controls, country-specific GPR data,
-or a narrow GDELT extension, require an explicit feature unlock before
-implementation.
+Research extensions, such as FRED controls, country-specific GPR data, or a
+narrow GDELT extension, are now unlocked but still need scoped plans, source
+validation, and cautious interpretation before implementation.

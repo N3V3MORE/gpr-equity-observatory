@@ -6,9 +6,10 @@ This is the entry point for a fresh agent picking up the GeoRiskLab + GPR Equity
 Observatory merge work. Read this before changing code, docs, data, or Git
 state.
 
-This branch is feature locked. Read `docs/FEATURE_LOCK.md` before making any
-change. Release hardening is allowed; new features require an explicit user
-unlock.
+Feature lock was lifted on 2026-06-26 by explicit user request. Read
+`docs/FEATURE_LOCK.md` before making any change; new features are allowed when
+their scope is recorded and the standing data and claim-safety guardrails are
+preserved.
 
 ## Current Answer
 
@@ -131,8 +132,8 @@ explicitly.
   findings, limitations, deployment, reproducibility, and profile packaging.
 - The packaging branch adds a reviewer guide, reproducibility checklist,
   screenshot refresh guide, local-first launch guidance, launch checklist,
-  draft pull request text, refreshed dashboard screenshots, a feature-lock-aware
-  pull request template, feature-lock-aware issue templates, an issue-template
+  draft pull request text, refreshed dashboard screenshots, a scope-aware
+  pull request template, scope-aware issue templates, an issue-template
   chooser, aligned setup commands, documentation-contract coverage for release
   guardrails, machine-specific local-path cleanup, and a roadmap section linking
   to the controlled GitHub backlog.
@@ -151,8 +152,8 @@ explicitly.
 - No custom project MCP server was added; existing local filesystem, Git,
   semantic navigation, GitHub tools, and search tools were sufficient.
 - Dashboard CSV downloads and missing-data message simplification were not
-  implemented on the packaging branch because they are dashboard feature work
-  under the active feature lock. They are tracked in GitHub issue #2.
+  implemented on the packaging branch before the unlock. They are tracked in
+  GitHub issue #2 and are now eligible feature work if scoped.
 
 ## GitHub Backlog Issues
 
@@ -285,9 +286,9 @@ Keep this cautious framing unless new validated evidence changes it.
 ## Known Remaining Choices
 
 These are not blockers for the completed merge branch. They are product or
-research choices for the user. Because the branch is feature locked, treat the
-data/research items as post-lock work unless the user explicitly unlocks feature
-work:
+research choices for the user. Feature work is now unlocked, but each item still
+needs scoped planning, source validation where relevant, and cautious
+interpretation:
 
 - Push this branch and open a pull request.
 - Decide whether to deploy the dashboard publicly.

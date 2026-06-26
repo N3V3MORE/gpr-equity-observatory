@@ -11,9 +11,9 @@
 ```markdown
 ## Summary
 
-This PR prepares the packaging branch on top of the feature-locked GPR Equity
-Observatory merge branch for review and portfolio presentation. It does not add
-new research, data, model, dashboard, or product behavior.
+This PR prepares the packaging branch on top of the GPR Equity Observatory merge
+branch for review and portfolio presentation. It does not add new research,
+data, model, dashboard, or product behavior.
 
 ## What Changed
 
@@ -25,10 +25,10 @@ new research, data, model, dashboard, or product behavior.
 - Added `docs/LAUNCH_CHECKLIST.md` for GitHub/profile launch steps.
 - Added `docs/SCREENSHOT_REFRESH.md` and refreshed the committed dashboard
   screenshots.
-- Tightened `.github/PULL_REQUEST_TEMPLATE.md` with feature-lock and
+- Tightened `.github/PULL_REQUEST_TEMPLATE.md` with scope and
   interpretation guardrails.
 - Tightened data-source, method, and release-hardening issue templates with
-  feature-lock gates.
+  scope gates.
 - Added an issue-template chooser that disables blank issues and points
   reviewers to the reviewer guide, roadmap, and reproducibility checklist.
 - Aligned setup commands across README, technical appendix, deployment guide,
@@ -41,12 +41,12 @@ new research, data, model, dashboard, or product behavior.
 - Updated `docs/PROJECT_STATUS.md`, `docs/IMPLEMENTATION_CHECKLIST.md`, and
   `docs/FUTURE_AGENT_HANDOFF.md` to reflect the current release state.
 
-## Feature-Lock Boundary
+## Feature Scope
 
-The branch remains in release-hardening mode. Dashboard CSV downloads and
-missing-data UI improvements are intentionally not implemented here because
-they are dashboard feature work under the active feature lock. That scope is
-tracked in issue #2.
+This packaging branch does not add new research, data, model, dashboard, or
+product behavior. Feature work was unlocked after this packaging pass; dashboard
+CSV downloads and missing-data UI improvements are tracked in issue #2 and are
+eligible for a later scoped feature branch.
 
 ## Validation
 

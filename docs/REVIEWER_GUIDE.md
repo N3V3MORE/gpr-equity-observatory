@@ -20,7 +20,7 @@ does not claim.
 - Read [docs/RESEARCH_NOTE.md](RESEARCH_NOTE.md) for the research question,
   methods, current results, and limitations.
 - Open [docs/PROJECT_STATUS.md](PROJECT_STATUS.md) to see what is implemented
-  and which parts are feature locked.
+  and which future work has been scoped.
 - Review [docs/REPRODUCIBILITY_CHECKLIST.md](REPRODUCIBILITY_CHECKLIST.md) for
   the commands needed to rebuild and check the project.
 - Look at the dashboard screenshots, especially the overview, robustness, and

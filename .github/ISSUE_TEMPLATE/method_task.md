@@ -10,10 +10,10 @@ Name:
 Purpose:
 Main equation or algorithm:
 
-## Feature-Lock Gate
+## Scope Gate
 
 - [ ] This is release hardening for already implemented behavior.
-- [ ] This is post-lock method work and has an explicit unlock decision:
+- [ ] This is new method work with a scoped plan, issue, or PR description:
 - [ ] The result claim this method is meant to support is stated cautiously:
 
 ## Inputs

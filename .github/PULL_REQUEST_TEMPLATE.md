@@ -4,7 +4,7 @@ What changed?
 
 ## Type
 
-- [ ] Release hardening on a locked branch
+- [ ] Release hardening
 - [ ] Data ingestion or source metadata
 - [ ] Feature engineering
 - [ ] Econometrics or forecasting
@@ -12,11 +12,10 @@ What changed?
 - [ ] Documentation
 - [ ] Tests or CI
 
-## Feature-Lock Check
+## Scope and Guardrail Check
 
-- [ ] This PR preserves the current feature-locked scope.
-- [ ] Any new research, data, model, dashboard, or product behavior has an
-      explicit unlock decision linked here:
+- [ ] Any new research, data, model, dashboard, or product behavior has a
+      scoped plan, issue, or PR description linked here:
 - [ ] Daily ETF outputs and monthly benchmark outputs remain separate in names,
       paths, docs, and dashboard text.
 - [ ] Sample-mode outputs are not presented as empirical evidence.

@@ -11,10 +11,10 @@ URL:
 Access method:
 Terms or licensing note:
 
-## Feature-Lock Gate
+## Scope Gate
 
 - [ ] This is release hardening for an already implemented data contract.
-- [ ] This is post-lock data work and has an explicit unlock decision:
+- [ ] This is new data work with a scoped plan, issue, or PR description:
 - [ ] The source belongs to a narrow documented scope.
 
 ## Dataset Mode

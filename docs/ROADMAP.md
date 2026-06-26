@@ -2,10 +2,10 @@
 
 This roadmap separates finished merge work from future research extensions.
 
-Feature lock is active on `codex/pre-merge-gpr-cleanup` and the current
-packaging branch, `codex/polish-readme-reviewer-path`. V0.2 is in
-release-hardening mode. V0.3 and V1.0 items are post-lock work and should not
-be started unless the user explicitly unlocks feature work.
+Feature lock was lifted on 2026-06-26 by explicit user request. V0.2 remains
+the completed merge baseline. V0.3 and V1.0 items are now selectable feature
+work, provided each change records scope and preserves the standing data and
+claim-safety guardrails in `docs/FEATURE_LOCK.md`.
 
 ## Current Integrated State
 
@@ -46,7 +46,7 @@ Future work is tracked in GitHub issues rather than scattered planning notes:
 
 ## V0.3 Research Extensions
 
-Status: post-lock only.
+Status: unlocked; select and scope before implementation.
 
 Potential next work:
 
@@ -60,7 +60,7 @@ rules.
 
 ## V1.0 Research Upgrade
 
-Status: post-lock only.
+Status: unlocked; select and scope before implementation.
 
 Potential larger upgrade:
 

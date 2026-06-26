@@ -1,7 +1,7 @@
 # Launch Checklist
 
 Use this checklist when presenting GPR Equity Observatory as a portfolio
-project. It keeps public launch work separate from post-lock feature work.
+project. It keeps public launch work separate from future feature work.
 
 ## GitHub Repository
 
@@ -68,7 +68,8 @@ is resolved.
 
 ## Future Work Boundary
 
-Keep these as backlog items unless feature work is explicitly unlocked:
+Feature work is unlocked, but keep these as scoped backlog items until the user
+chooses one for implementation:
 
 - dashboard CSV downloads and missing-data UI changes:
   [#2](https://github.com/N3V3MORE/gpr-equity-observatory/issues/2)
