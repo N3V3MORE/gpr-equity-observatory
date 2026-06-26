@@ -1,6 +1,22 @@
 import app
 
 
+def test_dashboard_components_live_in_dashboard_components_module():
+    from importlib import import_module
+
+    components = import_module("gprobs.dashboard.components")
+
+    assert components.DASHBOARD_INTRO is app.DASHBOARD_INTRO
+    assert components.DASHBOARD_MAIN_TAKEAWAY is app.DASHBOARD_MAIN_TAKEAWAY
+    assert components.DASHBOARD_USE_NOTE is app.DASHBOARD_USE_NOTE
+    assert components.HOW_TO_READ_NOTES is app.HOW_TO_READ_NOTES
+    assert components.render_intro is app.render_intro
+    assert components.render_summary_cards is app.render_summary_cards
+    assert components.render_how_to_read is app.render_how_to_read
+    assert components.render_csv_download is app.render_csv_download
+    assert components.render_missing_data_message is app.render_missing_data_message
+
+
 def test_dashboard_tab_render_helpers_are_defined():
     expected_helpers = [
         "render_overview_tab",
