@@ -17,7 +17,7 @@ benchmark pipeline into it in staged slices.
 Implementation status as of 2026-06-26
 ======================================
 
-Phases 0 through 6 are implemented on branch codex/pre-merge-gpr-cleanup.
+Phases 0 through 8 are implemented on branch codex/pre-merge-gpr-cleanup.
 
 Completed rollback commits:
 - 77369e4 chore: stabilize pre-merge cleanup
@@ -26,18 +26,31 @@ Completed rollback commits:
 - 778ddd7 chore: add MIT license
 - 3f60ae2 feat: add monthly benchmark real ingestion
 - b7e20db feat: add monthly benchmark models
+- 10e411c chore: add unified monthly task runner
+- 7fe03c2 feat: add monthly benchmark dashboard tab
 
-Phase 6 is implemented in the current working slice:
+Phase 6 is implemented:
 - scripts/run_task.py provides the documented Windows-friendly command path.
 - scripts/validate_monthly_benchmark.py validates monthly data, manifests, and
   optional model outputs.
 - CI runs a deterministic monthly sample pipeline through the task runner.
+
+Phase 7 is implemented:
+- app.py includes a Monthly Benchmark tab.
+- Monthly sample/real outputs are optional, so the daily dashboard can still run
+  without monthly files.
+- The tab shows mode, provenance, monthly GPR shock, developed/emerging spread,
+  regression outputs, forecast outputs, and limitation text.
+
+Phase 8 is implemented:
 - README.md, docs/PROJECT_STATUS.md, docs/TECHNICAL_APPENDIX.md, and
   docs/DATA_SOURCE_DECISIONS.md describe the merged daily/monthly workflow.
+- docs/REPRODUCIBILITY.md, docs/DATA_SOURCES.md, docs/METHODOLOGY.md, and
+  docs/ROADMAP.md consolidate the operating and interpretation story.
+- docs/RESEARCH_NOTE.md, docs/DEPLOYMENT_GUIDE.md, docs/PROFILE_PACKAGING.md,
+  and docs/IMPLEMENTATION_CHECKLIST.md now include the monthly benchmark layer.
 
-Remaining planned work starts at Phase 7: Streamlit monthly benchmark
-integration. Phase 8 documentation consolidation and Phase 9 final release
-verification remain future work.
+Remaining planned work is Phase 9 final verification and release decision.
 
 
 1. Sources Inspected

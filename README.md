@@ -124,9 +124,10 @@ ruff check .
 pytest --cov=gprobs --cov=app --cov-report=term-missing -q
 ```
 
-The build command downloads public data and writes generated files into
-`data/raw/`, `data/processed/`, and `reports/figures/`. Those generated folders
-are intentionally not committed to Git.
+The build commands download public data and write generated files into
+`data/raw/`, `data/processed/`, `data/metadata/`, `reports/tables/`, and
+`reports/figures/`. Those generated folders are intentionally not committed to
+Git by default.
 
 `requirements.txt` is the editable development install. `uv.lock` is the exact
 resolved dependency graph for reproducible rebuilds.

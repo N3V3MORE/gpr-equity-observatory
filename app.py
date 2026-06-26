@@ -19,6 +19,7 @@ ML_VALIDATION_CAPTION = (
 MONTHLY_SAMPLE_NOTICE = "Sample mode is not empirical evidence. It only proves the monthly benchmark workflow runs."
 MONTHLY_REAL_NOTICE = "Real monthly aggregate mode is a benchmark, not a country-panel proof."
 MONTHLY_CLUSTER_NOTICE = "The two-market aggregate design cannot support country-clustered inference."
+MONTHLY_MODE_PRIORITY_NOTICE = "If real monthly outputs are present, the dashboard shows real mode before sample mode."
 
 
 @dataclass(frozen=True)
@@ -275,6 +276,8 @@ MONTHLY_OUTPUT_SPECS = {
             "t_value",
             "p_value",
             "se_type",
+            "nobs",
+            "adjusted_r2",
         ),
     ),
     "monthly_forecasts": OutputSpec(
@@ -287,6 +290,7 @@ MONTHLY_OUTPUT_SPECS = {
             "n_forecasts",
             "first_forecast_date",
             "last_forecast_date",
+            "forecast_window_aligned",
         ),
     ),
 }
@@ -375,6 +379,21 @@ def _read_optional_monthly_csv(path: Path, spec: OutputSpec) -> pd.DataFrame | N
     output = pd.read_csv(path)
     validate_output_schema(output, spec)
     return output
+
+
+def monthly_provenance_rows(bundle: MonthlyOutputBundle) -> pd.DataFrame:
+    manifest = bundle.analysis_manifest
+    rows = [
+        ("mode", bundle.mode_label),
+        ("dataset_mode", str(manifest.get("dataset_mode") or manifest.get("dataset") or "")),
+        ("source_count", str(len(bundle.source_names))),
+        ("row_count", str(manifest.get("row_count", ""))),
+        ("sample_start", str(manifest.get("sample_start") or manifest.get("start_date") or "")),
+        ("sample_end", str(manifest.get("sample_end") or manifest.get("end_date") or "")),
+        ("used_placeholder_gdelt", str(manifest.get("used_placeholder_gdelt", ""))),
+        ("used_placeholder_macro", str(manifest.get("used_placeholder_macro", ""))),
+    ]
+    return pd.DataFrame(rows, columns=["field", "value"])
 
 
 def render_overview_tab(
@@ -666,9 +685,11 @@ def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
     else:
         st.info(MONTHLY_REAL_NOTICE)
     st.caption(MONTHLY_CLUSTER_NOTICE)
+    st.caption(MONTHLY_MODE_PRIORITY_NOTICE)
 
+    st.subheader("Source and Provenance Status")
+    st.dataframe(monthly_provenance_rows(bundle), use_container_width=True, hide_index=True)
     if bundle.source_names:
-        st.subheader("Source and Provenance Status")
         st.dataframe(
             pd.DataFrame({"source_name": bundle.source_names}),
             use_container_width=True,

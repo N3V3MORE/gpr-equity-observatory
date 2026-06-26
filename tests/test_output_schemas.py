@@ -142,6 +142,8 @@ EXPECTED_MONTHLY_OUTPUT_COLUMNS = {
         "t_value",
         "p_value",
         "se_type",
+        "nobs",
+        "adjusted_r2",
     },
     "monthly_forecasts": {
         "model",
@@ -151,6 +153,7 @@ EXPECTED_MONTHLY_OUTPUT_COLUMNS = {
         "n_forecasts",
         "first_forecast_date",
         "last_forecast_date",
+        "forecast_window_aligned",
     },
 }
 

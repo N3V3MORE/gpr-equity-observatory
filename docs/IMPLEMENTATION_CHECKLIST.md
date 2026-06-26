@@ -16,6 +16,8 @@ It is written as a plain-English audit, not as a marketing summary.
 | Dashboard runs locally | Done | `streamlit run app.py` |
 | README explains the project clearly | Done | `README.md` |
 | Limitations are documented | Done | Research note, technical appendix, status note, results brief |
+| Monthly benchmark layer exists | Done | sample/real monthly data paths, regressions, forecasts, validation, dashboard tab |
+| Unified command path exists | Done | `python scripts/run_task.py ...` |
 
 ## Strong Profile Success
 
@@ -38,6 +40,7 @@ It is written as a plain-English audit, not as a marketing summary.
 | Dashboard includes data quality, model diagnostics, and downloads | Mostly done | Data quality and model diagnostics exist; explicit download buttons are not custom-built |
 | Tests and linting are present | Done | Pytest and Ruff are configured |
 | GitHub Actions run tests | Done | `.github/workflows/tests.yml` |
+| Monthly sample pipeline runs in CI | Done | monthly sample job in `.github/workflows/tests.yml` |
 | Blog post is published | Drafted | `docs/BLOG_POST_DRAFT.md`; publishing is outside the repo |
 | Walkthrough video or demo script exists | Partial | Three-minute script exists; video is not recorded |
 
@@ -56,6 +59,8 @@ The current evidence should be described cautiously:
   emerging-market interaction remains weak.
 - The ML drawdown classifier has modest ranking signal, not a trading-grade
   forecast.
+- Monthly sample mode is not empirical evidence.
+- Monthly real mode is an aggregate benchmark, not a country-panel proof.
 
 ## Roadblocks That Need User Input
 
@@ -67,6 +72,8 @@ These are the main choices that require a human decision:
 - Whether to deploy the Streamlit app publicly, and where.
 - Whether to publish the blog post as-is or adapt it for a specific platform.
 - Whether to record a walkthrough video.
+- Whether to publish any real monthly benchmark outputs outside the local
+  machine.
 
 ## Recommended Next Move
 

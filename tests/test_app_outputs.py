@@ -70,12 +70,13 @@ def test_load_monthly_outputs_reads_sample_bundle(monkeypatch, tmp_path):
         encoding="utf-8",
     )
     regression_path.write_text(
-        "horizon,term,estimate,std_error,t_value,p_value,se_type\n1,gpr_change_z,-0.1,0.2,-0.5,0.6,HAC\n",
+        "horizon,term,estimate,std_error,t_value,p_value,se_type,nobs,adjusted_r2\n"
+        "1,gpr_change_z,-0.1,0.2,-0.5,0.6,HAC,24,0.1\n",
         encoding="utf-8",
     )
     forecast_path.write_text(
-        "model,rmse,mae,oos_r2,n_forecasts,first_forecast_date,last_forecast_date\n"
-        "historical_mean,1,1,0,12,2021-01-01,2021-12-01\n",
+        "model,rmse,mae,oos_r2,n_forecasts,first_forecast_date,last_forecast_date,forecast_window_aligned\n"
+        "historical_mean,1,1,0,12,2021-01-01,2021-12-01,True\n",
         encoding="utf-8",
     )
     source_manifest_path.write_text(
@@ -83,7 +84,16 @@ def test_load_monthly_outputs_reads_sample_bundle(monkeypatch, tmp_path):
         encoding="utf-8",
     )
     analysis_manifest_path.write_text(
-        json.dumps({"dataset_mode": "monthly_benchmark_sample"}),
+        json.dumps(
+            {
+                "dataset_mode": "monthly_benchmark_sample",
+                "row_count": 2,
+                "sample_start": "2020-01-01",
+                "sample_end": "2020-01-01",
+                "used_placeholder_gdelt": True,
+                "used_placeholder_macro": True,
+            }
+        ),
         encoding="utf-8",
     )
     monkeypatch.setattr(
@@ -108,3 +118,8 @@ def test_load_monthly_outputs_reads_sample_bundle(monkeypatch, tmp_path):
     assert bundle.mode_label == "Sample"
     assert bundle.panel.loc[0, "date_month"] == pd.Timestamp("2020-01-01")
     assert bundle.source_names == ["Monthly benchmark deterministic sample"]
+
+    provenance = app.monthly_provenance_rows(bundle)
+    assert {"field", "value"}.issubset(provenance.columns)
+    assert provenance.loc[provenance["field"] == "dataset_mode", "value"].iloc[0] == "monthly_benchmark_sample"
+    assert provenance.loc[provenance["field"] == "source_count", "value"].iloc[0] == "1"

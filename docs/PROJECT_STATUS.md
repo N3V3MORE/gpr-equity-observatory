@@ -108,8 +108,8 @@ interpreted as aggregate benchmark evidence, not country-panel proof.
 
 Good next options are:
 
-- Add the Streamlit monthly benchmark tab after deciding which monthly outputs
-  should be visible in the public app.
+- Capture refreshed dashboard screenshots now that the Monthly Benchmark tab is
+  implemented.
 - Add FRED controls if an API key is available.
 - Add country-specific GPR data where coverage is reliable.
 - Add GDELT only after the research note and robustness checks are clearer.

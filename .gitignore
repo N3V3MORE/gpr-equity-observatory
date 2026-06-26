@@ -11,7 +11,7 @@ config/sources.yml
 data/raw/
 data/processed/
 data/interim/
-data/metadata/monthly_benchmark/*_real.json
+data/metadata/monthly_benchmark/*.json
 
 reports/figures/
 reports/tables/monthly_benchmark/*.csv

@@ -9,6 +9,11 @@ data, public market controls, event studies, panel regressions, quantile
 regressions, local projections, rolling sensitivities, and a simple drawdown-risk
 classifier.
 
+The repository also includes a separate monthly benchmark layer. That layer
+uses deterministic sample mode for software validation and user-supplied real
+mode for aggregate developed/emerging benchmark analysis. It is deliberately
+kept separate from the daily ETF evidence.
+
 The current evidence is mixed. Market-controlled regressions show small,
 statistically weak average responses to standardized daily GPR jumps. The
 date-fixed-effects interaction, which is the cleanest H1 test, does not show a
@@ -33,6 +38,8 @@ The project tests this question through several complementary views:
   later horizons?
 - Drawdown classification: do current risk conditions help identify future
   downside-risk episodes?
+- Monthly benchmark: do aggregate developed/emerging returns show a lower
+  frequency benchmark association with monthly GPR changes?
 
 ## Data
 
@@ -57,6 +64,11 @@ The current market controls use public no-key proxies:
 
 Oil is not treated as a log return because WTI futures traded below zero in
 April 2020. Using a level change avoids an invalid mathematical transformation.
+
+The monthly benchmark uses either deterministic sample mode or real mode. Sample
+mode is not empirical evidence. Real mode uses user-supplied monthly
+Caldara-Iacoviello GPR and Kenneth French developed/emerging factor files, with
+local source hashes and redacted manifests.
 
 ## Methods
 
@@ -133,6 +145,17 @@ model. It is a communication layer that places the main event-study, regression,
 quantile, local-projection, and drawdown-classifier outputs in one table with
 plain-English interpretation.
 
+### Monthly Benchmark
+
+The monthly benchmark builds an aggregate developed/emerging monthly panel. The
+main benchmark regression uses the emerging-minus-developed forward return
+spread and HAC standard errors. Forecast comparisons use expanding windows and
+OOS R2 against a historical-mean benchmark.
+
+This monthly layer is not a replacement for the daily ETF panel. With only two
+aggregate markets, it cannot support credible country-clustered inference and
+is not a country-panel proof.
+
 ## Current Results
 
 The controlled panel regression estimates the developed-market GPR-jump
@@ -180,6 +203,10 @@ coefficient is negative, and the date-fixed-effects interaction is small and
 statistically weak. That is an important warning against over-selling a single
 headline result.
 
+Monthly sample-mode results, when generated, should not be included as empirical
+findings. Monthly real-mode benchmark outputs require user-supplied source files
+and provenance checks before interpretation.
+
 ## Interpretation
 
 The current evidence supports a cautious interpretation:
@@ -193,6 +220,8 @@ The current evidence supports a cautious interpretation:
   alone.
 - The ML model is useful for disciplined risk classification practice, but it is
   not a strong prediction engine.
+- The monthly benchmark is useful for reproducibility and aggregate comparison,
+  but it should not be mixed with daily ETF findings or described as causal.
 
 The project should therefore be presented as a transparent empirical platform,
 not as a finished proof of a single hypothesis.
@@ -226,11 +255,17 @@ some earlier events from controlled models.
 The current project uses global GPR, not country-specific GPR. Country-specific
 GPR could change the interpretation of country-level sensitivity.
 
+The monthly real workflow is local only by default. Source configs, raw inputs,
+and real generated outputs are not committed unless a separate data-publication
+decision is made.
+
 ## Next Steps
 
 The most useful next steps are:
 
 - Add FRED macro controls if an API key is available.
+- Add validated real macro controls to the monthly benchmark if source coverage
+  is strong enough.
 - Add country-specific GPR data where coverage is reliable.
 - Delay GDELT until the core empirical story is clearer.
 

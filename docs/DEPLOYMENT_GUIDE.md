@@ -10,13 +10,18 @@ Local use is straightforward:
 
 ```powershell
 python -m pip install -r requirements.txt
-python scripts/build_all.py
+python scripts/run_task.py build-daily
+python scripts/run_task.py monthly-sample --min-train-months 24
 streamlit run app.py
 ```
 
 The dashboard expects generated files in `data/processed/`. Those files are not
 committed to Git because the project keeps downloaded and generated market data
 out of version control.
+
+The Monthly Benchmark tab is optional. If monthly benchmark outputs are absent,
+the app still runs with the daily ETF dashboard and shows build instructions in
+the monthly tab.
 
 ## Streamlit Community Cloud Path
 
@@ -61,6 +66,8 @@ Cons:
 - Needs a data-licensing comfort check.
 - Generated outputs can become stale.
 - The repo becomes larger.
+- Monthly sample outputs are not empirical evidence and must be labelled as
+  sample mode if published.
 
 ### Option B: Build Data During Deployment
 
@@ -93,6 +100,13 @@ Cons:
 - Adds operational complexity.
 - Requires deciding who can access the files.
 
+### Monthly Real-Mode Warning
+
+Do not commit `config/sources.yml`, raw monthly source files, or real local
+paths. Real monthly outputs are local only by default. If they are published,
+the source manifests must be checked for redaction and the dashboard must label
+them as real monthly aggregate benchmark outputs.
+
 ## Recommendation
 
 For a student profile project, use one of these paths:
@@ -105,3 +119,5 @@ For a student profile project, use one of these paths:
 Do not deploy a public app that silently fails because processed data is
 missing. That would weaken the project more than keeping it local and well
 documented.
+
+Do not deploy sample-mode monthly outputs as if they were empirical findings.
