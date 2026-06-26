@@ -10,18 +10,25 @@ Local use is straightforward:
 
 ```powershell
 python -m pip install -r requirements.txt
-python scripts/run_task.py build-daily
-python scripts/run_task.py monthly-sample --min-train-months 24
+python scripts/build_all.py
 streamlit run app.py
 ```
 
-The dashboard expects generated files in `data/processed/`. Those files are not
-committed to Git because the project keeps downloaded and generated market data
-out of version control.
+For the exact resolver-locked environment, run `uv sync --all-extras` first.
+If the local Python environment does not already have dependencies installed,
+run the same commands through `uv run --all-extras`.
+
+The dashboard expects generated daily files in `data/processed/`. Those files
+are not committed to Git because the project keeps downloaded and generated
+market data out of version control.
 
 The Monthly Benchmark tab is optional. If monthly benchmark outputs are absent,
 the app still runs with the daily ETF dashboard and shows build instructions in
-the monthly tab.
+the monthly tab. To populate the deterministic monthly sample tab locally, run:
+
+```powershell
+python scripts/run_task.py monthly-sample --min-train-months 24
+```
 
 ## Local-First Portfolio Path
 

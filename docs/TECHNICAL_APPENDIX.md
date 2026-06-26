@@ -23,7 +23,7 @@ Run tests:
 pytest --cov=gprobs --cov=app --cov-report=term-missing -q
 ```
 
-Rebuild all generated data and figures:
+Rebuild all generated daily data and figures:
 
 ```powershell
 python scripts/build_all.py

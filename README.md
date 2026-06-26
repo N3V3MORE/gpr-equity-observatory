@@ -100,13 +100,13 @@ For an exact resolved environment, use the committed lock file:
 uv sync --all-extras
 ```
 
-Rebuild the data and results:
+Rebuild the daily data and results:
 
 ```powershell
 python scripts/build_all.py
 ```
 
-Use the unified task runner for the combined daily/monthly workflow:
+Use the unified task runner for targeted daily/monthly workflow checks:
 
 ```powershell
 python scripts/run_task.py build-daily
@@ -156,7 +156,7 @@ resolved dependency graph for reproducible rebuilds.
 ```text
 app.py                         Streamlit dashboard
 data/country_universe.csv      20-country ETF universe
-scripts/build_all.py           Full rebuild pipeline
+scripts/build_all.py           Daily rebuild pipeline
 scripts/run_task.py            Unified task runner for daily/monthly commands
 scripts/build_*.py             Data construction scripts
 scripts/run_*.py               Empirical model scripts
