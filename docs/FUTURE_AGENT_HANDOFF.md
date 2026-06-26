@@ -43,6 +43,7 @@ delete them unless the user explicitly asks.
 - Reviewer guide: `docs/REVIEWER_GUIDE.md`
 - Reproducibility checklist: `docs/REPRODUCIBILITY_CHECKLIST.md`
 - Screenshot refresh guide: `docs/SCREENSHOT_REFRESH.md`
+- Launch checklist: `docs/LAUNCH_CHECKLIST.md`
 - Requirement audit: `docs/IMPLEMENTATION_CHECKLIST.md`
 - Reproducibility contract: `docs/REPRODUCIBILITY.md`
 - Source policy: `docs/DATA_SOURCES.md`

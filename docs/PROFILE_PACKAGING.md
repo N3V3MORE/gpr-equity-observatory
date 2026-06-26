@@ -5,6 +5,9 @@
 Use this project as a GitHub/profile research project first. You do not need to
 deploy it publicly or add more datasets before showing it.
 
+For the concrete GitHub/profile launch checklist, see
+`docs/LAUNCH_CHECKLIST.md`.
+
 Recommended next actions:
 
 1. Put the GitHub repository on your profile.

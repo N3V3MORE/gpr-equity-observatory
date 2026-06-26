@@ -65,6 +65,8 @@ Start here:
   clean-clone rebuild checklist.
 - [docs/PROFILE_PACKAGING.md](docs/PROFILE_PACKAGING.md) for CV, LinkedIn, and
   interview material.
+- [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md) for GitHub/profile launch
+  steps.
 - [reports/screenshots](reports/screenshots) for dashboard images.
 - [docs/SCREENSHOT_REFRESH.md](docs/SCREENSHOT_REFRESH.md) for the screenshot
   refresh process.
@@ -167,6 +169,7 @@ docs/PROJECT_STATUS.md         Current implementation and results status
 docs/REVIEWER_GUIDE.md         5-minute, 15-minute, and 30-minute review paths
 docs/REPRODUCIBILITY_CHECKLIST.md  Clean-clone rebuild checklist
 docs/SCREENSHOT_REFRESH.md      Dashboard screenshot refresh process
+docs/LAUNCH_CHECKLIST.md        GitHub/profile launch checklist
 docs/RESEARCH_NOTE.md          Applied economics research note draft
 docs/TECHNICAL_APPENDIX.md     Data, model, and reproducibility details
 docs/PROFILE_PACKAGING.md      CV, LinkedIn, and interview materials

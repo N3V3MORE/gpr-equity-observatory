@@ -34,6 +34,8 @@ The lowest-risk public presentation path is local-first:
 - use [docs/REVIEWER_GUIDE.md](REVIEWER_GUIDE.md) for reviewer navigation
 - use [docs/BLOG_POST_DRAFT.md](BLOG_POST_DRAFT.md) or a shortened LinkedIn
   version for the project narrative
+- use [docs/LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) for the manual GitHub and
+  profile steps
 
 This path avoids committing generated market data and avoids a public app that
 starts without its required processed files. It is a complete portfolio option,
