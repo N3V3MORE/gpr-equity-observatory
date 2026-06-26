@@ -76,6 +76,10 @@ def test_build_evidence_map_adds_strength_and_reader_columns():
 
 
 def test_build_gpr_shock_timeline_marks_top_shocks():
+    charts = import_module("gprobs.dashboard.charts")
+
+    assert charts.build_gpr_shock_timeline is app.build_gpr_shock_timeline
+
     gpr = pd.DataFrame(
         {
             "date": pd.date_range("2024-01-01", periods=4, freq="D"),
