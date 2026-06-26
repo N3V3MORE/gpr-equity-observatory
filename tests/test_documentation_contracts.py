@@ -1,6 +1,7 @@
 from pathlib import Path
 
 DOCS = Path("docs")
+GITHUB = Path(".github")
 
 
 def test_phase8_documentation_files_exist():
@@ -98,3 +99,36 @@ def test_feature_lock_blocks_new_scope_without_user_unlock():
 
     assert "this branch is feature locked" in handoff
     assert "post-lock work" in roadmap
+
+
+def test_github_templates_preserve_feature_lock_guardrails():
+    pr_template = (GITHUB / "PULL_REQUEST_TEMPLATE.md").read_text(
+        encoding="utf-8"
+    ).lower()
+    data_template = (GITHUB / "ISSUE_TEMPLATE" / "data_source.md").read_text(
+        encoding="utf-8"
+    ).lower()
+    method_template = (GITHUB / "ISSUE_TEMPLATE" / "method_task.md").read_text(
+        encoding="utf-8"
+    ).lower()
+
+    for template in [pr_template, data_template, method_template]:
+        assert "feature-lock" in template
+        assert "explicit unlock decision" in template
+
+    required_pr_phrases = [
+        "daily etf outputs and monthly benchmark outputs remain separate",
+        "sample-mode outputs are not presented as empirical evidence",
+        "config/sources.yml",
+        "not framed as investment advice or a trading system",
+        "emerging-market asymmetry is not described as a strong result",
+    ]
+
+    for phrase in required_pr_phrases:
+        assert phrase in pr_template
+
+    assert "real/sample mode cannot be confused" in data_template
+    assert "daily and monthly outputs stay separate" in data_template
+    assert "no causal, trading, or strong emerging-market asymmetry claim" in (
+        method_template
+    )
