@@ -1,6 +1,18 @@
+from importlib import import_module
+
 import pandas as pd
 
 import app
+
+
+def test_formatting_helpers_render_reader_values():
+    formatting = import_module("gprobs.dashboard.formatting")
+
+    assert formatting.format_percent(0.1234) == "12.3%"
+    assert formatting.format_basis_points(-0.0042) == "-42.0 bp"
+    assert formatting.format_p_value(0.0321) == "0.032"
+    assert formatting.format_p_value(pd.NA) == ""
+    assert formatting.format_metric(pd.NA) == ""
 
 
 def test_classify_evidence_strength_uses_cautious_labels():

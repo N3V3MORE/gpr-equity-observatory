@@ -7,6 +7,12 @@ import plotly.express as px
 import streamlit as st
 
 from gprobs.config import DRAWDOWN_HORIZON_DAYS, DRAWDOWN_THRESHOLD
+from gprobs.dashboard.formatting import (
+    classify_evidence_strength,
+    format_evidence_direction,
+    format_evidence_estimate,
+    format_p_value,
+)
 from gprobs.dashboard.metrics import build_country_coverage, select_key_regression_terms
 from gprobs.dashboard.outputs import (
     OUTPUT_SPECS,
@@ -257,40 +263,15 @@ def monthly_provenance_rows(bundle: MonthlyOutputBundle) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["field", "value"])
 
 
-def classify_evidence_strength(row: pd.Series) -> str:
-    """Return a cautious display label for dashboard evidence summaries."""
-    inference = str(row.get("inference", "")).lower()
-    p_value = pd.to_numeric(row.get("p_value"), errors="coerce")
-    if "exploratory" in inference or pd.isna(p_value):
-        return "Exploratory"
-    if "mixed" in inference:
-        return "Mixed"
-    if p_value <= 0.10:
-        return "Useful signal"
-    if p_value <= 0.50:
-        return "Mixed"
-    return "Weak"
-
-
-def _format_evidence_direction(estimate: float) -> str:
-    if estimate > 0:
-        return "Positive"
-    if estimate < 0:
-        return "Negative"
-    return "Near zero"
-
-
 def build_evidence_map(evidence_summary: pd.DataFrame) -> pd.DataFrame:
     evidence_map = evidence_summary.copy()
     evidence_map["Evidence strength"] = evidence_map.apply(classify_evidence_strength, axis=1)
-    evidence_map["Direction"] = evidence_map["estimate"].map(_format_evidence_direction)
+    evidence_map["Direction"] = evidence_map["estimate"].map(format_evidence_direction)
     evidence_map["Estimate"] = evidence_map.apply(
-        lambda row: f"{row['estimate']:.3g} {row['unit']}",
+        lambda row: format_evidence_estimate(row["estimate"], row["unit"]),
         axis=1,
     )
-    evidence_map["p-value / metric"] = evidence_map["p_value"].map(
-        lambda value: "" if pd.isna(value) else f"{value:.3f}"
-    )
+    evidence_map["p-value / metric"] = evidence_map["p_value"].map(format_p_value)
     return evidence_map.rename(
         columns={
             "method": "Method",
