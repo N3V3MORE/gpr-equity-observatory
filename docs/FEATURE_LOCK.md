@@ -2,7 +2,8 @@
 
 Last updated: 2026-06-26
 
-Status: active on branch `codex/pre-merge-gpr-cleanup`.
+Status: active on `codex/pre-merge-gpr-cleanup` and descendant
+release-hardening branches, including `codex/polish-readme-reviewer-path`.
 
 The GeoRiskLab + GPR Equity Observatory merge is feature locked after completing
 Phases 0 through 9. The project is now in release-hardening mode.

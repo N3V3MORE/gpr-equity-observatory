@@ -15,7 +15,8 @@ commits, verification commands, and remaining decisions, see
 For the controlled future-work backlog, see `docs/ROADMAP.md` and the linked
 GitHub issues.
 
-Feature lock is active on `codex/pre-merge-gpr-cleanup`. See
+Feature lock is active on `codex/pre-merge-gpr-cleanup` and the current
+packaging branch, `codex/polish-readme-reviewer-path`. See
 `docs/FEATURE_LOCK.md`; new research, data, model, dashboard, or product
 features require an explicit user unlock.
 
