@@ -63,10 +63,13 @@ The current forward-plan packaging branch is
 
 Key packaging branch commits include, newest first:
 
+- `1dbd57e docs: refresh issue template summary`
 - `1ba17fd docs: add issue template chooser`
 - `f844038 docs: add release hardening issue template`
+- `649ce1b docs: refresh guardrail summary`
 - `c4aff24 test: cover setup command docs`
 - `0ad135c test: cover template guardrails`
+- `54fbdea docs: refresh release handoff`
 - `1416412 docs: omit local GeoRiskLab path`
 - `f6e0d34 docs: align setup commands`
 - `e73bced docs: tighten issue templates`
