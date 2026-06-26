@@ -32,3 +32,25 @@ def test_monthly_tab_uses_required_limitation_wording():
     assert "not empirical evidence" in app.MONTHLY_SAMPLE_NOTICE
     assert "benchmark" in app.MONTHLY_REAL_NOTICE
     assert "country-clustered" in app.MONTHLY_CLUSTER_NOTICE
+
+
+def test_dashboard_intro_keeps_cautious_project_framing():
+    assert "20 country ETF proxies" in app.DASHBOARD_INTRO
+    assert "does not strongly prove" in app.DASHBOARD_MAIN_TAKEAWAY
+    assert "not as a trading system" in app.DASHBOARD_USE_NOTE
+
+
+def test_dashboard_story_tab_labels_are_declared():
+    assert app.DAILY_TAB_LABELS == [
+        "Overview",
+        "GPR Shock Timeline",
+        "Market Response",
+        "Robustness",
+        "Regression Evidence",
+        "Downside Risk",
+        "Dynamic Response",
+        "Prediction Lab",
+        "Country Sensitivity",
+        "Monthly Benchmark",
+        "Data Quality",
+    ]

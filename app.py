@@ -20,6 +20,28 @@ MONTHLY_SAMPLE_NOTICE = "Sample mode is not empirical evidence. It only proves t
 MONTHLY_REAL_NOTICE = "Real monthly aggregate mode is a benchmark, not a country-panel proof."
 MONTHLY_CLUSTER_NOTICE = "The two-market aggregate design cannot support country-clustered inference."
 MONTHLY_MODE_PRIORITY_NOTICE = "If real monthly outputs are present, the dashboard shows real mode before sample mode."
+DASHBOARD_INTRO = (
+    "This dashboard studies whether equity markets respond to geopolitical risk shocks, "
+    "using 20 country ETF proxies."
+)
+DASHBOARD_MAIN_TAKEAWAY = (
+    "Geopolitical risk appears associated with equity-market risk, but the evidence "
+    "does not strongly prove that emerging markets always react more than developed markets."
+)
+DASHBOARD_USE_NOTE = "Use this dashboard as a research observatory, not as a trading system."
+DAILY_TAB_LABELS = [
+    "Overview",
+    "GPR Shock Timeline",
+    "Market Response",
+    "Robustness",
+    "Regression Evidence",
+    "Downside Risk",
+    "Dynamic Response",
+    "Prediction Lab",
+    "Country Sensitivity",
+    "Monthly Benchmark",
+    "Data Quality",
+]
 
 
 @dataclass(frozen=True)
@@ -396,12 +418,98 @@ def monthly_provenance_rows(bundle: MonthlyOutputBundle) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["field", "value"])
 
 
+def classify_evidence_strength(row: pd.Series) -> str:
+    """Return a cautious display label for dashboard evidence summaries."""
+    inference = str(row.get("inference", "")).lower()
+    p_value = pd.to_numeric(row.get("p_value"), errors="coerce")
+    if "exploratory" in inference or pd.isna(p_value):
+        return "Exploratory"
+    if "mixed" in inference:
+        return "Mixed"
+    if p_value <= 0.10:
+        return "Useful signal"
+    if p_value <= 0.50:
+        return "Mixed"
+    return "Weak"
+
+
+def _format_evidence_direction(estimate: float) -> str:
+    if estimate > 0:
+        return "Positive"
+    if estimate < 0:
+        return "Negative"
+    return "Near zero"
+
+
+def build_evidence_map(evidence_summary: pd.DataFrame) -> pd.DataFrame:
+    evidence_map = evidence_summary.copy()
+    evidence_map["Evidence strength"] = evidence_map.apply(classify_evidence_strength, axis=1)
+    evidence_map["Direction"] = evidence_map["estimate"].map(_format_evidence_direction)
+    evidence_map["Estimate"] = evidence_map.apply(
+        lambda row: f"{row['estimate']:.3g} {row['unit']}",
+        axis=1,
+    )
+    evidence_map["p-value / metric"] = evidence_map["p_value"].map(
+        lambda value: "" if pd.isna(value) else f"{value:.3f}"
+    )
+    return evidence_map.rename(
+        columns={
+            "method": "Method",
+            "focus": "Question answered",
+            "plain_english": "Plain-English takeaway",
+        }
+    )[
+        [
+            "Method",
+            "Question answered",
+            "Direction",
+            "Estimate",
+            "p-value / metric",
+            "Evidence strength",
+            "Plain-English takeaway",
+        ]
+    ]
+
+
+def render_intro() -> None:
+    st.markdown(DASHBOARD_INTRO)
+    st.markdown(f"**Main takeaway:** {DASHBOARD_MAIN_TAKEAWAY}")
+    st.caption(DASHBOARD_USE_NOTE)
+
+
+def render_summary_cards() -> None:
+    cards = [
+        (
+            "Question",
+            "Do emerging and developed ETF markets respond differently to GPR shocks?",
+        ),
+        ("Data", "20 country ETF proxies, daily GPR data, and market controls."),
+        (
+            "Methods",
+            "Event studies, regressions, quantile analysis, local projections, rolling betas, "
+            "and drawdown-risk classification.",
+        ),
+        (
+            "Bottom line",
+            "Evidence is useful but mixed. Stronger for general risk association than for "
+            "emerging-market asymmetry.",
+        ),
+    ]
+    columns = st.columns(4)
+    for column, (title, body) in zip(columns, cards, strict=True):
+        with column:
+            st.subheader(title)
+            st.write(body)
+
+
 def render_overview_tab(
     panel: pd.DataFrame,
     gpr: pd.DataFrame,
     group_returns: pd.DataFrame,
     evidence_summary: pd.DataFrame,
 ) -> None:
+    render_summary_cards()
+
     start_date = panel["date"].min().date()
     end_date = panel["date"].max().date()
     country_count = panel["country"].nunique()
@@ -432,8 +540,8 @@ def render_overview_tab(
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("Evidence Summary")
-    st.dataframe(evidence_summary, use_container_width=True, hide_index=True)
+    st.subheader("Evidence Map")
+    st.dataframe(build_evidence_map(evidence_summary), use_container_width=True, hide_index=True)
     st.caption(
         "This table collects the main outputs in one place. Treat weak "
         "p-values and exploratory ML metrics as signals to investigate, "
@@ -738,6 +846,7 @@ def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
 def main():
     st.set_page_config(page_title="GPR Equity Observatory", layout="wide")
     st.title("GPR Equity Observatory")
+    render_intro()
 
     missing = missing_files()
     if missing:
