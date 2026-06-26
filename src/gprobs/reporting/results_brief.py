@@ -123,6 +123,8 @@ def build_results_brief(
         ),
         "",
         "Local projection rows are market-model abnormal return responses, not raw cumulative ETF returns.",
+        "Prediction Lab treats the drawdown model as an out-of-sample risk-classification experiment, "
+        "not as a trading signal.",
         "",
         "## Sample Robustness",
         "",

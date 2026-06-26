@@ -18,6 +18,7 @@ The older controlled interaction alone is not strong evidence of a reliably larg
 | Drawdown classifier | 0.617 | n/a | cross-validation metric |
 
 Local projection rows are market-model abnormal return responses, not raw cumulative ETF returns.
+Prediction Lab treats the drawdown model as an out-of-sample risk-classification experiment, not as a trading signal.
 
 ## Sample Robustness
 

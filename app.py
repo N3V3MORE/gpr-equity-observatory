@@ -495,21 +495,90 @@ def render_local_tab(local_projections: pd.DataFrame) -> None:
 def render_ml_tab(
     drawdown_metrics: pd.DataFrame,
     drawdown_importance: pd.DataFrame,
+    drawdown_threshold_metrics: pd.DataFrame,
+    drawdown_calibration: pd.DataFrame,
+    drawdown_lift: pd.DataFrame,
+    drawdown_country_risk_summary: pd.DataFrame,
 ) -> None:
     render_how_to_read("prediction_lab")
-    headline_metrics = drawdown_metrics
-    if "model_name" in drawdown_metrics.columns:
-        headline_metrics = drawdown_metrics.loc[
-            drawdown_metrics["model_name"] == "full_features"
-        ]
-    mean_auc = headline_metrics["roc_auc"].mean()
-    mean_ap = headline_metrics["average_precision"].mean()
-    mean_base_rate = headline_metrics["base_rate"].mean()
+    st.caption(
+        "This is an out-of-sample risk-classification experiment. It asks whether current GPR and market "
+        "conditions help rank short-horizon drawdown risk; it is not a trading signal."
+    )
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Mean ROC AUC", f"{mean_auc:.3f}")
-    col2.metric("Mean average precision", f"{mean_ap:.3f}")
-    col3.metric("Mean event rate", f"{mean_base_rate:.1%}")
+    model_summary = (
+        drawdown_metrics.groupby("model_name", as_index=False)
+        .agg(
+            mean_roc_auc=("roc_auc", "mean"),
+            mean_average_precision=("average_precision", "mean"),
+            mean_brier_score=("brier_score", "mean"),
+            mean_base_rate=("base_rate", "mean"),
+            observation_count=("observation_count", "sum"),
+        )
+        .sort_values("mean_roc_auc", ascending=False)
+    )
+    top_decile_lift = drawdown_lift.loc[drawdown_lift["bucket"] == "top_10_percent", ["model_name", "lift"]].rename(
+        columns={"lift": "top_decile_lift"}
+    )
+    model_summary = model_summary.merge(top_decile_lift, on="model_name", how="left")
+
+    best_auc = model_summary["mean_roc_auc"].max()
+    best_ap = model_summary["mean_average_precision"].max()
+    best_lift = model_summary["top_decile_lift"].max()
+    mean_base_rate = drawdown_metrics["base_rate"].mean()
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Best model AUC", "n/a" if pd.isna(best_auc) else f"{best_auc:.3f}")
+    col2.metric("Best model AP", "n/a" if pd.isna(best_ap) else f"{best_ap:.3f}")
+    col3.metric("Top-decile lift", "n/a" if pd.isna(best_lift) else f"{best_lift:.2f}x")
+    col4.metric("Mean event rate", f"{mean_base_rate:.1%}")
+
+    st.subheader("Model Comparison")
+    st.dataframe(model_summary, use_container_width=True, hide_index=True)
+    render_csv_download(model_summary, "Download Model Comparison CSV", "drawdown_model_comparison.csv")
+
+    st.subheader("Calibration")
+    calibration_fig = px.line(
+        drawdown_calibration,
+        x="probability_decile",
+        y="realized_event_rate",
+        color="model_name",
+        markers=True,
+        title="Realized Drawdown Rate by Predicted-Risk Decile",
+    )
+    calibration_fig.update_yaxes(tickformat=".0%")
+    st.plotly_chart(calibration_fig, use_container_width=True)
+    st.dataframe(drawdown_calibration, use_container_width=True, hide_index=True)
+    render_csv_download(drawdown_calibration, "Download Calibration CSV", "drawdown_model_calibration.csv")
+
+    st.subheader("Lift")
+    lift_fig = px.bar(
+        drawdown_lift,
+        x="bucket",
+        y="lift",
+        color="model_name",
+        barmode="group",
+        title="Drawdown Event Lift in Highest-Risk Buckets",
+    )
+    st.plotly_chart(lift_fig, use_container_width=True)
+    st.dataframe(drawdown_lift, use_container_width=True, hide_index=True)
+    render_csv_download(drawdown_lift, "Download Lift CSV", "drawdown_model_lift.csv")
+
+    st.subheader("Threshold Metrics")
+    st.dataframe(drawdown_threshold_metrics, use_container_width=True, hide_index=True)
+    render_csv_download(
+        drawdown_threshold_metrics,
+        "Download Threshold Metrics CSV",
+        "drawdown_model_threshold_metrics.csv",
+    )
+
+    st.subheader("Country Risk Summary")
+    st.dataframe(drawdown_country_risk_summary, use_container_width=True, hide_index=True)
+    render_csv_download(
+        drawdown_country_risk_summary,
+        "Download Country Risk Summary CSV",
+        "drawdown_country_risk_summary.csv",
+    )
 
     fig = px.bar(
         drawdown_importance,
@@ -520,6 +589,7 @@ def render_ml_tab(
     )
     fig.update_layout(yaxis={"categoryorder": "total ascending"})
     st.plotly_chart(fig, use_container_width=True)
+    render_csv_download(drawdown_importance, "Download Feature Importance CSV", "drawdown_feature_importance.csv")
 
     st.subheader(ML_VALIDATION_HEADING)
     st.dataframe(drawdown_metrics, use_container_width=True, hide_index=True)
@@ -676,6 +746,10 @@ def main():
     quantile_regression = outputs["quantile_regression"]
     local_projections = outputs["local_projections"]
     drawdown_metrics = outputs["drawdown_metrics"]
+    drawdown_threshold_metrics = outputs["drawdown_threshold_metrics"]
+    drawdown_calibration = outputs["drawdown_calibration"]
+    drawdown_lift = outputs["drawdown_lift"]
+    drawdown_country_risk_summary = outputs["drawdown_country_risk_summary"]
     drawdown_importance = outputs["drawdown_importance"]
     evidence_summary = outputs["evidence_summary"]
     rolling_beta = outputs["rolling_beta"]
@@ -721,7 +795,14 @@ def main():
         render_local_tab(local_projections)
 
     with tab_ml:
-        render_ml_tab(drawdown_metrics, drawdown_importance)
+        render_ml_tab(
+            drawdown_metrics,
+            drawdown_importance,
+            drawdown_threshold_metrics,
+            drawdown_calibration,
+            drawdown_lift,
+            drawdown_country_risk_summary,
+        )
 
     with tab_rolling:
         render_rolling_tab(rolling_beta)
