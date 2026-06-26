@@ -44,6 +44,7 @@ delete them unless the user explicitly asks.
 - Reproducibility checklist: `docs/REPRODUCIBILITY_CHECKLIST.md`
 - Screenshot refresh guide: `docs/SCREENSHOT_REFRESH.md`
 - Launch checklist: `docs/LAUNCH_CHECKLIST.md`
+- Draft pull request text: `docs/PULL_REQUEST_DRAFT.md`
 - Requirement audit: `docs/IMPLEMENTATION_CHECKLIST.md`
 - Reproducibility contract: `docs/REPRODUCIBILITY.md`
 - Source policy: `docs/DATA_SOURCES.md`
@@ -110,8 +111,8 @@ explicitly.
   findings, limitations, deployment, reproducibility, and profile packaging.
 - The packaging branch adds a reviewer guide, reproducibility checklist,
   screenshot refresh guide, local-first launch guidance, launch checklist,
-  refreshed dashboard screenshots, and a roadmap section linking to the
-  controlled GitHub backlog.
+  draft pull request text, refreshed dashboard screenshots, and a roadmap
+  section linking to the controlled GitHub backlog.
 
 ## What Was Intentionally Not Done
 

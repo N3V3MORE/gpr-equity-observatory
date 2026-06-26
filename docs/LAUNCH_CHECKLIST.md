@@ -6,6 +6,8 @@ project. It keeps public launch work separate from post-lock feature work.
 ## GitHub Repository
 
 - Pin the repository on the GitHub profile if this is the project to lead with.
+- Use [docs/PULL_REQUEST_DRAFT.md](PULL_REQUEST_DRAFT.md) when opening the
+  packaging branch pull request.
 - Use this repository description:
 
 ```text
