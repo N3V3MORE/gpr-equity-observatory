@@ -61,3 +61,25 @@ def test_build_evidence_map_adds_strength_and_reader_columns():
         evidence_map.loc[0, "Plain-English takeaway"]
         == "No strong asymmetry evidence."
     )
+
+
+def test_build_gpr_shock_timeline_marks_top_shocks():
+    gpr = pd.DataFrame(
+        {
+            "date": pd.date_range("2024-01-01", periods=4, freq="D"),
+            "gpr": [100, 110, 90, 130],
+            "gpr_change": [0, 10, -20, 40],
+            "event": ["", "Shock A", "", "Shock B"],
+        }
+    )
+
+    fig = app.build_gpr_shock_timeline(gpr)
+
+    assert len(fig.data) == 2
+    assert fig.data[1].name == "Top GPR changes"
+    assert list(fig.data[1].x) == [
+        pd.Timestamp("2024-01-04"),
+        pd.Timestamp("2024-01-02"),
+        pd.Timestamp("2024-01-01"),
+        pd.Timestamp("2024-01-03"),
+    ]

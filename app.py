@@ -545,6 +545,34 @@ def render_how_to_read(tab_key: str) -> None:
     st.info(f"How to read this: {HOW_TO_READ_NOTES[tab_key]}")
 
 
+def render_csv_download(df: pd.DataFrame, label: str, filename: str) -> None:
+    st.download_button(
+        label=label,
+        data=df.to_csv(index=False).encode("utf-8"),
+        file_name=filename,
+        mime="text/csv",
+        key=f"download-{filename}",
+    )
+
+
+def build_gpr_shock_timeline(gpr: pd.DataFrame):
+    timeline = gpr.sort_values("date")
+    top_shocks = gpr.sort_values("gpr_change", ascending=False).head(25)
+    fig = px.line(timeline, x="date", y="gpr", title="GPR Index With Top Shock Dates")
+    fig.add_scatter(
+        x=top_shocks["date"],
+        y=top_shocks["gpr"],
+        mode="markers",
+        name="Top GPR changes",
+        customdata=top_shocks[["gpr_change", "event"]],
+        hovertemplate=(
+            "Date=%{x}<br>GPR=%{y}<br>GPR change=%{customdata[0]}"
+            "<br>Event=%{customdata[1]}<extra></extra>"
+        ),
+    )
+    return fig
+
+
 def render_overview_tab(
     panel: pd.DataFrame,
     gpr: pd.DataFrame,
@@ -585,7 +613,9 @@ def render_overview_tab(
     st.plotly_chart(fig, use_container_width=True)
 
     st.subheader("Evidence Map")
-    st.dataframe(build_evidence_map(evidence_summary), use_container_width=True, hide_index=True)
+    evidence_map = build_evidence_map(evidence_summary)
+    st.dataframe(evidence_map, use_container_width=True, hide_index=True)
+    render_csv_download(evidence_map, "Download Evidence Map CSV", "evidence_map.csv")
     st.caption(
         "This table collects the main outputs in one place. Treat weak "
         "p-values and exploratory ML metrics as signals to investigate, "
@@ -595,12 +625,11 @@ def render_overview_tab(
 
 def render_shocks_tab(gpr: pd.DataFrame) -> None:
     render_how_to_read("shocks")
+    st.plotly_chart(build_gpr_shock_timeline(gpr), use_container_width=True)
     top_shocks = gpr.sort_values("gpr_change", ascending=False).head(25)
-    st.dataframe(
-        top_shocks[["date", "gpr", "gpr_change", "gpr_act", "gpr_threat", "event"]],
-        use_container_width=True,
-        hide_index=True,
-    )
+    top_shocks_table = top_shocks[["date", "gpr", "gpr_change", "gpr_act", "gpr_threat", "event"]]
+    st.dataframe(top_shocks_table, use_container_width=True, hide_index=True)
+    render_csv_download(top_shocks_table, "Download Top Shocks CSV", "top_gpr_shocks.csv")
 
 
 def render_event_tab(
@@ -619,6 +648,11 @@ def render_event_tab(
     fig.add_vline(x=0, line_dash="dash", line_color="black")
     st.plotly_chart(fig, use_container_width=True)
     st.dataframe(abnormal_event_study, use_container_width=True, hide_index=True)
+    render_csv_download(
+        abnormal_event_study,
+        "Download Abnormal Event Study CSV",
+        "event_study_abnormal_summary.csv",
+    )
 
     fig = px.line(
         event_study,
@@ -631,6 +665,7 @@ def render_event_tab(
     fig.add_vline(x=0, line_dash="dash", line_color="black")
     st.plotly_chart(fig, use_container_width=True)
     st.dataframe(event_study, use_container_width=True, hide_index=True)
+    render_csv_download(event_study, "Download Raw Event Study CSV", "event_study_summary.csv")
 
 
 def render_robustness_tab(event_robustness: pd.DataFrame) -> None:
@@ -650,6 +685,11 @@ def render_robustness_tab(event_robustness: pd.DataFrame) -> None:
     fig.add_hline(y=0, line_dash="dash", line_color="gray")
     st.plotly_chart(fig, use_container_width=True)
     st.dataframe(event_robustness, use_container_width=True, hide_index=True)
+    render_csv_download(
+        event_robustness,
+        "Download Event Robustness CSV",
+        "event_robustness_summary.csv",
+    )
     st.caption(
         "This compares whether the event-study conclusion changes when the GPR "
         "shock threshold or post-shock window is changed."
@@ -668,13 +708,20 @@ def render_regression_tab(
         st.subheader("Baseline")
         key_terms = select_key_regression_terms(regression)
         st.dataframe(key_terms, use_container_width=True, hide_index=True)
+        render_csv_download(key_terms, "Download Baseline Terms CSV", "panel_regression_baseline_terms.csv")
     with col2:
         st.subheader("With Market Controls")
         controlled_terms = select_key_regression_terms(controlled_regression)
         st.dataframe(controlled_terms, use_container_width=True, hide_index=True)
+        render_csv_download(
+            controlled_terms,
+            "Download Controlled Terms CSV",
+            "panel_regression_controlled_terms.csv",
+        )
     st.subheader("Date Fixed-Effects H1 Model")
     date_fe_terms = select_key_regression_terms(date_fe_regression)
     st.dataframe(date_fe_terms, use_container_width=True, hide_index=True)
+    render_csv_download(date_fe_terms, "Download Date FE Terms CSV", "panel_regression_date_fe_terms.csv")
     st.caption(
         "The interaction term is the extra association between a standardized "
         "daily GPR jump and returns for emerging market ETFs relative to developed "
@@ -686,6 +733,11 @@ def render_regression_tab(
         panel_sample_robustness,
         use_container_width=True,
         hide_index=True,
+    )
+    render_csv_download(
+        panel_sample_robustness,
+        "Download Sample Robustness CSV",
+        "panel_sample_robustness.csv",
     )
     st.caption(
         "These rows rerun the controlled model after excluding major crisis "
@@ -708,6 +760,7 @@ def render_tail_tab(quantile_regression: pd.DataFrame) -> None:
     fig.add_hline(y=0, line_dash="dash", line_color="gray")
     st.plotly_chart(fig, use_container_width=True)
     st.dataframe(key_quantile_terms, use_container_width=True, hide_index=True)
+    render_csv_download(key_quantile_terms, "Download Quantile Terms CSV", "quantile_regression_terms.csv")
     st.caption(
         "Lower quantiles describe worse return days. A more negative coefficient "
         "at the 10th percentile than at the median suggests stronger downside "
@@ -746,6 +799,7 @@ def render_local_tab(local_projections: pd.DataFrame) -> None:
     fig.add_hline(y=0, line_dash="dash", line_color="gray")
     st.plotly_chart(fig, use_container_width=True)
     st.dataframe(local_projections, use_container_width=True, hide_index=True)
+    render_csv_download(local_projections, "Download Local Projections CSV", "local_projection_results.csv")
 
 
 def render_ml_tab(
@@ -779,6 +833,7 @@ def render_ml_tab(
 
     st.subheader(ML_VALIDATION_HEADING)
     st.dataframe(drawdown_metrics, use_container_width=True, hide_index=True)
+    render_csv_download(drawdown_metrics, "Download Drawdown Metrics CSV", "drawdown_model_metrics.csv")
     st.caption(
         f"This classifier predicts whether an ETF has a forward {DRAWDOWN_HORIZON_DAYS}-trading-day "
         f"cumulative log-return drawdown of at least {abs(DRAWDOWN_THRESHOLD):.0%}. "
@@ -809,8 +864,10 @@ def render_coverage_tab(panel: pd.DataFrame, large_returns: pd.DataFrame) -> Non
     coverage = build_country_coverage(panel)
     st.subheader("Country Coverage")
     st.dataframe(coverage, use_container_width=True, hide_index=True)
+    render_csv_download(coverage, "Download Country Coverage CSV", "country_coverage.csv")
     st.subheader("Large Daily Return Flags")
     st.dataframe(large_returns, use_container_width=True, hide_index=True)
+    render_csv_download(large_returns, "Download Large Return Flags CSV", "large_return_flags.csv")
 
 
 def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
@@ -848,13 +905,13 @@ def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
     st.caption(MONTHLY_MODE_PRIORITY_NOTICE)
 
     st.subheader("Source and Provenance Status")
-    st.dataframe(monthly_provenance_rows(bundle), use_container_width=True, hide_index=True)
+    provenance = monthly_provenance_rows(bundle)
+    st.dataframe(provenance, use_container_width=True, hide_index=True)
+    render_csv_download(provenance, "Download Monthly Provenance CSV", "monthly_provenance.csv")
     if bundle.source_names:
-        st.dataframe(
-            pd.DataFrame({"source_name": bundle.source_names}),
-            use_container_width=True,
-            hide_index=True,
-        )
+        sources = pd.DataFrame({"source_name": bundle.source_names})
+        st.dataframe(sources, use_container_width=True, hide_index=True)
+        render_csv_download(sources, "Download Monthly Sources CSV", "monthly_sources.csv")
 
     gpr_fig = px.line(
         month_level,
@@ -879,6 +936,11 @@ def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
         st.info("Monthly benchmark regression output is not available yet.")
     else:
         st.dataframe(bundle.regressions, use_container_width=True, hide_index=True)
+        render_csv_download(
+            bundle.regressions,
+            "Download Monthly Regressions CSV",
+            "monthly_benchmark_regressions.csv",
+        )
 
     st.subheader("Forecast Comparison")
     if bundle.forecasts is None:
@@ -893,6 +955,11 @@ def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
         forecast_fig.add_hline(y=0, line_dash="dash", line_color="gray")
         st.plotly_chart(forecast_fig, use_container_width=True)
         st.dataframe(bundle.forecasts, use_container_width=True, hide_index=True)
+        render_csv_download(
+            bundle.forecasts,
+            "Download Monthly Forecasts CSV",
+            "monthly_benchmark_forecasts.csv",
+        )
 
 
 def main():

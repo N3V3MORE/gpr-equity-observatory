@@ -71,3 +71,8 @@ def test_daily_tabs_have_how_to_read_notes():
     assert set(app.HOW_TO_READ_NOTES) == expected_keys
     assert "Day 0" in app.HOW_TO_READ_NOTES["market_response"]
     assert "not a trading strategy" in app.HOW_TO_READ_NOTES["prediction_lab"]
+
+
+def test_dashboard_download_and_timeline_helpers_are_defined():
+    assert callable(app.render_csv_download)
+    assert callable(app.build_gpr_shock_timeline)
