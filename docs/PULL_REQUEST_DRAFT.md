@@ -50,6 +50,7 @@ tracked in issue #2.
 
 ## Validation
 
+- [x] `uv run --all-extras pytest tests\test_documentation_contracts.py -q`
 - [x] `uv run --all-extras ruff check .`
 - [x] `uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q`
 - [x] `uv run --all-extras python scripts/run_task.py monthly-sample --min-train-months 24`

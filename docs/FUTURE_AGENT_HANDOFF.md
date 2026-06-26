@@ -63,6 +63,8 @@ The current forward-plan packaging branch is
 
 Key packaging branch commits include, newest first:
 
+- `1ba17fd docs: add issue template chooser`
+- `f844038 docs: add release hardening issue template`
 - `c4aff24 test: cover setup command docs`
 - `0ad135c test: cover template guardrails`
 - `1416412 docs: omit local GeoRiskLab path`
@@ -217,8 +219,8 @@ The packaging branch screenshot refresh was also validated with:
 - `uv run --all-extras ruff check .`
 - `uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q`
 
-The latest setup-command, GitHub-template, and local-path hardening docs were
-validated with:
+The latest setup-command, GitHub-template, issue-template, and local-path
+hardening docs were validated with:
 
 - `uv run --all-extras pytest tests\test_documentation_contracts.py -q`
 - `uv run --all-extras ruff check .`
