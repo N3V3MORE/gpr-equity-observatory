@@ -3,6 +3,16 @@ import json
 import pandas as pd
 
 import app
+from gprobs.dashboard import outputs as dashboard_outputs
+
+
+def test_dashboard_output_contracts_live_in_dashboard_outputs_module():
+    assert dashboard_outputs.OutputSpec is app.OutputSpec
+    assert dashboard_outputs.OUTPUT_SPECS is app.OUTPUT_SPECS
+    assert dashboard_outputs.REQUIRED_FILES is app.REQUIRED_FILES
+    assert dashboard_outputs.load_outputs is app.load_outputs
+    assert dashboard_outputs.validate_output_schema is app.validate_output_schema
+    assert dashboard_outputs.missing_files is app.missing_files
 
 
 def test_required_files_are_derived_from_output_specs():
@@ -18,15 +28,20 @@ def test_load_outputs_reads_each_declared_output(monkeypatch, tmp_path):
     gpr_path.write_text("date,gpr\n2024-01-01,120\n", encoding="utf-8")
 
     monkeypatch.setattr(
-        app,
+        dashboard_outputs,
         "OUTPUT_SPECS",
         {
-            "analysis_panel": app.OutputSpec(analysis_path, date_columns=("date",), low_memory=False),
-            "gpr": app.OutputSpec(gpr_path, date_columns=("date",)),
+            "analysis_panel": dashboard_outputs.OutputSpec(
+                analysis_path,
+                date_columns=("date",),
+                low_memory=False,
+            ),
+            "gpr": dashboard_outputs.OutputSpec(gpr_path, date_columns=("date",)),
         },
     )
 
-    outputs = app.load_outputs()
+    dashboard_outputs.load_outputs.clear()
+    outputs = dashboard_outputs.load_outputs()
 
     assert outputs["analysis_panel"].loc[0, "date"] == pd.Timestamp("2024-01-01")
     assert outputs["gpr"].loc[0, "gpr"] == 120
@@ -37,13 +52,13 @@ def test_missing_files_ignores_optional_monthly_outputs(monkeypatch, tmp_path):
     daily_path.write_text("date,value\n2024-01-01,1\n", encoding="utf-8")
 
     monkeypatch.setattr(
-        app,
+        dashboard_outputs,
         "OUTPUT_SPECS",
-        {"daily": app.OutputSpec(daily_path, required_columns=("date", "value"))},
+        {"daily": dashboard_outputs.OutputSpec(daily_path, required_columns=("date", "value"))},
     )
-    monkeypatch.setattr(app, "REQUIRED_FILES", {"daily": daily_path})
+    monkeypatch.setattr(dashboard_outputs, "REQUIRED_FILES", {"daily": daily_path})
 
-    assert app.missing_files() == []
+    assert dashboard_outputs.missing_files() == []
 
 
 def test_missing_data_message_helper_is_defined():

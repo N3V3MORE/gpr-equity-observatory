@@ -1,6 +1,7 @@
 from contextlib import suppress
 
 import app
+from gprobs.dashboard import outputs as dashboard_outputs
 
 EXPECTED_OUTPUT_COLUMNS = {
     "analysis_panel": {
@@ -180,10 +181,10 @@ def test_load_outputs_rejects_missing_required_columns(monkeypatch, tmp_path):
     bad_path = tmp_path / "gpr_daily.csv"
     bad_path.write_text("date,gpr\n2024-01-01,120\n", encoding="utf-8")
     monkeypatch.setattr(
-        app,
+        dashboard_outputs,
         "OUTPUT_SPECS",
         {
-            "gpr": app.OutputSpec(
+            "gpr": dashboard_outputs.OutputSpec(
                 bad_path,
                 date_columns=("date",),
                 required_columns=("date", "gpr", "gpr_change"),
@@ -192,10 +193,10 @@ def test_load_outputs_rejects_missing_required_columns(monkeypatch, tmp_path):
     )
 
     with suppress(AttributeError):
-        app.load_outputs.clear()
+        dashboard_outputs.load_outputs.clear()
 
     try:
-        app.load_outputs()
+        dashboard_outputs.load_outputs()
     except ValueError as exc:
         assert "gpr_daily.csv is missing required columns: ['gpr_change']" in str(exc)
     else:
