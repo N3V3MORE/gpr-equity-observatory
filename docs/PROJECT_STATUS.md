@@ -99,12 +99,12 @@ negative. That is a warning not to overstate a single headline result.
 `reports/RESULTS_BRIEF.md` now gives a short generated summary of these results
 for interviews, profile packaging, or quick project review.
 
-The monthly benchmark layer is newly integrated as infrastructure. The
-deterministic monthly sample pipeline is a software validation target. Real
-monthly benchmark outputs require user-supplied source files and should be
-interpreted as aggregate benchmark evidence, not country-panel proof.
+The monthly benchmark now works as a separate local comparison layer. The
+deterministic sample path validates the software. Real monthly outputs require
+user-supplied source files and should be read as aggregate benchmark evidence,
+not country-panel proof.
 
-## Interpretation Rules
+## Boundaries
 
 - This is not a trading system.
 - This is not investment advice.

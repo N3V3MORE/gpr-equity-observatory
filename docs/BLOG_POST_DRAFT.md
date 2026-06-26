@@ -6,8 +6,8 @@ instability, but those events rarely happen in isolation. They often arrive at
 the same time as oil shocks, currency moves, volatility spikes, and broader
 macro-financial stress.
 
-GPR Equity Observatory is my attempt to turn that problem into a reproducible
-quant economics project. The central question is simple:
+GPR Equity Observatory is my attempt to test one version of that problem with
+public data. The central question is simple:
 
 > Do emerging equity markets respond more strongly to geopolitical risk shocks
 > than developed markets?
@@ -17,9 +17,14 @@ quant economics project. The central question is simple:
 The project repository is
 [N3V3MORE/gpr-equity-observatory](https://github.com/N3V3MORE/gpr-equity-observatory).
 
-The project does not try to build a trading system. It studies risk
-transmission. The aim is to build a transparent empirical workflow that can be
-checked, extended, and explained.
+## Boundaries
+
+The project studies risk transmission, not trade entry and exit rules. It is
+not a trading system.
+
+ETF returns are dollar returns, so they mix local equity performance with
+currency exposure. The estimates are associations and response patterns, not
+causal proof that GPR alone moved each market.
 
 ## Data
 
@@ -102,12 +107,12 @@ feature set do more of the ranking work.
 ## Why This Is Still A Useful Result
 
 A project like this is stronger when it reports mixed evidence honestly. The
-goal is not to force a dramatic conclusion. The goal is to build a credible
-empirical platform.
+goal is not to force a dramatic conclusion. The goal is to make the evidence
+easy to inspect.
 
 The useful outcome is that the project now has:
 
-- a reproducible data pipeline,
+- a 20-country ETF return panel,
 - tested data and feature logic,
 - multiple empirical methods,
 - robustness checks,

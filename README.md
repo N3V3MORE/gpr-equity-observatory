@@ -3,16 +3,16 @@
 GPR Equity Observatory tests how far a simple question can be answered with
 public data: do equity markets react differently when geopolitical risk jumps?
 
-The project combines a tested Python data pipeline, empirical models, an
-interactive Streamlit dashboard, screenshots, and research notes.
+It uses 20 country ETF proxies, the Caldara-Iacoviello GPR index, market
+controls, event studies, regressions, local projections, and a small
+out-of-sample drawdown-risk lab.
 
 ![Dashboard overview](reports/screenshots/dashboard_overview.png)
 
 ## One-Sentence Summary
 
-I built a reproducible quant economics platform studying how geopolitical risk
-is associated with equity-market risk across 20 developed and emerging market
-country ETF proxies.
+An applied economics project on geopolitical risk, international ETF returns,
+and the limits of what public data can show.
 
 ## What The Project Does
 
@@ -27,9 +27,8 @@ country ETF proxies.
   expanding-window forecast comparisons.
 - Presents the results in a Streamlit dashboard and written research notes.
 
-This is not a trading system and it is not investment advice. It is an
-educational economics project about geopolitical risk, international equity
-markets, and empirical research design.
+It is an educational economics project about geopolitical risk, international
+equity markets, and empirical research design.
 
 ## Main Finding
 
@@ -202,7 +201,7 @@ docs/PROFILE_PACKAGING.md      CV, LinkedIn, and interview materials
 - Monthly developed/emerging benchmark HAC regressions
 - Monthly expanding-window forecast comparisons
 
-## Important Limitations
+## Boundaries
 
 - ETF returns are USD returns, so they combine local equity-market movement and
   currency exposure against the US dollar.
@@ -216,6 +215,7 @@ docs/PROFILE_PACKAGING.md      CV, LinkedIn, and interview materials
 - Free market data can contain revisions, missing values, or provider limits.
 - The current project runs locally. Public dashboard deployment is a separate
   optional step because generated data files are not committed by default.
+- This is not a trading system and it is not investment advice.
 
 ## Profile Materials
 

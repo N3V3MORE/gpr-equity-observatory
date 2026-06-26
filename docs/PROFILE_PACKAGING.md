@@ -22,22 +22,16 @@ Simple GitHub repository description:
 > market responses across developed and emerging market ETF proxies, with a
 > separate monthly benchmark layer for reproducibility checks.
 
-## What Not To Claim
+## Boundaries
 
-Do not claim that this project proves a causal effect. It does not.
+Keep these boundaries when using the project in a CV, post, or interview:
 
-Do not claim that it is a trading system. It is not.
-
-Do not claim strong emerging-market asymmetry. The current evidence is mixed:
-the controlled and date fixed-effects GPR-jump interactions are small and not
-statistically strong.
-
-Do not claim monthly sample mode is empirical evidence. It is not empirical
-evidence.
-
-Do not claim the monthly benchmark is a country-panel proof. The current monthly
-benchmark is an aggregate developed/emerging comparison and not a country-panel
-proof.
+- It does not prove a causal effect.
+- It is not a trading system.
+- It does not show strong emerging-market asymmetry; the controlled and date
+  fixed-effects GPR-jump interactions are small and statistically weak.
+- Monthly sample mode is not empirical evidence.
+- The monthly benchmark is an aggregate developed/emerging comparison, not a country-panel proof.
 
 The strongest honest claim is:
 
@@ -106,9 +100,9 @@ asymmetry result is not a strong statistical conclusion after controls.
 - Prediction Lab is deliberately simple and time-aware. It is exploratory, not a
   trading signal; the current GPR-only model is weak compared with volatility
   and broader feature sets.
-- The monthly benchmark is useful for reproducibility and aggregate comparison,
-  but sample mode is not empirical evidence and real monthly aggregate mode is
-  not a country-panel proof.
+- The monthly benchmark is useful for reproducibility and aggregate comparison;
+  sample mode validates software, and real monthly aggregate mode is not
+  country-level panel inference.
 
 ## Three-Minute Walkthrough Script
 

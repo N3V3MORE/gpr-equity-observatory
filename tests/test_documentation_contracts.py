@@ -9,6 +9,13 @@ PUBLIC_REVIEWER_DOCS = [
     DOCS / "TECHNICAL_APPENDIX.md",
     DOCS / "REPRODUCIBILITY_CHECKLIST.md",
 ]
+PHASE6_PUBLIC_DOCS = [
+    Path("README.md"),
+    DOCS / "RESEARCH_NOTE.md",
+    DOCS / "PROFILE_PACKAGING.md",
+    DOCS / "PROJECT_STATUS.md",
+    DOCS / "BLOG_POST_DRAFT.md",
+]
 
 
 def test_phase8_documentation_files_exist():
@@ -236,6 +243,45 @@ def test_public_reviewer_path_avoids_internal_ai_workflow_docs():
         assert "explicit user request" not in contents, f"chat-history wording leaked into {doc_path}"
 
 
+def test_phase6_public_docs_use_single_boundaries_section():
+    for doc_path in PHASE6_PUBLIC_DOCS:
+        contents = doc_path.read_text(encoding="utf-8")
+        boundary_headings = [
+            line for line in contents.splitlines()
+            if line.strip().lower() == "## boundaries"
+        ]
+        assert len(boundary_headings) == 1, f"{doc_path} should have exactly one Boundaries section"
+
+
+def test_phase6_public_docs_avoid_repeated_warning_boilerplate():
+    repeated_warning_phrases = [
+        "not a trading system",
+        "not investment advice",
+        "not empirical evidence",
+        "not a country-panel proof",
+    ]
+
+    for doc_path in PHASE6_PUBLIC_DOCS:
+        contents = doc_path.read_text(encoding="utf-8").lower()
+        for phrase in repeated_warning_phrases:
+            assert contents.count(phrase) <= 1, f"{phrase} repeated in {doc_path}"
+
+
+def test_phase6_public_docs_do_not_lead_with_process_infrastructure():
+    infrastructure_phrases = [
+        "reproducible python pipeline",
+        "transparent empirical workflow",
+        "empirical platform",
+        "data pipeline",
+        "project repository",
+    ]
+
+    for doc_path in PHASE6_PUBLIC_DOCS:
+        opening = _first_body_paragraph(doc_path).lower()
+        for phrase in infrastructure_phrases:
+            assert phrase not in opening, f"{doc_path} leads with process phrase: {phrase}"
+
+
 def test_internal_ai_review_context_routes_safe_context():
     guide = (DOCS / "internal" / "REVIEW_CONTEXT_FOR_AI_TOOLS.md").read_text(
         encoding="utf-8"
@@ -275,3 +321,21 @@ def test_committed_docs_do_not_leak_local_paths():
         contents = doc_path.read_text(encoding="utf-8").lower()
         for pattern in forbidden_patterns:
             assert pattern not in contents, f"{pattern} leaked into {doc_path}"
+
+
+def _first_body_paragraph(doc_path: Path) -> str:
+    paragraphs = []
+    current = []
+    for line in doc_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped:
+            if current:
+                paragraphs.append(" ".join(current))
+                current = []
+            continue
+        if stripped.startswith("#"):
+            continue
+        current.append(stripped)
+    if current:
+        paragraphs.append(" ".join(current))
+    return paragraphs[0] if paragraphs else ""

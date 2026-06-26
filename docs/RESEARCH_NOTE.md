@@ -2,17 +2,15 @@
 
 ## Abstract
 
-This project studies whether equity-market responses to geopolitical risk differ
-between emerging and developed market ETF proxies. It builds a reproducible
-Python pipeline using daily country ETF returns, daily Caldara-Iacoviello GPR
-data, public market controls, event studies, panel regressions, quantile
-regressions, local projections, rolling sensitivities, and a Prediction Lab for
-drawdown-risk classification.
+This note asks whether emerging-market equity ETFs react differently when
+geopolitical risk jumps. The evidence comes from daily country ETF returns,
+daily Caldara-Iacoviello GPR data, public market controls, event studies, panel
+regressions, quantile regressions, local projections, rolling sensitivities,
+and a small Prediction Lab for drawdown-risk classification.
 
-The repository also includes a separate monthly benchmark layer. That layer
-uses deterministic sample mode for software validation and user-supplied real
-mode for aggregate developed/emerging benchmark analysis. It is deliberately
-kept separate from the daily ETF evidence.
+The monthly benchmark is separate from the daily ETF panel. Its sample mode
+checks that the software path runs; its real mode uses user-supplied monthly GPR
+and Kenneth French files for aggregate developed/emerging comparisons.
 
 The current evidence is mixed. Market-controlled regressions show small,
 statistically weak average responses to standardized daily GPR jumps. The
@@ -237,7 +235,7 @@ The current evidence supports a cautious interpretation:
 The project should therefore be presented as a transparent empirical platform,
 not as a finished proof of a single hypothesis.
 
-## Limitations
+## Boundaries
 
 ETF returns are imperfect proxies for local equity markets. They are practical
 and reproducible, but they include currency exposure, ETF liquidity effects, and
