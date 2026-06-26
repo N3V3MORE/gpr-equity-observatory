@@ -22,7 +22,8 @@ The repository now combines:
 
 ## V0.2 Wrap-Up
 
-Status: implemented on the current merge branch.
+Status: implemented on the locked merge branch and carried forward on the
+packaging branch.
 
 Included:
 
