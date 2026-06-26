@@ -11,9 +11,9 @@ research notes.
 
 ## One-Sentence Summary
 
-I built a reproducible quant economics platform that measures how geopolitical
-risk is associated with equity-market returns across 20 developed and emerging
-market country ETF proxies.
+I built a reproducible quant economics platform studying how geopolitical risk
+is associated with equity-market risk across 20 developed and emerging market
+country ETF proxies.
 
 ## What The Project Does
 
@@ -33,7 +33,10 @@ markets, and empirical research design.
 
 ## Main Finding
 
-The current evidence should be reported carefully.
+The current evidence should be reported carefully: the project finds cautious
+evidence that geopolitical risk is associated with equity-market risk, but the
+emerging-market asymmetry result is mixed and not statistically strong in the
+current specification.
 
 The controlled panel regression finds a small negative association between daily
 geopolitical-risk jumps and ETF returns. However, the date fixed-effects H1 test
@@ -45,6 +48,20 @@ react more strongly.
 
 See [reports/RESULTS_BRIEF.md](reports/RESULTS_BRIEF.md) for the short generated
 summary.
+
+## For Reviewers
+
+Start here:
+
+- [reports/RESULTS_BRIEF.md](reports/RESULTS_BRIEF.md) for the short generated
+  result summary.
+- [docs/RESEARCH_NOTE.md](docs/RESEARCH_NOTE.md) for the research framing and
+  interpretation.
+- [docs/TECHNICAL_APPENDIX.md](docs/TECHNICAL_APPENDIX.md) for data, methods,
+  and reproducibility details.
+- [docs/PROFILE_PACKAGING.md](docs/PROFILE_PACKAGING.md) for CV, LinkedIn, and
+  interview material.
+- [reports/screenshots](reports/screenshots) for dashboard images.
 
 ## Why This Works As A Profile Project
 

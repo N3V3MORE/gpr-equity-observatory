@@ -53,7 +53,9 @@ You said the future options were confusing, so here is the short version.
 - GDELT or country-specific GPR means adding more advanced news/geopolitical
   data. This is a bigger extension and should wait.
 
-For now, the best choice is to present the current project clearly.
+For now, the best choice is to present the current project clearly: polish the
+reviewer path, keep screenshots current, use the generated results brief, and
+capture future extensions as backlog items instead of starting them immediately.
 
 ## CV Bullet
 
@@ -175,8 +177,9 @@ avoid look-ahead bias and keep the model simple enough to interpret.
 
 ### What would improve the project next?
 
-The best next steps are FRED macro controls, country-specific GPR where
-reliable, and later a carefully scoped GDELT extension.
+The best immediate next steps are packaging and review polish. FRED macro
+controls, country-specific GPR where reliable, and a carefully scoped GDELT
+extension are later research decisions.
 
 ## Quick Results Brief
 

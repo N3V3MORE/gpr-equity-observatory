@@ -114,10 +114,15 @@ interpreted as aggregate benchmark evidence, not country-panel proof.
 
 ## Next Useful Work
 
-Good next options are:
+Good release-hardening options are:
 
 - Capture refreshed dashboard screenshots now that the Monthly Benchmark tab is
   implemented.
-- Add FRED controls if an API key is available.
-- Add country-specific GPR data where coverage is reliable.
-- Add GDELT only after the research note and robustness checks are clearer.
+- Polish the reviewer path in the README and supporting docs.
+- Add a practical reproducibility checklist.
+- Decide whether the project stays local-first for portfolio use or gets a
+  documented public deployment snapshot.
+
+Post-lock research extensions, such as FRED controls, country-specific GPR data,
+or a narrow GDELT extension, require an explicit feature unlock before
+implementation.

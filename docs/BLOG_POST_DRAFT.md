@@ -116,13 +116,15 @@ structure.
 
 ## Next Steps
 
-The next step is not to add complexity for its own sake. The priority should be
-better external data where it clearly improves interpretation: FRED macro
-controls if an API key is available, and country-specific GPR where coverage is
-reliable.
+The next step is not to add complexity for its own sake. The priority is to make
+the current project easier to review, reproduce, and present: a clearer reviewer
+path, current screenshots, practical reproducibility notes, and a controlled
+backlog for future extensions.
 
-Only after that would I add a GDELT extension. News-event data could be useful,
-but it is noisy and can easily distract from the main economics question.
+After that, FRED macro controls or country-specific GPR data could improve
+interpretation if the scope is narrow and the lagging rules are explicit. Only
+later would I add a GDELT extension. News-event data could be useful, but it is
+noisy and can easily distract from the main economics question.
 
 The current conclusion is therefore careful: geopolitical risk is associated
 with equity-market risk, but the emerging-versus-developed asymmetry is not yet
