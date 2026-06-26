@@ -32,6 +32,16 @@ Included:
 - CI monthly sample pipeline added
 - docs consolidated around the daily/monthly distinction
 
+## Active Backlog Issues
+
+Future work is tracked in GitHub issues rather than scattered planning notes:
+
+- [#1 Package current project for portfolio use](https://github.com/N3V3MORE/gpr-equity-observatory/issues/1)
+- [#2 Improve dashboard usability without changing models](https://github.com/N3V3MORE/gpr-equity-observatory/issues/2)
+- [#3 Decide deployment data strategy](https://github.com/N3V3MORE/gpr-equity-observatory/issues/3)
+- [#4 Plan future FRED macro-controls extension](https://github.com/N3V3MORE/gpr-equity-observatory/issues/4)
+- [#5 Scope later country-specific GPR or GDELT extension](https://github.com/N3V3MORE/gpr-equity-observatory/issues/5)
+
 ## V0.3 Research Extensions
 
 Status: post-lock only.
