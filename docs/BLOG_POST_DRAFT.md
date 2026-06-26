@@ -88,7 +88,7 @@ developed-market abnormal returns over the 10-day event window. But the
 the controlled GPR-jump coefficient remains negative after excluding COVID and
 Russia-Ukraine windows, while the emerging-market interaction remains weak.
 
-The drawdown classifier has modest signal. Its mean ROC AUC is about 0.614, and
+The drawdown classifier has modest signal. Its mean ROC AUC is about 0.617, and
 rolling volatility is the most important feature. GPR variables are small in the
 current model.
 

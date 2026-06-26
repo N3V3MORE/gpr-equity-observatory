@@ -160,9 +160,9 @@ is not a country-panel proof.
 
 The controlled panel regression estimates the developed-market GPR-jump
 coefficient at about `-0.4` basis points per one-SD GPR jump, with a p-value
-around `0.328`. The controlled emerging-market interaction is about `-0.6` basis
-points, with a p-value around `0.551`. The date-fixed-effects H1 interaction is
-also about `-0.6` basis points, with a p-value around `0.557`. This is a sharper
+around `0.325`. The controlled emerging-market interaction is about `-0.5` basis
+points, with a p-value around `0.574`. The date-fixed-effects H1 interaction is
+also about `-0.6` basis points, with a p-value around `0.563`. This is a sharper
 and more interpretable specification, but it does not strongly support a
 differential average response for emerging markets.
 
@@ -175,16 +175,16 @@ but neither is statistically strong.
 The quantile regression results are more suggestive than conclusive. The
 10th-percentile GPR-jump coefficient is about `-0.8` basis points, which is
 directionally consistent with downside concentration. However, the p-value is
-around `0.280`, so this is not a firm result.
+around `0.271`, so this is not a firm result.
 
 The abnormal-return local projection estimates now line up better with the
 event-study framing. At the 20-day horizon, the developed-market estimate is
 near zero at about `0.01%`, while the emerging-market estimate is negative at
-about `-0.11%`. This is useful as a diagnostic response path, not as a
+about `-0.06%`. This is useful as a diagnostic response path, not as a
 standalone claim.
 
-The drawdown classifier has a mean ROC AUC of about `0.614` and average
-precision of about `0.370`, compared with a mean event rate of about `28.5%`.
+The drawdown classifier has a mean ROC AUC of about `0.617` and average
+precision of about `0.373`, compared with a mean event rate of about `28.6%`.
 This is modest predictive signal. Rolling volatility is the largest feature by
 standardized coefficient. GPR features are small in the current classifier, so
 the ML layer should be described as exploratory.

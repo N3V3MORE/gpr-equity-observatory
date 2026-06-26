@@ -53,9 +53,9 @@ panel, quantile, local-projection, rolling-sensitivity, and ML evidence.
 
 The controlled panel regression estimates the developed-market GPR-jump
 coefficient at about `-0.4` basis points per one-SD jump, with a p-value near
-`0.328`. The controlled emerging-market interaction is about `-0.6` basis
-points, with a p-value near `0.551`. The date fixed-effects H1 interaction is
-also about `-0.6` basis points, with a p-value near `0.557`. That means the
+`0.325`. The controlled emerging-market interaction is about `-0.5` basis
+points, with a p-value near `0.574`. The date fixed-effects H1 interaction is
+also about `-0.6` basis points, with a p-value near `0.563`. That means the
 current model does not give strong statistical evidence that emerging ETFs have
 a different average GPR-jump response.
 
@@ -66,15 +66,15 @@ claim.
 
 The quantile regressions are directionally interesting but not decisive. The
 10th-percentile GPR-jump coefficient is about `-0.8` basis points with a p-value
-near `0.280`, so it should not be presented as proof.
+near `0.271`, so it should not be presented as proof.
 
 The local projections now use cumulative market-model abnormal returns. At the
 20-day horizon, the developed-market response is near zero while the
 emerging-market response is negative. These should still be treated as
 response-path diagnostics rather than headline conclusions.
 
-The drawdown classifier is exploratory. Mean ROC AUC is about `0.614`, average
-precision is about `0.370`, and the mean drawdown event rate is about `28.5%`.
+The drawdown classifier is exploratory. Mean ROC AUC is about `0.617`, average
+precision is about `0.373`, and the mean drawdown event rate is about `28.6%`.
 Rolling volatility is the largest feature by standardized coefficient; GPR
 features are small in the current version.
 

@@ -9,19 +9,19 @@ The older controlled interaction alone is not strong evidence of a reliably larg
 
 | Method | Estimate | p-value | Inference |
 | --- | ---: | ---: | --- |
-| Controlled panel regression | -0.4 bps | 0.328 | two-way clustered by ticker/date |
-| Controlled emerging interaction | -0.6 bps | 0.551 | two-way clustered by ticker/date |
+| Controlled panel regression | -0.4 bps | 0.325 | two-way clustered by ticker/date |
+| Controlled emerging interaction | -0.5 bps | 0.574 | two-way clustered by ticker/date |
 | Date fixed-effects emerging interaction | -0.6 bps | 0.563 | two-way clustered by ticker/date |
-| Tail-risk quantile regression | -0.8 bps | 0.280 | i.i.d. QuantReg asymptotic p-value |
-| Local projection developed | 0.003% | 0.964 | two-way clustered by ticker/date |
-| Local projection emerging | -0.060% | 0.604 | two-way clustered by ticker/date |
-| Drawdown classifier | 0.616 | n/a | cross-validation metric |
+| Tail-risk quantile regression | -0.8 bps | 0.271 | i.i.d. QuantReg asymptotic p-value |
+| Local projection developed | 0.010% | 0.858 | two-way clustered by ticker/date |
+| Local projection emerging | -0.057% | 0.587 | two-way clustered by ticker/date |
+| Drawdown classifier | 0.617 | n/a | cross-validation metric |
 
 Local projection rows are market-model abnormal return responses, not raw cumulative ETF returns.
 
 ## Sample Robustness
 
-Under `Excluding COVID and Russia windows`, the controlled one-SD GPR-jump coefficient is -0.6 bps with p-value 0.194. The emerging interaction is -0.8 bps with p-value 0.396.
+Under `Excluding COVID and Russia windows`, the controlled one-SD GPR-jump coefficient is -0.6 bps with p-value 0.190. The emerging interaction is -0.8 bps with p-value 0.419.
 
 That means the main controlled GPR-jump coefficient is not only a COVID or Russia-Ukraine result. But the emerging-market asymmetry claim remains weak in the current specification.
 
