@@ -102,6 +102,33 @@ def test_build_evidence_map_adds_strength_and_reader_columns():
     assert evidence_map.loc[1, "p-value / metric"] == "n/a"
 
 
+def test_prediction_lab_best_metric_labels_include_model_names():
+    metrics = pd.DataFrame(
+        {
+            "model_name": ["gpr_only", "full_features"],
+            "roc_auc": [0.51, 0.63],
+            "average_precision": [0.22, 0.38],
+            "brier_score": [0.20, 0.18],
+            "base_rate": [0.25, 0.25],
+            "observation_count": [10, 10],
+        }
+    )
+    lift = pd.DataFrame(
+        {
+            "model_name": ["gpr_only", "full_features"],
+            "bucket": ["top_10_percent", "top_10_percent"],
+            "lift": [1.1, 1.5],
+        }
+    )
+
+    summary = app.build_model_summary(metrics, lift)
+    labels = app.best_model_metric_labels(summary)
+
+    assert labels["auc"] == ("Best model AUC (full_features)", "0.630")
+    assert labels["ap"] == ("Best model AP (full_features)", "0.380")
+    assert labels["lift"] == ("Top-decile lift (full_features)", "1.50x")
+
+
 def test_build_gpr_shock_timeline_marks_top_shocks():
     charts = import_module("gprobs.dashboard.charts")
 
@@ -126,3 +153,46 @@ def test_build_gpr_shock_timeline_marks_top_shocks():
         pd.Timestamp("2024-01-01"),
         pd.Timestamp("2024-01-03"),
     ]
+
+
+def test_dashboard_chart_builders_cover_monthly_and_prediction_views():
+    charts = import_module("gprobs.dashboard.charts")
+    monthly = pd.DataFrame(
+        {
+            "date_month": pd.to_datetime(["2024-01-01", "2024-02-01"]),
+            "gpr_change_z": [0.2, -0.1],
+            "spread_em_dev": [0.01, -0.02],
+        }
+    )
+    calibration = pd.DataFrame(
+        {
+            "probability_decile": [1, 2],
+            "realized_event_rate": [0.1, 0.2],
+            "model_name": ["full_features", "full_features"],
+        }
+    )
+    lift = pd.DataFrame(
+        {
+            "bucket": ["top_10_percent"],
+            "lift": [1.5],
+            "model_name": ["full_features"],
+        }
+    )
+    forecasts = pd.DataFrame({"model": ["historical_mean"], "oos_r2": [0.0]})
+    importance = pd.DataFrame({"feature": ["volatility"], "abs_coefficient": [0.8]})
+
+    assert charts.build_monthly_gpr_shock_chart(monthly).layout.title.text == "Monthly GPR Shock Measure"
+    assert (
+        charts.build_monthly_spread_chart(monthly).layout.title.text
+        == "Emerging Minus Developed Aggregate Return Spread"
+    )
+    assert (
+        charts.build_monthly_forecast_chart(forecasts).layout.title.text
+        == "Monthly Forecast OOS R2 Versus Historical Mean"
+    )
+    assert (
+        charts.build_prediction_calibration_chart(calibration).layout.title.text
+        == "Realized Drawdown Rate by Predicted-Risk Decile"
+    )
+    assert charts.build_prediction_lift_chart(lift).layout.title.text == "Drawdown Event Lift in Highest-Risk Buckets"
+    assert charts.build_feature_importance_chart(importance).layout.title.text == "Drawdown Model Feature Importance"

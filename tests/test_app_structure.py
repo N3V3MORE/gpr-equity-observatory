@@ -17,6 +17,26 @@ def test_dashboard_components_live_in_dashboard_components_module():
     assert components.render_missing_data_message is app.render_missing_data_message
 
 
+def test_evidence_map_helper_lives_in_dashboard_evidence_module():
+    from importlib import import_module
+
+    evidence = import_module("gprobs.dashboard.evidence")
+
+    assert evidence.build_evidence_map is app.build_evidence_map
+
+
+def test_prediction_summary_helpers_live_in_dashboard_prediction_module():
+    from importlib import import_module
+
+    prediction = import_module("gprobs.dashboard.prediction")
+
+    assert prediction.ML_VALIDATION_HEADING is app.ML_VALIDATION_HEADING
+    assert prediction.ML_VALIDATION_CAPTION is app.ML_VALIDATION_CAPTION
+    assert prediction.FEATURE_IMPORTANCE_CAPTION is app.FEATURE_IMPORTANCE_CAPTION
+    assert prediction.build_model_summary is app.build_model_summary
+    assert prediction.best_model_metric_labels is app.best_model_metric_labels
+
+
 def test_dashboard_tab_render_helpers_are_defined():
     expected_helpers = [
         "render_overview_tab",
@@ -57,7 +77,7 @@ def test_dashboard_intro_keeps_cautious_project_framing():
 
 
 def test_dashboard_story_tab_labels_are_declared():
-    assert app.DAILY_TAB_LABELS == [
+    assert app.DASHBOARD_TAB_LABELS == [
         "Overview",
         "GPR Shock Timeline",
         "Market Response",
@@ -69,6 +89,7 @@ def test_dashboard_story_tab_labels_are_declared():
         "Monthly Benchmark",
         "Data Quality",
     ]
+    assert app.DAILY_TAB_LABELS is app.DASHBOARD_TAB_LABELS
 
 
 def test_daily_tabs_have_how_to_read_notes():
@@ -81,12 +102,14 @@ def test_daily_tabs_have_how_to_read_notes():
         "dynamic_response",
         "prediction_lab",
         "country_sensitivity",
+        "monthly_benchmark",
         "data_quality",
     }
 
     assert set(app.HOW_TO_READ_NOTES) == expected_keys
     assert "Day 0" in app.HOW_TO_READ_NOTES["market_response"]
     assert "not a trading strategy" in app.HOW_TO_READ_NOTES["prediction_lab"]
+    assert "not country-level panel evidence" in app.HOW_TO_READ_NOTES["monthly_benchmark"]
 
 
 def test_dashboard_download_and_timeline_helpers_are_defined():

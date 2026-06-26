@@ -15,6 +15,18 @@ def test_dashboard_output_contracts_live_in_dashboard_outputs_module():
     assert dashboard_outputs.missing_files is app.missing_files
 
 
+def test_monthly_dashboard_contracts_live_in_dashboard_monthly_module():
+    from gprobs.dashboard import monthly
+
+    assert monthly.MonthlyModeConfig is app.MonthlyModeConfig
+    assert monthly.MonthlyOutputBundle is app.MonthlyOutputBundle
+    assert monthly.MONTHLY_MODES is app.MONTHLY_MODES
+    assert monthly.MONTHLY_OUTPUT_SPECS is app.MONTHLY_OUTPUT_SPECS
+    assert monthly.load_monthly_outputs is app.load_monthly_outputs
+    assert monthly.monthly_provenance_rows is app.monthly_provenance_rows
+    assert monthly.render_monthly_benchmark_tab is app.render_monthly_benchmark_tab
+
+
 def test_required_files_are_derived_from_output_specs():
     assert {
         name: spec.path for name, spec in app.OUTPUT_SPECS.items()
@@ -66,12 +78,16 @@ def test_missing_data_message_helper_is_defined():
 
 
 def test_load_monthly_outputs_returns_none_when_optional_files_are_missing(monkeypatch, tmp_path):
-    monkeypatch.setattr(app, "MONTHLY_MODES", {"sample": app.MonthlyModeConfig(root=tmp_path)})
+    from gprobs.dashboard import monthly
+
+    monkeypatch.setattr(monthly, "MONTHLY_MODES", {"sample": app.MonthlyModeConfig(root=tmp_path)})
 
     assert app.load_monthly_outputs() is None
 
 
 def test_load_monthly_outputs_reads_sample_bundle(monkeypatch, tmp_path):
+    from gprobs.dashboard import monthly
+
     panel_path = tmp_path / "sample_analysis_panel.csv"
     regression_path = tmp_path / "sample_table_02_baseline_regressions.csv"
     forecast_path = tmp_path / "sample_table_03_forecast_comparison.csv"
@@ -116,7 +132,7 @@ def test_load_monthly_outputs_reads_sample_bundle(monkeypatch, tmp_path):
         encoding="utf-8",
     )
     monkeypatch.setattr(
-        app,
+        monthly,
         "MONTHLY_MODES",
         {
             "sample": app.MonthlyModeConfig(

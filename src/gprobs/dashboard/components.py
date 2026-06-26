@@ -47,6 +47,10 @@ HOW_TO_READ_NOTES = {
         "The rolling beta shows how one country's ETF return sensitivity to GPR changes over time. "
         "Use it as a diagnostic, not as a stable country ranking."
     ),
+    "monthly_benchmark": (
+        "This tab is separate from the daily ETF panel. Sample mode validates the workflow, while real "
+        "mode is aggregate benchmark evidence, not country-level panel evidence."
+    ),
     "data_quality": (
         "Coverage and large-return flags help identify data limitations that may affect interpretation. "
         "They are checks on the research inputs, not standalone findings."

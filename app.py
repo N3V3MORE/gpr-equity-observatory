@@ -1,13 +1,14 @@
-import json
-from dataclasses import dataclass
-from pathlib import Path
-
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
 from gprobs.config import DRAWDOWN_HORIZON_DAYS, DRAWDOWN_THRESHOLD
-from gprobs.dashboard.charts import build_gpr_shock_timeline
+from gprobs.dashboard.charts import (
+    build_feature_importance_chart,
+    build_gpr_shock_timeline,
+    build_prediction_calibration_chart,
+    build_prediction_lift_chart,
+)
 from gprobs.dashboard.components import (
     DASHBOARD_INTRO,
     DASHBOARD_MAIN_TAKEAWAY,
@@ -19,13 +20,22 @@ from gprobs.dashboard.components import (
     render_missing_data_message,
     render_summary_cards,
 )
-from gprobs.dashboard.formatting import (
-    classify_evidence_strength,
-    format_evidence_direction,
-    format_evidence_estimate,
-    format_p_value,
-)
+from gprobs.dashboard.evidence import build_evidence_map
+from gprobs.dashboard.formatting import classify_evidence_strength
 from gprobs.dashboard.metrics import build_country_coverage, select_key_regression_terms
+from gprobs.dashboard.monthly import (
+    MONTHLY_CLUSTER_NOTICE,
+    MONTHLY_MODE_PRIORITY_NOTICE,
+    MONTHLY_MODES,
+    MONTHLY_OUTPUT_SPECS,
+    MONTHLY_REAL_NOTICE,
+    MONTHLY_SAMPLE_NOTICE,
+    MonthlyModeConfig,
+    MonthlyOutputBundle,
+    load_monthly_outputs,
+    monthly_provenance_rows,
+    render_monthly_benchmark_tab,
+)
 from gprobs.dashboard.outputs import (
     OUTPUT_SPECS,
     PROJECT_ROOT,
@@ -35,35 +45,54 @@ from gprobs.dashboard.outputs import (
     missing_files,
     validate_output_schema,
 )
+from gprobs.dashboard.prediction import (
+    FEATURE_IMPORTANCE_CAPTION,
+    ML_VALIDATION_CAPTION,
+    ML_VALIDATION_HEADING,
+    best_model_metric_labels,
+    build_model_summary,
+)
 
 __all__ = [
     "DASHBOARD_INTRO",
     "DASHBOARD_MAIN_TAKEAWAY",
+    "DASHBOARD_TAB_LABELS",
     "DASHBOARD_USE_NOTE",
+    "DAILY_TAB_LABELS",
+    "FEATURE_IMPORTANCE_CAPTION",
     "HOW_TO_READ_NOTES",
+    "ML_VALIDATION_CAPTION",
+    "ML_VALIDATION_HEADING",
+    "MONTHLY_CLUSTER_NOTICE",
+    "MONTHLY_MODE_PRIORITY_NOTICE",
+    "MONTHLY_MODES",
+    "MONTHLY_OUTPUT_SPECS",
+    "MONTHLY_REAL_NOTICE",
+    "MONTHLY_SAMPLE_NOTICE",
     "OUTPUT_SPECS",
+    "PROJECT_ROOT",
     "REQUIRED_FILES",
+    "MonthlyModeConfig",
+    "MonthlyOutputBundle",
     "OutputSpec",
+    "best_model_metric_labels",
+    "build_evidence_map",
+    "build_model_summary",
+    "classify_evidence_strength",
     "load_outputs",
+    "load_monthly_outputs",
+    "monthly_provenance_rows",
     "render_csv_download",
     "render_how_to_read",
     "render_intro",
     "render_missing_data_message",
+    "render_monthly_benchmark_tab",
     "render_summary_cards",
     "missing_files",
     "validate_output_schema",
 ]
 
-ML_VALIDATION_HEADING = "Purged Chronological Validation"
-ML_VALIDATION_CAPTION = (
-    "Splits are purged chronological, so the model trains only on earlier dates "
-    "and excludes dates immediately before the test fold to reduce forward-label leakage."
-)
-MONTHLY_SAMPLE_NOTICE = "Sample mode is not empirical evidence. It only proves the monthly benchmark workflow runs."
-MONTHLY_REAL_NOTICE = "Real monthly aggregate mode is a benchmark, not a country-panel proof."
-MONTHLY_CLUSTER_NOTICE = "The two-market aggregate design cannot support country-clustered inference."
-MONTHLY_MODE_PRIORITY_NOTICE = "If real monthly outputs are present, the dashboard shows real mode before sample mode."
-DAILY_TAB_LABELS = [
+DASHBOARD_TAB_LABELS = [
     "Overview",
     "GPR Shock Timeline",
     "Market Response",
@@ -75,192 +104,7 @@ DAILY_TAB_LABELS = [
     "Monthly Benchmark",
     "Data Quality",
 ]
-
-
-@dataclass(frozen=True)
-class MonthlyModeConfig:
-    root: Path = PROJECT_ROOT
-    mode_label: str = "Sample"
-    dataset_mode: str = "monthly_benchmark_sample"
-    panel: str = "data/processed/monthly_benchmark/sample_analysis_panel.csv"
-    source_manifest: str = "data/metadata/monthly_benchmark/source_manifest.json"
-    analysis_manifest: str = "data/metadata/monthly_benchmark/analysis_panel_manifest.json"
-    regressions: str = "reports/tables/monthly_benchmark/sample_table_02_baseline_regressions.csv"
-    forecasts: str = "reports/tables/monthly_benchmark/sample_table_03_forecast_comparison.csv"
-
-    def path(self, relative_path: str) -> Path:
-        return self.root / relative_path
-
-
-@dataclass(frozen=True)
-class MonthlyOutputBundle:
-    mode: str
-    mode_label: str
-    panel: pd.DataFrame
-    source_manifest: dict
-    analysis_manifest: dict
-    source_names: list[str]
-    regressions: pd.DataFrame | None = None
-    forecasts: pd.DataFrame | None = None
-
-
-MONTHLY_MODES = {
-    "real": MonthlyModeConfig(
-        mode_label="Real",
-        dataset_mode="monthly_benchmark_real",
-        panel="data/processed/monthly_benchmark/analysis_panel.csv",
-        source_manifest="data/metadata/monthly_benchmark/source_manifest_real.json",
-        analysis_manifest="data/metadata/monthly_benchmark/analysis_panel_manifest_real.json",
-        regressions="reports/tables/monthly_benchmark/table_02_baseline_regressions_real.csv",
-        forecasts="reports/tables/monthly_benchmark/table_03_forecast_comparison_real.csv",
-    ),
-    "sample": MonthlyModeConfig(),
-}
-
-MONTHLY_OUTPUT_SPECS = {
-    "monthly_panel": OutputSpec(
-        Path("monthly_benchmark_analysis_panel.csv"),
-        date_columns=("date_month",),
-        required_columns=(
-            "date_month",
-            "market_id",
-            "market_class",
-            "excess_return",
-            "ret_fwd_1m",
-            "gpr_global",
-            "gpr_change_z",
-            "spread_em_dev",
-            "gdelt_risk_raw",
-            "gdelt_risk_z",
-        ),
-    ),
-    "monthly_regressions": OutputSpec(
-        Path("monthly_benchmark_regressions.csv"),
-        required_columns=(
-            "horizon",
-            "term",
-            "estimate",
-            "std_error",
-            "t_value",
-            "p_value",
-            "se_type",
-            "nobs",
-            "adjusted_r2",
-        ),
-    ),
-    "monthly_forecasts": OutputSpec(
-        Path("monthly_benchmark_forecasts.csv"),
-        required_columns=(
-            "model",
-            "rmse",
-            "mae",
-            "oos_r2",
-            "n_forecasts",
-            "first_forecast_date",
-            "last_forecast_date",
-            "forecast_window_aligned",
-        ),
-    ),
-}
-
-
-def load_monthly_outputs() -> MonthlyOutputBundle | None:
-    for mode, config in MONTHLY_MODES.items():
-        bundle = _load_monthly_output_mode(mode, config)
-        if bundle is not None:
-            return bundle
-    return None
-
-
-def _load_monthly_output_mode(mode: str, config: MonthlyModeConfig) -> MonthlyOutputBundle | None:
-    panel_path = config.path(config.panel)
-    source_manifest_path = config.path(config.source_manifest)
-    analysis_manifest_path = config.path(config.analysis_manifest)
-    if not all(path.exists() for path in [panel_path, source_manifest_path, analysis_manifest_path]):
-        return None
-
-    panel = pd.read_csv(panel_path, parse_dates=["date_month"])
-    validate_output_schema(panel, MONTHLY_OUTPUT_SPECS["monthly_panel"])
-    source_manifest = _read_json(source_manifest_path)
-    analysis_manifest = _read_json(analysis_manifest_path)
-    source_names = [
-        source.get("source_name", "Unknown source")
-        for source in source_manifest.get("sources", [])
-    ]
-
-    regressions = _read_optional_monthly_csv(
-        config.path(config.regressions),
-        MONTHLY_OUTPUT_SPECS["monthly_regressions"],
-    )
-    forecasts = _read_optional_monthly_csv(
-        config.path(config.forecasts),
-        MONTHLY_OUTPUT_SPECS["monthly_forecasts"],
-    )
-    return MonthlyOutputBundle(
-        mode=mode,
-        mode_label=config.mode_label,
-        panel=panel,
-        source_manifest=source_manifest,
-        analysis_manifest=analysis_manifest,
-        source_names=source_names,
-        regressions=regressions,
-        forecasts=forecasts,
-    )
-
-
-def _read_json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _read_optional_monthly_csv(path: Path, spec: OutputSpec) -> pd.DataFrame | None:
-    if not path.exists():
-        return None
-    output = pd.read_csv(path)
-    validate_output_schema(output, spec)
-    return output
-
-
-def monthly_provenance_rows(bundle: MonthlyOutputBundle) -> pd.DataFrame:
-    manifest = bundle.analysis_manifest
-    rows = [
-        ("mode", bundle.mode_label),
-        ("dataset_mode", str(manifest.get("dataset_mode") or manifest.get("dataset") or "")),
-        ("source_count", str(len(bundle.source_names))),
-        ("row_count", str(manifest.get("row_count", ""))),
-        ("sample_start", str(manifest.get("sample_start") or manifest.get("start_date") or "")),
-        ("sample_end", str(manifest.get("sample_end") or manifest.get("end_date") or "")),
-        ("used_placeholder_gdelt", str(manifest.get("used_placeholder_gdelt", ""))),
-        ("used_placeholder_macro", str(manifest.get("used_placeholder_macro", ""))),
-    ]
-    return pd.DataFrame(rows, columns=["field", "value"])
-
-
-def build_evidence_map(evidence_summary: pd.DataFrame) -> pd.DataFrame:
-    evidence_map = evidence_summary.copy()
-    evidence_map["Evidence strength"] = evidence_map.apply(classify_evidence_strength, axis=1)
-    evidence_map["Direction"] = evidence_map["estimate"].map(format_evidence_direction)
-    evidence_map["Estimate"] = evidence_map.apply(
-        lambda row: format_evidence_estimate(row["estimate"], row["unit"]),
-        axis=1,
-    )
-    evidence_map["p-value / metric"] = evidence_map["p_value"].map(format_p_value)
-    return evidence_map.rename(
-        columns={
-            "method": "Method",
-            "focus": "Question answered",
-            "plain_english": "Plain-English takeaway",
-        }
-    )[
-        [
-            "Method",
-            "Question answered",
-            "Direction",
-            "Estimate",
-            "p-value / metric",
-            "Evidence strength",
-            "Plain-English takeaway",
-        ]
-    ]
+DAILY_TAB_LABELS = DASHBOARD_TAB_LABELS
 
 
 def render_overview_tab(
@@ -506,31 +350,14 @@ def render_ml_tab(
         "conditions help rank short-horizon drawdown risk; it is not a trading signal."
     )
 
-    model_summary = (
-        drawdown_metrics.groupby("model_name", as_index=False)
-        .agg(
-            mean_roc_auc=("roc_auc", "mean"),
-            mean_average_precision=("average_precision", "mean"),
-            mean_brier_score=("brier_score", "mean"),
-            mean_base_rate=("base_rate", "mean"),
-            observation_count=("observation_count", "sum"),
-        )
-        .sort_values("mean_roc_auc", ascending=False)
-    )
-    top_decile_lift = drawdown_lift.loc[drawdown_lift["bucket"] == "top_10_percent", ["model_name", "lift"]].rename(
-        columns={"lift": "top_decile_lift"}
-    )
-    model_summary = model_summary.merge(top_decile_lift, on="model_name", how="left")
-
-    best_auc = model_summary["mean_roc_auc"].max()
-    best_ap = model_summary["mean_average_precision"].max()
-    best_lift = model_summary["top_decile_lift"].max()
+    model_summary = build_model_summary(drawdown_metrics, drawdown_lift)
+    best_labels = best_model_metric_labels(model_summary)
     mean_base_rate = drawdown_metrics["base_rate"].mean()
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Best model AUC", "n/a" if pd.isna(best_auc) else f"{best_auc:.3f}")
-    col2.metric("Best model AP", "n/a" if pd.isna(best_ap) else f"{best_ap:.3f}")
-    col3.metric("Top-decile lift", "n/a" if pd.isna(best_lift) else f"{best_lift:.2f}x")
+    col1.metric(*best_labels["auc"])
+    col2.metric(*best_labels["ap"])
+    col3.metric(*best_labels["lift"])
     col4.metric("Mean event rate", f"{mean_base_rate:.1%}")
 
     st.subheader("Model Comparison")
@@ -538,29 +365,12 @@ def render_ml_tab(
     render_csv_download(model_summary, "Download Model Comparison CSV", "drawdown_model_comparison.csv")
 
     st.subheader("Calibration")
-    calibration_fig = px.line(
-        drawdown_calibration,
-        x="probability_decile",
-        y="realized_event_rate",
-        color="model_name",
-        markers=True,
-        title="Realized Drawdown Rate by Predicted-Risk Decile",
-    )
-    calibration_fig.update_yaxes(tickformat=".0%")
-    st.plotly_chart(calibration_fig, use_container_width=True)
+    st.plotly_chart(build_prediction_calibration_chart(drawdown_calibration), use_container_width=True)
     st.dataframe(drawdown_calibration, use_container_width=True, hide_index=True)
     render_csv_download(drawdown_calibration, "Download Calibration CSV", "drawdown_model_calibration.csv")
 
     st.subheader("Lift")
-    lift_fig = px.bar(
-        drawdown_lift,
-        x="bucket",
-        y="lift",
-        color="model_name",
-        barmode="group",
-        title="Drawdown Event Lift in Highest-Risk Buckets",
-    )
-    st.plotly_chart(lift_fig, use_container_width=True)
+    st.plotly_chart(build_prediction_lift_chart(drawdown_lift), use_container_width=True)
     st.dataframe(drawdown_lift, use_container_width=True, hide_index=True)
     render_csv_download(drawdown_lift, "Download Lift CSV", "drawdown_model_lift.csv")
 
@@ -580,15 +390,8 @@ def render_ml_tab(
         "drawdown_country_risk_summary.csv",
     )
 
-    fig = px.bar(
-        drawdown_importance,
-        x="abs_coefficient",
-        y="feature",
-        orientation="h",
-        title="Drawdown Model Feature Importance",
-    )
-    fig.update_layout(yaxis={"categoryorder": "total ascending"})
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(build_feature_importance_chart(drawdown_importance), use_container_width=True)
+    st.caption(FEATURE_IMPORTANCE_CAPTION)
     render_csv_download(drawdown_importance, "Download Feature Importance CSV", "drawdown_feature_importance.csv")
 
     st.subheader(ML_VALIDATION_HEADING)
@@ -628,98 +431,6 @@ def render_coverage_tab(panel: pd.DataFrame, large_returns: pd.DataFrame) -> Non
     st.subheader("Large Daily Return Flags")
     st.dataframe(large_returns, use_container_width=True, hide_index=True)
     render_csv_download(large_returns, "Download Large Return Flags CSV", "large_return_flags.csv")
-
-
-def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
-    if bundle is None:
-        st.info("Monthly benchmark outputs are not available yet.")
-        st.code(
-            "\n".join(
-                [
-                    "python scripts/run_task.py monthly-sample --min-train-months 24",
-                    "python scripts/run_task.py build-monthly-real",
-                    "python scripts/run_task.py validate-monthly-real",
-                ]
-            )
-        )
-        st.caption(f"{MONTHLY_SAMPLE_NOTICE} {MONTHLY_REAL_NOTICE} {MONTHLY_CLUSTER_NOTICE}")
-        return
-
-    panel = bundle.panel.copy()
-    panel["date_month"] = pd.to_datetime(panel["date_month"])
-    month_level = panel.drop_duplicates("date_month").sort_values("date_month")
-    start_date = panel["date_month"].min().date()
-    end_date = panel["date_month"].max().date()
-
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Mode", bundle.mode_label)
-    col2.metric("Start month", str(start_date))
-    col3.metric("End month", str(end_date))
-    col4.metric("Sources", len(bundle.source_names))
-
-    if bundle.mode == "sample":
-        st.warning(MONTHLY_SAMPLE_NOTICE)
-    else:
-        st.info(MONTHLY_REAL_NOTICE)
-    st.caption(MONTHLY_CLUSTER_NOTICE)
-    st.caption(MONTHLY_MODE_PRIORITY_NOTICE)
-
-    st.subheader("Source and Provenance Status")
-    provenance = monthly_provenance_rows(bundle)
-    st.dataframe(provenance, use_container_width=True, hide_index=True)
-    render_csv_download(provenance, "Download Monthly Provenance CSV", "monthly_provenance.csv")
-    if bundle.source_names:
-        sources = pd.DataFrame({"source_name": bundle.source_names})
-        st.dataframe(sources, use_container_width=True, hide_index=True)
-        render_csv_download(sources, "Download Monthly Sources CSV", "monthly_sources.csv")
-
-    gpr_fig = px.line(
-        month_level,
-        x="date_month",
-        y="gpr_change_z",
-        title="Monthly GPR Shock Measure",
-    )
-    gpr_fig.add_hline(y=0, line_dash="dash", line_color="gray")
-    st.plotly_chart(gpr_fig, use_container_width=True)
-
-    spread_fig = px.line(
-        month_level,
-        x="date_month",
-        y="spread_em_dev",
-        title="Emerging Minus Developed Aggregate Return Spread",
-    )
-    spread_fig.add_hline(y=0, line_dash="dash", line_color="gray")
-    st.plotly_chart(spread_fig, use_container_width=True)
-
-    st.subheader("Benchmark Regression Table")
-    if bundle.regressions is None:
-        st.info("Monthly benchmark regression output is not available yet.")
-    else:
-        st.dataframe(bundle.regressions, use_container_width=True, hide_index=True)
-        render_csv_download(
-            bundle.regressions,
-            "Download Monthly Regressions CSV",
-            "monthly_benchmark_regressions.csv",
-        )
-
-    st.subheader("Forecast Comparison")
-    if bundle.forecasts is None:
-        st.info("Monthly benchmark forecast output is not available yet.")
-    else:
-        forecast_fig = px.bar(
-            bundle.forecasts,
-            x="model",
-            y="oos_r2",
-            title="Monthly Forecast OOS R2 Versus Historical Mean",
-        )
-        forecast_fig.add_hline(y=0, line_dash="dash", line_color="gray")
-        st.plotly_chart(forecast_fig, use_container_width=True)
-        st.dataframe(bundle.forecasts, use_container_width=True, hide_index=True)
-        render_csv_download(
-            bundle.forecasts,
-            "Download Monthly Forecasts CSV",
-            "monthly_benchmark_forecasts.csv",
-        )
 
 
 def main():
@@ -767,7 +478,7 @@ def main():
         tab_rolling,
         tab_monthly,
         tab_coverage,
-    ) = st.tabs(DAILY_TAB_LABELS)
+    ) = st.tabs(DASHBOARD_TAB_LABELS)
 
     with tab_overview:
         render_overview_tab(panel, gpr, group_returns, evidence_summary)
