@@ -12,6 +12,11 @@ quant economics project. The central question is simple:
 > Do emerging equity markets respond more strongly to geopolitical risk shocks
 > than developed markets?
 
+![Dashboard overview](../reports/screenshots/dashboard_overview.png)
+
+The project repository is
+[N3V3MORE/gpr-equity-observatory](https://github.com/N3V3MORE/gpr-equity-observatory).
+
 The project does not try to build a trading system. It studies risk
 transmission. The aim is to build a transparent empirical workflow that can be
 checked, extended, and explained.
@@ -113,6 +118,11 @@ The useful outcome is that the project now has:
 That foundation makes it possible to add better macro controls, country-specific
 GPR data, and eventually news-event features without losing the empirical
 structure.
+
+The reproducibility layer is part of the point. The repository includes a
+single rebuild path, a reviewer guide, a technical appendix, tests, CI-oriented
+checks, and a generated results brief so the public explanation can be traced
+back to the code and outputs.
 
 ## Next Steps
 

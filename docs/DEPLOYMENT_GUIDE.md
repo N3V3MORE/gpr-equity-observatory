@@ -23,6 +23,22 @@ The Monthly Benchmark tab is optional. If monthly benchmark outputs are absent,
 the app still runs with the daily ETF dashboard and shows build instructions in
 the monthly tab.
 
+## Local-First Portfolio Path
+
+The lowest-risk public presentation path is local-first:
+
+- keep the Streamlit app as a locally runnable dashboard
+- use [reports/RESULTS_BRIEF.md](../reports/RESULTS_BRIEF.md) as the short
+  public result summary
+- use [reports/screenshots](../reports/screenshots) for dashboard visuals
+- use [docs/REVIEWER_GUIDE.md](REVIEWER_GUIDE.md) for reviewer navigation
+- use [docs/BLOG_POST_DRAFT.md](BLOG_POST_DRAFT.md) or a shortened LinkedIn
+  version for the project narrative
+
+This path avoids committing generated market data and avoids a public app that
+starts without its required processed files. It is a complete portfolio option,
+not a fallback.
+
 ## Streamlit Community Cloud Path
 
 The simplest public hosting option is Streamlit Community Cloud.
