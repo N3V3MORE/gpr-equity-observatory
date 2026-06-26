@@ -11,9 +11,9 @@
 ```markdown
 ## Summary
 
-This PR prepares the feature-locked GPR Equity Observatory merge branch for
-review and portfolio presentation. It does not add new research, data, model,
-dashboard, or product behavior.
+This PR prepares the packaging branch on top of the feature-locked GPR Equity
+Observatory merge branch for review and portfolio presentation. It does not add
+new research, data, model, dashboard, or product behavior.
 
 ## What Changed
 
