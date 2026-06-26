@@ -150,10 +150,15 @@ Monthly benchmark generated files are also ignored by Git and can be rebuilt:
 
 ## Variable Definitions
 
+For GPR-specific z-score and shock-alias details, see
+`docs/GPR_FEATURE_DEFINITIONS.md`.
+
 - `return`: daily ETF log return.
 - `gpr`: daily geopolitical risk index.
 - `gpr_change`: daily change in the geopolitical risk index.
-- `gpr_change_z`: standardized daily GPR change.
+- `gpr_change_z`: standardized daily GPR change. The name is reused across
+  descriptive, regression, and Prediction Lab contexts; the GPR feature
+  definitions note explains which versions are time-aware.
 - `gpr_change_shock`: expanding-window top-quantile positive daily GPR-change
   indicator using only prior observations for the threshold.
 - `gpr_change_shock_full_sample`: full-sample top-quantile positive daily

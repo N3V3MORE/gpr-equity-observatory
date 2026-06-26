@@ -1,7 +1,10 @@
 import numpy as np
 import pandas as pd
 
+from gprobs.features.gpr_terms import MONTHLY_DESCRIPTIVE_GPR_CHANGE_Z
 from gprobs.validation.data_contracts import ensure_columns
+
+MONTHLY_GPR_CHANGE_Z_CONTEXT = MONTHLY_DESCRIPTIVE_GPR_CHANGE_Z
 
 
 def standardize_shocks(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:

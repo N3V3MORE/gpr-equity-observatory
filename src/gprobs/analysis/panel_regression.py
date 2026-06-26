@@ -5,7 +5,11 @@ import pandas as pd
 import statsmodels.formula.api as smf
 from linearmodels.panel import PanelOLS
 
-BASELINE_FORMULA = "etf_return ~ gpr_change_z + gpr_change_z:emerging_market + C(ticker)"
+from gprobs.features.gpr_terms import PANEL_REGRESSION_GPR_CHANGE_Z
+
+PANEL_GPR_CHANGE_Z_CONTEXT = PANEL_REGRESSION_GPR_CHANGE_Z
+PANEL_GPR_CHANGE_Z_COLUMN = PANEL_GPR_CHANGE_Z_CONTEXT.column
+BASELINE_FORMULA = f"etf_return ~ {PANEL_GPR_CHANGE_Z_COLUMN} + {PANEL_GPR_CHANGE_Z_COLUMN}:emerging_market + C(ticker)"
 CONTROL_COLUMNS = [
     "global_market_return",
     "vix_change",
@@ -14,11 +18,11 @@ CONTROL_COLUMNS = [
     "us10y_change",
 ]
 CONTROLLED_FORMULA = (
-    "etf_return ~ gpr_change_z + gpr_change_z:emerging_market + "
+    f"etf_return ~ {PANEL_GPR_CHANGE_Z_COLUMN} + {PANEL_GPR_CHANGE_Z_COLUMN}:emerging_market + "
     "global_market_return + vix_change + oil_change + dollar_return + us10y_change + "
     "C(ticker)"
 )
-DATE_FE_TERM = "gpr_change_z:emerging_market"
+DATE_FE_TERM = f"{PANEL_GPR_CHANGE_Z_COLUMN}:emerging_market"
 
 
 def _add_gpr_change_from_level(panel: pd.DataFrame) -> pd.DataFrame:
@@ -83,7 +87,7 @@ def prepare_panel_regression_data(
     if not np.isfinite(1 / gpr_change_std):
         raise ValueError("GPR change has no (or near-zero) variation, so it cannot be standardized.")
 
-    data["gpr_change_z"] = (data["gpr_change"] - gpr_change_mean) / gpr_change_std
+    data[PANEL_GPR_CHANGE_Z_COLUMN] = (data["gpr_change"] - gpr_change_mean) / gpr_change_std
     return data
 
 
@@ -150,7 +154,7 @@ def run_date_fe_panel_regression(
         cluster_by_date = cluster_by_ticker
 
     model_data = data.copy()
-    model_data[DATE_FE_TERM] = model_data["gpr_change_z"] * model_data["emerging_market"]
+    model_data[DATE_FE_TERM] = model_data[PANEL_GPR_CHANGE_Z_COLUMN] * model_data["emerging_market"]
     model_data = model_data.set_index(["ticker", "date"])
     model = PanelOLS(
         model_data["etf_return"],

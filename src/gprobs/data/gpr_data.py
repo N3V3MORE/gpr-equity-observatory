@@ -12,10 +12,20 @@ from gprobs.config import (
     RAW_DATA_DIR,
 )
 from gprobs.data.download_cache import download_url_to_cache, fetch_url_bytes, retry
+from gprobs.features.gpr_terms import (
+    DAILY_DESCRIPTIVE_GPR_CHANGE_Z,
+    EXPANDING_GPR_CHANGE_SHOCK_COLUMN,
+    FULL_SAMPLE_GPR_CHANGE_SHOCK_COLUMN,
+    GPR_CHANGE_SHOCK_COMPATIBILITY_ALIAS,
+    GPR_SHOCK_COMPATIBILITY_ALIAS,
+    GPR_SHOCK_EXPANDING_ALIAS,
+    GPR_SHOCK_FULL_SAMPLE_ALIAS,
+)
 from gprobs.utils import require_columns
 
 DAILY_GPR_URL = "https://www.matteoiacoviello.com/gpr_files/data_gpr_daily_recent.xls"
 DEFAULT_GPR_CACHE_PATH = RAW_DATA_DIR / "gpr_daily_recent.xls"
+DAILY_GPR_CHANGE_Z_CONTEXT = DAILY_DESCRIPTIVE_GPR_CHANGE_Z
 
 GPR_COLUMN_MAP = {
     "date": "date",
@@ -147,15 +157,15 @@ def mark_top_quantile_shocks(
     )
     expanding_shock = (marked[value_column] >= expanding_threshold).fillna(False)
 
-    marked["gpr_shock_full_sample"] = full_sample_shock
-    marked["gpr_shock_expanding"] = expanding_shock
-    marked["gpr_shock"] = expanding_shock
+    marked[GPR_SHOCK_FULL_SAMPLE_ALIAS] = full_sample_shock
+    marked[GPR_SHOCK_EXPANDING_ALIAS] = expanding_shock
+    marked[GPR_SHOCK_COMPATIBILITY_ALIAS] = expanding_shock
     marked["gpr_shock_threshold"] = full_sample_threshold
     marked["gpr_shock_expanding_threshold"] = expanding_threshold
 
     if value_column == "gpr_change":
-        marked["gpr_change_shock_full_sample"] = full_sample_shock
-        marked["gpr_change_shock"] = expanding_shock
-        marked["gpr_change_shock_expanding"] = expanding_shock
+        marked[FULL_SAMPLE_GPR_CHANGE_SHOCK_COLUMN] = full_sample_shock
+        marked[GPR_CHANGE_SHOCK_COMPATIBILITY_ALIAS] = expanding_shock
+        marked[EXPANDING_GPR_CHANGE_SHOCK_COLUMN] = expanding_shock
 
     return marked

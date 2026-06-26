@@ -15,11 +15,18 @@ from gprobs.config import (
     DRAWDOWN_VOLATILITY_WINDOW_DAYS,
     GPR_EXPANDING_SHOCK_MIN_PERIODS,
 )
+from gprobs.features.gpr_terms import (
+    EXPANDING_GPR_CHANGE_SHOCK_COLUMN,
+    PREDICTION_LAB_EXPANDING_GPR_CHANGE_Z,
+)
 from gprobs.utils import coerce_shock_to_int
 
+PREDICTION_LAB_GPR_CHANGE_Z_CONTEXT = PREDICTION_LAB_EXPANDING_GPR_CHANGE_Z
+PREDICTION_LAB_GPR_CHANGE_Z_COLUMN = PREDICTION_LAB_GPR_CHANGE_Z_CONTEXT.column
+
 DEFAULT_FEATURE_COLUMNS = [
-    "gpr_change_z",
-    "gpr_change_shock_expanding",
+    PREDICTION_LAB_GPR_CHANGE_Z_COLUMN,
+    EXPANDING_GPR_CHANGE_SHOCK_COLUMN,
     "global_market_return",
     "vix_change",
     "oil_change",
@@ -30,7 +37,7 @@ DEFAULT_FEATURE_COLUMNS = [
     "emerging_market",
 ]
 
-GPR_FEATURE_COLUMNS = ["gpr_change_z", "gpr_change_shock_expanding"]
+GPR_FEATURE_COLUMNS = [PREDICTION_LAB_GPR_CHANGE_Z_COLUMN, EXPANDING_GPR_CHANGE_SHOCK_COLUMN]
 MARKET_CONTROL_FEATURE_COLUMNS = CONTROL_COLUMNS.copy()
 VOLATILITY_FEATURE_COLUMNS = ["rolling_volatility"]
 VOLATILITY_PLUS_GPR_FEATURE_COLUMNS = VOLATILITY_FEATURE_COLUMNS + GPR_FEATURE_COLUMNS
@@ -426,10 +433,10 @@ def _add_time_aware_gpr_features(data: pd.DataFrame) -> pd.DataFrame:
     if "gpr_change" not in daily_gpr.columns:
         daily_gpr["gpr_change"] = daily_gpr["gpr"].diff()
 
-    daily_gpr["gpr_change_z"] = _expanding_z_score(daily_gpr["gpr_change"])
-    if "gpr_change_shock_expanding" not in daily_gpr.columns:
+    daily_gpr[PREDICTION_LAB_GPR_CHANGE_Z_COLUMN] = _expanding_z_score(daily_gpr["gpr_change"])
+    if EXPANDING_GPR_CHANGE_SHOCK_COLUMN not in daily_gpr.columns:
         if "gpr_shock_expanding" in daily_gpr.columns:
-            daily_gpr["gpr_change_shock_expanding"] = daily_gpr[
+            daily_gpr[EXPANDING_GPR_CHANGE_SHOCK_COLUMN] = daily_gpr[
                 "gpr_shock_expanding"
             ]
         else:
@@ -439,20 +446,20 @@ def _add_time_aware_gpr_features(data: pd.DataFrame) -> pd.DataFrame:
                 .expanding(min_periods=GPR_EXPANDING_SHOCK_MIN_PERIODS)
                 .quantile(DEFAULT_GPR_SHOCK_QUANTILE)
             )
-            daily_gpr["gpr_change_shock_expanding"] = (
+            daily_gpr[EXPANDING_GPR_CHANGE_SHOCK_COLUMN] = (
                 daily_gpr["gpr_change"] >= threshold
             ).fillna(False)
 
     gpr_features = daily_gpr[
-        ["date", "gpr_change", "gpr_change_z", "gpr_change_shock_expanding"]
+        ["date", "gpr_change", PREDICTION_LAB_GPR_CHANGE_Z_COLUMN, EXPANDING_GPR_CHANGE_SHOCK_COLUMN]
     ].copy()
-    gpr_features["gpr_change_shock_expanding"] = gpr_features[
-        "gpr_change_shock_expanding"
+    gpr_features[EXPANDING_GPR_CHANGE_SHOCK_COLUMN] = gpr_features[
+        EXPANDING_GPR_CHANGE_SHOCK_COLUMN
     ].map(coerce_shock_to_int)
 
     drop_columns = [
         column
-        for column in ["gpr_change", "gpr_change_z", "gpr_change_shock_expanding"]
+        for column in ["gpr_change", PREDICTION_LAB_GPR_CHANGE_Z_COLUMN, EXPANDING_GPR_CHANGE_SHOCK_COLUMN]
         if column in data.columns
     ]
     data = data.drop(columns=drop_columns)
