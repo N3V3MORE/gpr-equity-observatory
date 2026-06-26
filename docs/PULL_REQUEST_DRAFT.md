@@ -27,7 +27,8 @@ dashboard, or product behavior.
   screenshots.
 - Tightened `.github/PULL_REQUEST_TEMPLATE.md` with feature-lock and
   interpretation guardrails.
-- Tightened data-source and method issue templates with feature-lock gates.
+- Tightened data-source, method, and release-hardening issue templates with
+  feature-lock gates.
 - Aligned setup commands across README, technical appendix, deployment guide,
   and reproducibility docs.
 - Added documentation-contract tests that keep GitHub template guardrails and

@@ -134,6 +134,28 @@ def test_github_templates_preserve_feature_lock_guardrails():
     )
 
 
+def test_release_hardening_issue_template_preserves_locked_scope():
+    release_template = (
+        GITHUB / "ISSUE_TEMPLATE" / "release_hardening.md"
+    ).read_text(encoding="utf-8").lower()
+
+    required_phrases = [
+        "release hardening",
+        "feature-lock",
+        "preserves the current feature-locked scope",
+        "no new research, data, model, dashboard, or product behavior",
+        "explicit unlock decision",
+        "config/sources.yml",
+        "not framed as investment advice or a trading system",
+        "sample-mode outputs are not presented as empirical evidence",
+        "ruff check .",
+        "pytest --cov=gprobs --cov=app --cov-report=term-missing -q",
+    ]
+
+    for phrase in required_phrases:
+        assert phrase in release_template
+
+
 def test_public_setup_docs_share_core_commands():
     setup_docs = [
         Path("README.md"),

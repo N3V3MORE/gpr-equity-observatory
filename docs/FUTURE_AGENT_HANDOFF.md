@@ -18,10 +18,10 @@ The merge implementation is complete through Phases 0 through 9 on branch
 A forward-plan packaging branch, `codex/polish-readme-reviewer-path`, now sits
 on top of the locked merge branch. It adds reviewer navigation, reproducibility
 checklists, local-first launch guidance, refreshed screenshots, screenshot
-refresh instructions, PR/issue template guardrails, setup-command alignment,
-documentation-contract tests for those release guardrails, local path hygiene,
-and links to the GitHub backlog issues. It does not add new research, data,
-model, dashboard, or product behavior.
+refresh instructions, PR/issue template guardrails, a release-hardening issue
+template, setup-command alignment, documentation-contract tests for those
+release guardrails, local path hygiene, and links to the GitHub backlog issues.
+It does not add new research, data, model, dashboard, or product behavior.
 
 GPR Equity Observatory remains the destination repository and public Streamlit
 research product. GeoRiskLab has been absorbed selectively as reproducibility,
