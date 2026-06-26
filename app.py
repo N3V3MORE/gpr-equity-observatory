@@ -33,7 +33,6 @@ DAILY_TAB_LABELS = [
     "Overview",
     "GPR Shock Timeline",
     "Market Response",
-    "Robustness",
     "Regression Evidence",
     "Downside Risk",
     "Dynamic Response",
@@ -42,6 +41,46 @@ DAILY_TAB_LABELS = [
     "Monthly Benchmark",
     "Data Quality",
 ]
+HOW_TO_READ_NOTES = {
+    "overview": (
+        "Start with the summary cards, then use the Evidence Map to compare what each method says. "
+        "Mixed or weak labels mean the result should stay cautious."
+    ),
+    "shocks": (
+        "The line shows the GPR index over time. Markers highlight the largest daily GPR changes, "
+        "which are the shock episodes used elsewhere in the dashboard."
+    ),
+    "market_response": (
+        "The line shows average cumulative abnormal returns around GPR shock dates. Day 0 is the "
+        "shock day. A negative line after day 0 means ETFs tended to underperform their "
+        "market-model expectation after shocks."
+    ),
+    "regression": (
+        "The key term is the emerging-market interaction. If it is negative and statistically strong, "
+        "that would support the idea that emerging markets react more. In the current version, this "
+        "evidence is not strong."
+    ),
+    "downside_risk": (
+        "Lower return quantiles describe worse return days. A more negative coefficient in the lower "
+        "tail suggests downside association, but p-values still determine how strong the evidence is."
+    ),
+    "dynamic_response": (
+        "Each horizon shows the estimated cumulative abnormal-return response after a GPR shock. "
+        "Confidence bands crossing zero indicate weak statistical evidence at that horizon."
+    ),
+    "prediction_lab": (
+        "This is an exploratory risk classifier. AUC above 0.5 means some ranking signal, but it is "
+        "not a trading strategy and should not be read as a price forecast."
+    ),
+    "country_sensitivity": (
+        "The rolling beta shows how one country's ETF return sensitivity to GPR changes over time. "
+        "Use it as a diagnostic, not as a stable country ranking."
+    ),
+    "data_quality": (
+        "Coverage and large-return flags help identify data limitations that may affect interpretation. "
+        "They are checks on the research inputs, not standalone findings."
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -502,12 +541,17 @@ def render_summary_cards() -> None:
             st.write(body)
 
 
+def render_how_to_read(tab_key: str) -> None:
+    st.info(f"How to read this: {HOW_TO_READ_NOTES[tab_key]}")
+
+
 def render_overview_tab(
     panel: pd.DataFrame,
     gpr: pd.DataFrame,
     group_returns: pd.DataFrame,
     evidence_summary: pd.DataFrame,
 ) -> None:
+    render_how_to_read("overview")
     render_summary_cards()
 
     start_date = panel["date"].min().date()
@@ -550,6 +594,7 @@ def render_overview_tab(
 
 
 def render_shocks_tab(gpr: pd.DataFrame) -> None:
+    render_how_to_read("shocks")
     top_shocks = gpr.sort_values("gpr_change", ascending=False).head(25)
     st.dataframe(
         top_shocks[["date", "gpr", "gpr_change", "gpr_act", "gpr_threat", "event"]],
@@ -562,6 +607,7 @@ def render_event_tab(
     event_study: pd.DataFrame,
     abnormal_event_study: pd.DataFrame,
 ) -> None:
+    render_how_to_read("market_response")
     fig = px.line(
         abnormal_event_study,
         x="relative_day",
@@ -616,6 +662,7 @@ def render_regression_tab(
     date_fe_regression: pd.DataFrame,
     panel_sample_robustness: pd.DataFrame,
 ) -> None:
+    render_how_to_read("regression")
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Baseline")
@@ -648,6 +695,7 @@ def render_regression_tab(
 
 
 def render_tail_tab(quantile_regression: pd.DataFrame) -> None:
+    render_how_to_read("downside_risk")
     key_quantile_terms = select_key_regression_terms(quantile_regression)
     fig = px.line(
         key_quantile_terms,
@@ -668,6 +716,7 @@ def render_tail_tab(quantile_regression: pd.DataFrame) -> None:
 
 
 def render_local_tab(local_projections: pd.DataFrame) -> None:
+    render_how_to_read("dynamic_response")
     fig = px.line(
         local_projections,
         x="horizon",
@@ -703,6 +752,7 @@ def render_ml_tab(
     drawdown_metrics: pd.DataFrame,
     drawdown_importance: pd.DataFrame,
 ) -> None:
+    render_how_to_read("prediction_lab")
     headline_metrics = drawdown_metrics
     if "model_name" in drawdown_metrics.columns:
         headline_metrics = drawdown_metrics.loc[
@@ -737,6 +787,7 @@ def render_ml_tab(
 
 
 def render_rolling_tab(rolling_beta: pd.DataFrame) -> None:
+    render_how_to_read("country_sensitivity")
     countries = sorted(rolling_beta["country"].dropna().unique())
     selected_country = st.selectbox("Country", countries)
     country_beta = rolling_beta.loc[
@@ -754,6 +805,7 @@ def render_rolling_tab(rolling_beta: pd.DataFrame) -> None:
 
 
 def render_coverage_tab(panel: pd.DataFrame, large_returns: pd.DataFrame) -> None:
+    render_how_to_read("data_quality")
     coverage = build_country_coverage(panel)
     st.subheader("Country Coverage")
     st.dataframe(coverage, use_container_width=True, hide_index=True)
@@ -882,7 +934,6 @@ def main():
         tab_overview,
         tab_shocks,
         tab_event,
-        tab_robustness,
         tab_regression,
         tab_tail,
         tab_local,
@@ -890,21 +941,7 @@ def main():
         tab_rolling,
         tab_monthly,
         tab_coverage,
-    ) = st.tabs(
-        [
-            "Overview",
-            "GPR Shocks",
-            "Event Study",
-            "Robustness",
-            "Panel Regression",
-            "Tail Risk",
-            "Local Projections",
-            "ML Drawdown",
-            "Rolling Beta",
-            "Monthly Benchmark",
-            "Data Coverage",
-        ]
-    )
+    ) = st.tabs(DAILY_TAB_LABELS)
 
     with tab_overview:
         render_overview_tab(panel, gpr, group_returns, evidence_summary)
@@ -914,8 +951,7 @@ def main():
 
     with tab_event:
         render_event_tab(event_study, abnormal_event_study)
-
-    with tab_robustness:
+        st.divider()
         render_robustness_tab(event_robustness)
 
     with tab_regression:

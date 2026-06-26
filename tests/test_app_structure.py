@@ -45,7 +45,6 @@ def test_dashboard_story_tab_labels_are_declared():
         "Overview",
         "GPR Shock Timeline",
         "Market Response",
-        "Robustness",
         "Regression Evidence",
         "Downside Risk",
         "Dynamic Response",
@@ -54,3 +53,21 @@ def test_dashboard_story_tab_labels_are_declared():
         "Monthly Benchmark",
         "Data Quality",
     ]
+
+
+def test_daily_tabs_have_how_to_read_notes():
+    expected_keys = {
+        "overview",
+        "shocks",
+        "market_response",
+        "regression",
+        "downside_risk",
+        "dynamic_response",
+        "prediction_lab",
+        "country_sensitivity",
+        "data_quality",
+    }
+
+    assert set(app.HOW_TO_READ_NOTES) == expected_keys
+    assert "Day 0" in app.HOW_TO_READ_NOTES["market_response"]
+    assert "not a trading strategy" in app.HOW_TO_READ_NOTES["prediction_lab"]
