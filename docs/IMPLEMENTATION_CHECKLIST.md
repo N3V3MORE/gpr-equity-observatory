@@ -28,8 +28,10 @@ It is written as a plain-English audit, not as a marketing summary.
 | Robustness checks exist | Done | Event-window/threshold checks and panel sample checks |
 | Local projections or quantile analysis exists | Done | Both local projections and quantile regressions are implemented |
 | ML drawdown model exists with time-aware validation | Done | Drawdown classifier with purged chronological validation folds |
-| Project can be explained in interviews | Done | `docs/PROFILE_PACKAGING.md` and `reports/RESULTS_BRIEF.md` |
+| Project can be explained in interviews | Done | `docs/PROFILE_PACKAGING.md`, `docs/REVIEWER_GUIDE.md`, and `reports/RESULTS_BRIEF.md` |
 | CV bullet sounds credible and specific | Done | `docs/PROFILE_PACKAGING.md` |
+| Local-first launch path is documented | Done | `docs/LAUNCH_CHECKLIST.md` and `docs/DEPLOYMENT_GUIDE.md` |
+| Reproducibility checklist exists | Done | `docs/REPRODUCIBILITY_CHECKLIST.md` |
 
 ## Excellent-Version Items
 
@@ -37,7 +39,7 @@ It is written as a plain-English audit, not as a marketing summary.
 | --- | --- | --- |
 | GDELT extension is integrated | Not started | Add only after choosing a narrow country/event scope |
 | Country-specific GPR is integrated | Needs decision | Official pages exist, but data access is not a simple workbook link |
-| Dashboard includes data quality, model diagnostics, and downloads | Mostly done | Data quality and model diagnostics exist; explicit download buttons are not custom-built |
+| Dashboard includes data quality, model diagnostics, and downloads | Mostly done | Data quality and model diagnostics exist; explicit download buttons are tracked in issue #2 |
 | Tests and linting are present | Done | Pytest and Ruff are configured |
 | GitHub Actions run tests | Done | `.github/workflows/tests.yml` |
 | Monthly sample pipeline runs in CI | Done | monthly sample job in `.github/workflows/tests.yml` |
@@ -48,6 +50,8 @@ Deployment details are documented in `docs/DEPLOYMENT_GUIDE.md`. External-data
 choices are documented in `docs/DATA_SOURCE_DECISIONS.md`.
 Future-agent continuation context is documented in
 `docs/FUTURE_AGENT_HANDOFF.md`.
+Current future work is tracked in the GitHub issues linked from
+`docs/ROADMAP.md`.
 
 ## Current Evidence Summary
 
@@ -79,11 +83,14 @@ These are the main choices that require a human decision:
 
 ## Recommended Next Move
 
-The project is already strong as a reproducible local research product. The next
-best technical step is richer external data only if the data source is chosen
-deliberately. Without that choice, the better path is public packaging:
+The project is already strong as a reproducible local research product. The
+packaging branch has moved the public-facing docs, screenshots, reviewer guide,
+reproducibility checklist, and launch checklist into release shape. The next
+repo-level move is review:
 
-1. Decide whether the dashboard should be deployed publicly.
-2. If yes, choose Streamlit Community Cloud or another host.
-3. If no, keep the repository local-first and use the screenshots plus results
-   brief for profile presentation.
+1. Push the packaging branch and open a draft pull request when ready.
+2. Review the branch before merge.
+3. Decide whether the dashboard stays local-first or needs a documented public
+   deployment snapshot.
+4. Keep richer external data and dashboard usability additions in the GitHub
+   backlog until those scopes are explicitly unlocked.
