@@ -4,12 +4,13 @@ This repository is the destination for the GeoRiskLab + GPR Equity Observatory
 merge unless the user explicitly says otherwise.
 
 Before making project-level changes, read `docs/FUTURE_AGENT_HANDOFF.md`. It is
-the current handoff entry point for the completed merge branch, release state,
+the current handoff entry point for the completed merge, release state,
 verification commands, and remaining decisions.
 
-This branch is feature locked. Read `docs/FEATURE_LOCK.md` before editing. Do
-not add new research, data, model, dashboard, or product features unless the
-user explicitly unlocks feature work.
+Feature lock was lifted on 2026-06-26. Read `docs/FEATURE_LOCK.md` before
+editing. New research, data, model, dashboard, or product features are allowed
+only when their scope is recorded and the standing data and claim-safety
+guardrails are preserved.
 
 ## Project Direction
 
@@ -46,16 +47,16 @@ user explicitly unlocks feature work.
 Run these before calling code work complete:
 
 ```powershell
-ruff check .
-pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+uv run --all-extras ruff check .
+uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q
 ```
 
-Use `uv run --all-extras ...` for those commands if the local Python environment
-does not already have the project dependencies installed.
+For broad dashboard, data, model, or documentation-contract changes, also run
+the relevant task-runner checks from `docs/FUTURE_AGENT_HANDOFF.md`.
 
 ## Local Agent State
 
 - Do not commit `.claude/`.
 - Do not commit `.serena/cache/`.
-- Do not copy GeoRiskLab's local root name, `New folder`, into committed docs or
-  config.
+- Do not copy GeoRiskLab's machine-specific local root name into committed docs
+  or config.

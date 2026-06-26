@@ -62,10 +62,11 @@ thresholds and event-window lengths. The panel robustness layer also reruns the
 controlled regression after excluding the COVID crash and Russia-Ukraine
 invasion windows.
 
-A simple drawdown classifier asks whether current GPR and market conditions help
-identify higher forward downside risk. It uses purged chronological validation rather
+Prediction Lab asks whether current GPR and market conditions help identify
+higher forward downside risk. It uses purged chronological validation rather
 than random splits, because random splits are inappropriate for time-series
-prediction.
+prediction. It also checks calibration, lift, threshold tradeoffs, and whether
+GPR adds signal beyond volatility and market controls.
 
 ## What The Current Results Say
 
@@ -93,9 +94,10 @@ developed-market abnormal returns over the 10-day event window. But the
 the controlled GPR-jump coefficient remains negative after excluding COVID and
 Russia-Ukraine windows, while the emerging-market interaction remains weak.
 
-The drawdown classifier has modest signal. Its mean ROC AUC is about 0.617, and
-rolling volatility is the most important feature. GPR variables are small in the
-current model.
+Prediction Lab has modest signal. The full-feature model's mean ROC AUC is
+about 0.617, its average precision is about 0.373, and its top-decile lift is
+about 1.47x. The GPR-only model is weak, while volatility and the broader
+feature set do more of the ranking work.
 
 ## Why This Is Still A Useful Result
 
@@ -110,6 +112,7 @@ The useful outcome is that the project now has:
 - multiple empirical methods,
 - robustness checks,
 - a dashboard for interpretation,
+- out-of-sample Prediction Lab diagnostics,
 - a research note,
 - a technical appendix,
 - a short generated results brief,

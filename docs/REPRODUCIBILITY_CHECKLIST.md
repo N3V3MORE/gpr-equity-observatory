@@ -100,3 +100,7 @@ avoid rewriting model conclusions from a partial rebuild.
 Before showing the project widely, confirm that lint and tests pass, the daily
 pipeline rebuilds, the dashboard runs locally, and the public wording remains
 cautious.
+
+For ChatGPT web or another external reviewer, use
+`docs/CHATGPT_WEB_ANALYSIS_GUIDE.md` to choose a safe, compact file bundle and
+avoid uploading local-only data or credentials.

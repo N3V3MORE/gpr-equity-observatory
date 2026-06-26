@@ -53,6 +53,9 @@ summary.
 
 Start here:
 
+- [docs/CHATGPT_WEB_ANALYSIS_GUIDE.md](docs/CHATGPT_WEB_ANALYSIS_GUIDE.md) for
+  the most efficient file bundle and review prompts for ChatGPT web or another
+  external reviewer.
 - [reports/RESULTS_BRIEF.md](reports/RESULTS_BRIEF.md) for the short generated
   result summary.
 - [docs/RESEARCH_NOTE.md](docs/RESEARCH_NOTE.md) for the research framing and
@@ -166,6 +169,7 @@ tests/                         Data and feature checks
 reports/RESULTS_BRIEF.md       Short generated findings summary
 reports/screenshots/           Dashboard screenshots for profile use
 docs/PROJECT_STATUS.md         Current implementation and results status
+docs/CHATGPT_WEB_ANALYSIS_GUIDE.md  Efficient context bundle for ChatGPT web
 docs/REVIEWER_GUIDE.md         5-minute, 15-minute, and 30-minute review paths
 docs/REPRODUCIBILITY_CHECKLIST.md  Clean-clone rebuild checklist
 docs/SCREENSHOT_REFRESH.md      Dashboard screenshot refresh process
@@ -185,7 +189,8 @@ docs/PROFILE_PACKAGING.md      CV, LinkedIn, and interview materials
 - Quantile regressions for downside-risk analysis
 - Local projections for abnormal-return response paths
 - Rolling GPR sensitivity estimates
-- Time-aware drawdown-risk classification
+- Prediction Lab with out-of-sample drawdown-risk classification, calibration,
+  lift, threshold metrics, and country risk summaries
 - Monthly developed/emerging benchmark HAC regressions
 - Monthly expanding-window forecast comparisons
 

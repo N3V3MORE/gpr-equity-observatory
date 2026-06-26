@@ -12,6 +12,7 @@ def test_phase8_documentation_files_exist():
         "ROADMAP.md",
         "FUTURE_AGENT_HANDOFF.md",
         "FEATURE_LOCK.md",
+        "CHATGPT_WEB_ANALYSIS_GUIDE.md",
     ]:
         assert (DOCS / filename).exists()
 
@@ -197,3 +198,30 @@ def test_public_setup_docs_share_core_commands():
         contents = doc_path.read_text(encoding="utf-8")
         for command in required_commands:
             assert command in contents, f"{command} missing from {doc_path}"
+
+
+def test_chatgpt_web_analysis_guide_routes_safe_context():
+    guide = (DOCS / "CHATGPT_WEB_ANALYSIS_GUIDE.md").read_text(
+        encoding="utf-8"
+    ).lower()
+    readme = Path("README.md").read_text(encoding="utf-8").lower()
+    reviewer = (DOCS / "REVIEWER_GUIDE.md").read_text(encoding="utf-8").lower()
+
+    required_phrases = [
+        "best files to upload or paste",
+        "what not to upload",
+        "config/sources.yml",
+        "raw third-party market data",
+        "daily etf workflow",
+        "monthly benchmark workflow",
+        "prediction lab",
+        "out-of-sample prediction rows",
+        "not a trading system",
+        "verification commands",
+    ]
+
+    for phrase in required_phrases:
+        assert phrase in guide
+
+    assert "chatgpt_web_analysis_guide.md" in readme
+    assert "chatgpt_web_analysis_guide.md" in reviewer

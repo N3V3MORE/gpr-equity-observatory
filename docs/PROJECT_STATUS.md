@@ -8,9 +8,12 @@ separates what is implemented from what the evidence currently says.
 For a requirement-by-requirement audit against the original project plan, see
 `docs/IMPLEMENTATION_CHECKLIST.md`.
 
-For future-agent continuation context, including branch state, completed merge
-commits, verification commands, and remaining decisions, see
+For future-agent continuation context, including current `main` state,
+completed merge commits, verification commands, and remaining decisions, see
 `docs/FUTURE_AGENT_HANDOFF.md`.
+
+For ChatGPT web or another external reviewer, start with
+`docs/CHATGPT_WEB_ANALYSIS_GUIDE.md`.
 
 For the controlled future-work backlog, see `docs/ROADMAP.md` and the linked
 GitHub issues.
@@ -37,7 +40,9 @@ claim-safety guardrails are preserved.
 - Quantile regressions for tail-risk analysis.
 - Local projections for dynamic abnormal-return response paths.
 - Rolling GPR sensitivity by country.
-- Simple drawdown-risk classifier with purged chronological validation.
+- Prediction Lab: simple drawdown-risk classifiers with purged chronological
+  validation, out-of-sample predictions, calibration, lift, threshold metrics,
+  and country risk summaries.
 - Compact evidence summary table for comparing methods.
 - Generated plain-English results brief for quick review.
 - Streamlit dashboard.
@@ -56,8 +61,8 @@ claim-safety guardrails are preserved.
   result tables.
 - Automated test workflow for GitHub Actions.
 - CI monthly sample pipeline job.
-- Refreshed profile screenshots that show the current dashboard tab set,
-  including the Monthly Benchmark tab.
+- Refreshed profile screenshots that show the guided dashboard tab set,
+  including Prediction Lab and Monthly Benchmark tabs.
 
 ## Current Results
 
@@ -87,10 +92,12 @@ The local projections now use cumulative market-model abnormal returns. At the
 emerging-market response is negative. These should still be treated as
 response-path diagnostics rather than headline conclusions.
 
-The drawdown classifier is exploratory. Mean ROC AUC is about `0.617`, average
-precision is about `0.373`, and the mean drawdown event rate is about `28.6%`.
-Rolling volatility is the largest feature by standardized coefficient; GPR
-features are small in the current version.
+Prediction Lab is exploratory. The full-features model has mean ROC AUC around
+`0.617`, average precision around `0.373`, and mean out-of-sample base event
+rate around `28.6%`. Its top-decile lift is about `1.47x`. The volatility-only
+model is similar, while the `gpr_only` model is weak. This means the current
+risk-ranking signal mostly comes from volatility and the broader feature set,
+not from GPR alone.
 
 The overview evidence table is deliberately mixed. For example, the baseline
 panel coefficient is positive, while the controlled panel coefficient is
@@ -120,13 +127,13 @@ interpreted as aggregate benchmark evidence, not country-panel proof.
 
 ## Next Useful Work
 
-Good release-hardening options are:
+Good next options are:
 
-- Push the packaging branch and open a draft pull request.
-- Review the packaging branch before merge.
 - Decide whether the project stays local-first for portfolio use or gets a
   documented public deployment snapshot.
 - Publish or adapt the blog draft for the chosen platform.
+- Keep the ChatGPT web analysis guide current when major docs or outputs
+  change.
 
 Research extensions, such as FRED controls, country-specific GPR data, or a
 narrow GDELT extension, are now unlocked but still need scoped plans, source

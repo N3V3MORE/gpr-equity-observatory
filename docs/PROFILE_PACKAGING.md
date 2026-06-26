@@ -65,16 +65,16 @@ capture future extensions as backlog items instead of starting them immediately.
 Built a reproducible Python research platform measuring equity-market responses
 to geopolitical risk across 20 country ETF proxies, implementing event studies,
 panel fixed-effects regressions, quantile regressions, local projections, a
-drawdown-risk classifier, a monthly benchmark pipeline, and an interactive
-Streamlit dashboard.
+Prediction Lab drawdown-risk classifier, a monthly benchmark pipeline, and an
+interactive Streamlit dashboard.
 
 ## Short Project Summary
 
 GPR Equity Observatory is a quant economics project that studies how equity
 markets respond to geopolitical risk shocks across emerging and developed market
 ETF proxies. It combines daily GPR data, ETF returns, market controls, event
-studies, panel regressions, local projections, tail-risk analysis, and a simple
-time-aware ML classifier in a reproducible Python pipeline.
+studies, panel regressions, local projections, tail-risk analysis, and a
+time-aware Prediction Lab in a reproducible Python pipeline.
 
 The monthly benchmark layer adds deterministic sample mode, user-supplied real
 mode, source manifests, HAC spread regressions, and expanding-window forecast
@@ -86,9 +86,9 @@ I built GPR Equity Observatory, a reproducible quant economics project examining
 how equity markets respond to geopolitical risk shocks across emerging and
 developed economies. The project uses daily country ETF returns, the
 Caldara-Iacoviello GPR index, public market controls, event studies, panel
-regressions, quantile regressions, local projections, and a simple drawdown-risk
-classifier. The output includes a tested Python pipeline, a Streamlit dashboard,
-a research note, and a technical appendix.
+regressions, quantile regressions, local projections, and a Prediction Lab for
+out-of-sample drawdown-risk classification. The output includes a tested Python
+pipeline, a Streamlit dashboard, a research note, and a technical appendix.
 
 It also includes a monthly benchmark layer that keeps sample mode and real mode
 separate and documents which outputs are local only.
@@ -110,8 +110,9 @@ and reproducible empirical workflow.
   event studies for timing, panel regressions for average association, quantile
   regression for downside asymmetry, and local projections for abnormal-return
   response paths.
-- The ML model is deliberately simple and time-aware. It is exploratory, not a
-  trading signal.
+- Prediction Lab is deliberately simple and time-aware. It is exploratory, not a
+  trading signal; the current GPR-only model is weak compared with volatility
+  and broader feature sets.
 - The monthly benchmark is useful for reproducibility and aggregate comparison,
   but sample mode is not empirical evidence and real monthly aggregate mode is
   not a country-panel proof.
@@ -130,11 +131,11 @@ The pipeline starts by downloading ETF prices, building daily log returns,
 ingesting GPR data, adding market controls, and creating a country-day analysis
 panel. From there, it runs event studies, market-model abnormal returns, panel
 regressions, quantile regressions, local projections, rolling GPR sensitivities,
-and a simple drawdown-risk classifier.
+and a Prediction Lab drawdown-risk classifier.
 
 The dashboard lets a user inspect GPR shocks, event-study responses, regression
-coefficients, tail-risk estimates, local projection paths, ML drawdown metrics,
-rolling betas, and data coverage.
+coefficients, tail-risk estimates, local projection paths, Prediction Lab
+diagnostics, rolling betas, and data coverage.
 
 There is also a Monthly Benchmark tab. It shows whether the monthly layer is in
 sample mode or real mode, displays provenance status, plots monthly GPR shocks
@@ -144,8 +145,9 @@ tables when available.
 The current results are mixed. The controlled panel regression finds a negative
 association between GPR and returns, but the emerging-market interaction is not
 statistically strong. Robustness checks support the controlled GPR association
-more than the emerging-market asymmetry claim. The ML classifier has modest
-predictive value, with rolling volatility more important than GPR features.
+more than the emerging-market asymmetry claim. Prediction Lab has modest
+predictive value, with volatility and broader feature sets more useful than GPR
+alone.
 
 The main strength of the project is not a dramatic headline result. It is the
 reproducible empirical framework: the methods are tested, the data pipeline is
@@ -174,15 +176,17 @@ the GPR association at the 10th percentile, 25th percentile, and median.
 
 ### Why use ML?
 
-The ML layer reframes the problem as risk classification: can current conditions
-help flag higher short-horizon drawdown risk? I use purged chronological validation to
-avoid look-ahead bias and keep the model simple enough to interpret.
+Prediction Lab reframes the problem as risk classification: can current
+conditions help rank higher short-horizon drawdown risk? I use purged
+chronological validation to avoid look-ahead bias and keep the models simple
+enough to interpret.
 
 ### What would improve the project next?
 
-The best immediate next steps are packaging and review polish. FRED macro
-controls, country-specific GPR where reliable, and a carefully scoped GDELT
-extension are later research decisions.
+The best next steps are deployment/data-publication decisions and careful
+source-scoped research extensions. FRED macro controls, country-specific GPR
+where reliable, and a carefully scoped GDELT extension are later research
+decisions.
 
 ## Quick Results Brief
 

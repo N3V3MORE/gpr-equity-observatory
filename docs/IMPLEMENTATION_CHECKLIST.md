@@ -39,12 +39,12 @@ It is written as a plain-English audit, not as a marketing summary.
 | --- | --- | --- |
 | GDELT extension is integrated | Not started | Add only after choosing a narrow country/event scope |
 | Country-specific GPR is integrated | Needs decision | Official pages exist, but data access is not a simple workbook link |
-| Dashboard includes data quality, model diagnostics, and downloads | Mostly done | Data quality and model diagnostics exist; explicit download buttons are tracked in issue #2 |
+| Dashboard includes data quality, model diagnostics, and downloads | Done | Guided tabs, data quality, Prediction Lab diagnostics, and CSV download buttons |
 | Tests and linting are present | Done | Pytest and Ruff are configured |
 | GitHub Actions run tests | Done | `.github/workflows/tests.yml` |
 | Monthly sample pipeline runs in CI | Done | monthly sample job in `.github/workflows/tests.yml` |
 | Blog post is published | Drafted | `docs/BLOG_POST_DRAFT.md`; publishing is outside the repo |
-| Walkthrough video or demo script exists | Partial | Three-minute script exists; video is not recorded |
+| Walkthrough video or demo script exists | Partial | Three-minute script and ChatGPT analysis guide exist; video is not recorded |
 
 Deployment details are documented in `docs/DEPLOYMENT_GUIDE.md`. External-data
 choices are documented in `docs/DATA_SOURCE_DECISIONS.md`.
@@ -63,8 +63,9 @@ The current evidence should be described cautiously:
   supportive of emerging-market downside than the 95th-percentile definition.
 - Sample robustness keeps the controlled GPR-jump coefficient negative, but the
   emerging-market interaction remains weak.
-- The ML drawdown classifier has modest ranking signal, not a trading-grade
-  forecast.
+- Prediction Lab has modest ranking signal, not a trading-grade forecast.
+- The standalone `gpr_only` drawdown-risk model is weak; volatility and the
+  broader feature set carry more of the ranking signal.
 - Monthly sample mode is not empirical evidence.
 - Monthly real mode is an aggregate benchmark, not a country-panel proof.
 
@@ -83,14 +84,14 @@ These are the main choices that require a human decision:
 
 ## Recommended Next Move
 
-The project is already strong as a reproducible local research product. The
-packaging branch has moved the public-facing docs, screenshots, reviewer guide,
-reproducibility checklist, and launch checklist into release shape. The next
-repo-level move is review:
+The project is already strong as a reproducible local research product on
+`main`. The public-facing docs, screenshots, reviewer guide, reproducibility
+checklist, ChatGPT web guide, launch checklist, guided dashboard, monthly
+benchmark, and Prediction Lab are in place.
 
-1. Push the packaging branch and open a draft pull request when ready.
-2. Review the branch before merge.
-3. Decide whether the dashboard stays local-first or needs a documented public
+1. Decide whether the dashboard stays local-first or needs a documented public
    deployment snapshot.
-4. Keep richer external data and dashboard usability additions in the GitHub
-   backlog until those scopes are explicitly unlocked.
+2. Keep richer external data additions in the GitHub backlog until each scope is
+   explicitly chosen and source validation is planned.
+3. Refresh screenshots or the ChatGPT guide only when visible dashboard content
+   or major output contracts change.

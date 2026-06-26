@@ -6,8 +6,8 @@ This project studies whether equity-market responses to geopolitical risk differ
 between emerging and developed market ETF proxies. It builds a reproducible
 Python pipeline using daily country ETF returns, daily Caldara-Iacoviello GPR
 data, public market controls, event studies, panel regressions, quantile
-regressions, local projections, rolling sensitivities, and a simple drawdown-risk
-classifier.
+regressions, local projections, rolling sensitivities, and a Prediction Lab for
+drawdown-risk classification.
 
 The repository also includes a separate monthly benchmark layer. That layer
 uses deterministic sample mode for software validation and user-supplied real
@@ -36,8 +36,8 @@ The project tests this question through several complementary views:
 - Quantile regressions: does GPR matter more in the left tail of returns?
 - Local projections: how does the market-adjusted response path evolve over
   later horizons?
-- Drawdown classification: do current risk conditions help identify future
-  downside-risk episodes?
+- Prediction Lab: do current risk conditions help rank future downside-risk
+  episodes out of sample?
 - Monthly benchmark: do aggregate developed/emerging returns show a lower
   frequency benchmark association with monthly GPR changes?
 
@@ -130,13 +130,19 @@ date, the expected return path is estimated from pre-date ETF sensitivity to the
 global market return, then subtracted from the forward ETF return path. This
 keeps the response path aligned with the abnormal-return event-study design.
 
-### Drawdown Classifier
+### Prediction Lab
 
-The drawdown classifier predicts whether an ETF experiences a forward
-20-trading-day cumulative log-return drawdown of at least 5 percent. Validation
-uses chronological folds, so the model always trains on earlier dates and tests
-on later dates. This avoids the common mistake of randomly splitting time-series
+Prediction Lab predicts whether an ETF experiences a forward 20-trading-day
+cumulative log-return drawdown of at least 5 percent. Validation uses purged
+chronological folds, so the model always trains on earlier dates and tests on
+later dates. This avoids the common mistake of randomly splitting time-series
 data.
+
+The saved predictions are out of sample. The model comparison includes
+constant, volatility-only, GPR-only, market-controls-only, volatility-plus-GPR,
+and full-feature variants. The diagnostics include Brier score, threshold
+metrics, calibration by predicted-risk decile, top-bucket lift, and country risk
+summaries.
 
 ### Evidence Summary
 
@@ -183,11 +189,13 @@ near zero at about `0.01%`, while the emerging-market estimate is negative at
 about `-0.06%`. This is useful as a diagnostic response path, not as a
 standalone claim.
 
-The drawdown classifier has a mean ROC AUC of about `0.617` and average
-precision of about `0.373`, compared with a mean event rate of about `28.6%`.
-This is modest predictive signal. Rolling volatility is the largest feature by
-standardized coefficient. GPR features are small in the current classifier, so
-the ML layer should be described as exploratory.
+Prediction Lab has modest ranking signal. The full-features model has mean ROC
+AUC around `0.617`, average precision around `0.373`, and mean out-of-sample
+base event rate around `28.6%`. Its top-decile lift is about `1.47x`.
+Volatility-only and volatility-plus-GPR variants are similar, while `gpr_only`
+is weak. The ML layer should therefore be described as exploratory risk
+classification, not a trading signal or evidence that GPR alone predicts
+drawdowns.
 
 The event-study robustness checks compare 90th- and 95th-percentile GPR-jump
 definitions across 3-, 5-, and 10-trading-day windows. The 90th-percentile jump
@@ -218,8 +226,8 @@ The current evidence supports a cautious interpretation:
 - Tail-risk, abnormal-return local-projection, and event-study robustness
   results are useful diagnostics, but they do not yet carry the main conclusion
   alone.
-- The ML model is useful for disciplined risk classification practice, but it is
-  not a strong prediction engine.
+- Prediction Lab is useful for disciplined out-of-sample risk classification
+  practice, but it is not a strong prediction engine or trading signal.
 - The monthly benchmark is useful for reproducibility and aggregate comparison,
   but it should not be mixed with daily ETF findings or described as causal.
 

@@ -61,11 +61,11 @@ If dashboard behavior changes, also run a Streamlit smoke test.
 
 ## Current Next Moves
 
-Feature work is unlocked. Good next moves include:
+Feature work is unlocked. Completed post-unlock work now includes dashboard
+understandability improvements, dashboard helper refactors, and the Prediction
+Lab extension. Good next moves include:
 
-- push this branch and open a pull request
 - decide public deployment policy
 - decide whether real monthly benchmark outputs can be published
-- improve dashboard usability
-- extend the Prediction Lab
 - plan FRED, country-specific GPR, or GDELT work with source validation
+- keep `docs/CHATGPT_WEB_ANALYSIS_GUIDE.md` current for external review

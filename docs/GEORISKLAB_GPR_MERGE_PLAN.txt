@@ -1,6 +1,24 @@
 GeoRiskLab + GPR Equity Observatory Merge Plan
 Generated: 2026-06-26
 
+Current status note, 2026-06-26
+===============================
+
+This is a historical planning document. The merge, reviewer packaging,
+dashboard understandability work, dashboard helper refactor, monthly benchmark
+layer, and Prediction Lab extension are now merged into `main`.
+
+For current context, use:
+
+- docs/CHATGPT_WEB_ANALYSIS_GUIDE.md
+- docs/FUTURE_AGENT_HANDOFF.md
+- docs/PROJECT_STATUS.md
+- docs/TECHNICAL_APPENDIX.md
+
+Do not use this file as the primary ChatGPT web context unless you specifically
+need merge history. It is intentionally long and includes old branch-state
+observations that are superseded by the current docs above.
+
 Purpose
 =======
 

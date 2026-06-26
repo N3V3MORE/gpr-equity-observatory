@@ -6,8 +6,10 @@ project. It keeps public launch work separate from future feature work.
 ## GitHub Repository
 
 - Pin the repository on the GitHub profile if this is the project to lead with.
-- Use [docs/PULL_REQUEST_DRAFT.md](PULL_REQUEST_DRAFT.md) when opening the
-  packaging branch pull request.
+- Use [docs/CHATGPT_WEB_ANALYSIS_GUIDE.md](CHATGPT_WEB_ANALYSIS_GUIDE.md) when
+  asking ChatGPT web or another external reviewer to inspect the project.
+- Use [docs/PULL_REQUEST_DRAFT.md](PULL_REQUEST_DRAFT.md) only as a merged
+  update summary; it is no longer a pending pull-request draft.
 - Use this repository description:
 
 ```text
@@ -52,8 +54,10 @@ Geopolitical risk is associated with equity-market risk, while the emerging-mark
 - Run:
 
 ```powershell
-ruff check .
-pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+uv run --all-extras ruff check .
+uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+uv run --all-extras python scripts/run_task.py monthly-sample --min-train-months 24
+uv run --all-extras python scripts/run_task.py build-daily
 ```
 
 ## Deployment Decision
@@ -71,8 +75,8 @@ is resolved.
 Feature work is unlocked, but keep these as scoped backlog items until the user
 chooses one for implementation:
 
-- dashboard CSV downloads and missing-data UI changes:
-  [#2](https://github.com/N3V3MORE/gpr-equity-observatory/issues/2)
+- public deployment/data-publication policy:
+  [#3](https://github.com/N3V3MORE/gpr-equity-observatory/issues/3)
 - FRED macro controls:
   [#4](https://github.com/N3V3MORE/gpr-equity-observatory/issues/4)
 - country-specific GPR or GDELT:

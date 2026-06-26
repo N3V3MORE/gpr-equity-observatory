@@ -18,12 +18,14 @@ The repository now combines:
 - monthly HAC benchmark regressions
 - monthly expanding-window forecast comparisons
 - a unified task runner
+- guided dashboard story tabs and CSV downloads
+- Prediction Lab diagnostics with out-of-sample predictions, calibration, lift,
+  threshold metrics, and country risk summaries
 - a Monthly Benchmark dashboard tab
 
 ## V0.2 Wrap-Up
 
-Status: implemented on the locked merge branch and carried forward on the
-packaging branch.
+Status: implemented and merged to `main`.
 
 Included:
 
@@ -33,6 +35,20 @@ Included:
 - monthly benchmark models added
 - CI monthly sample pipeline added
 - docs consolidated around the daily/monthly distinction
+- reviewer packaging, screenshot guidance, and ChatGPT web analysis guide added
+
+## V0.3 Completed Usability And Prediction Work
+
+Status: implemented and merged to `main`.
+
+Included:
+
+- dashboard intro, summary cards, Evidence Map, GPR Shock Timeline, and
+  reader notes
+- dashboard output/component/chart helper refactors
+- Prediction Lab model variants, out-of-sample prediction CSV, Brier score,
+  threshold metrics, calibration, lift, and country risk summary
+- dashboard Prediction Lab tables and charts
 
 ## Active Backlog Issues
 
@@ -54,6 +70,7 @@ Potential next work:
 - add selected real macro controls to the monthly benchmark
 - add a narrow GDELT extension after choosing event types and countries
 - add country-specific GPR if the extraction method is reliable
+- decide public deployment and data-publication policy
 
 These should be added only with source validation and explicit interpretation
 rules.

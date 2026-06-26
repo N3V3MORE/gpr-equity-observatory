@@ -5,6 +5,9 @@ them to inspect every script first.
 
 ## 5-Minute Review
 
+- If using ChatGPT web or another external reviewer, start with
+  [docs/CHATGPT_WEB_ANALYSIS_GUIDE.md](CHATGPT_WEB_ANALYSIS_GUIDE.md). It lists
+  the smallest useful file bundle and the claim-safety rules.
 - Read the main finding in [README.md](../README.md).
 - Open [reports/RESULTS_BRIEF.md](../reports/RESULTS_BRIEF.md) for the generated
   result summary.
@@ -51,6 +54,7 @@ When running the Streamlit app locally, start with these tabs:
 - Panel Regression: controlled and date fixed-effects results.
 - Robustness: event-study and sample-robustness checks.
 - Tail Risk and Local Projections: downside and response-path diagnostics.
+- Prediction Lab: out-of-sample drawdown-risk classification diagnostics.
 - Monthly Benchmark: separate lower-frequency benchmark status and tables.
 - Data Coverage: coverage gaps and large-return flags.
 

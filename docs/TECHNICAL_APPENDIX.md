@@ -37,6 +37,8 @@ streamlit run app.py
 ```
 
 For time-boxed review paths, see [docs/REVIEWER_GUIDE.md](REVIEWER_GUIDE.md).
+For ChatGPT web or another external reviewer, see
+[docs/CHATGPT_WEB_ANALYSIS_GUIDE.md](CHATGPT_WEB_ANALYSIS_GUIDE.md).
 For a practical clean-clone rebuild sequence, see
 [docs/REPRODUCIBILITY_CHECKLIST.md](REPRODUCIBILITY_CHECKLIST.md).
 
@@ -67,7 +69,8 @@ python scripts/run_task.py test
 - `src/gprobs/analysis/quantile_regression.py`: lower-tail regressions.
 - `src/gprobs/analysis/local_projection.py`: dynamic abnormal-return response
   paths.
-- `src/gprobs/analysis/drawdown_model.py`: drawdown-risk classifier.
+- `src/gprobs/analysis/drawdown_model.py`: drawdown-risk Prediction Lab
+  classifiers and diagnostics.
 - `src/gprobs/analysis/evidence_summary.py`: compact model comparison table.
 - `src/gprobs/analysis/rolling_sensitivity.py`: rolling GPR beta.
 - `src/gprobs/data/monthly_sample.py`: deterministic monthly benchmark sample
@@ -113,6 +116,11 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `data/processed/local_projection_results.csv`
 - `data/processed/drawdown_model_dataset.csv`
 - `data/processed/drawdown_model_metrics.csv`
+- `data/processed/drawdown_model_predictions.csv`
+- `data/processed/drawdown_model_threshold_metrics.csv`
+- `data/processed/drawdown_model_calibration.csv`
+- `data/processed/drawdown_model_lift.csv`
+- `data/processed/drawdown_country_risk_summary.csv`
 - `data/processed/drawdown_feature_importance.csv`
 - `data/processed/evidence_summary.csv`
 - `data/processed/rolling_gpr_beta.csv`
@@ -174,6 +182,11 @@ Monthly benchmark generated files are also ignored by Git and can be rebuilt:
 - `spread_em_dev`: emerging minus developed monthly excess-return spread.
 - `gdelt_risk_raw`, `gdelt_risk_z`: monthly GDELT risk placeholders or
   validated real features when added later.
+- `drawdown_risk`: binary forward drawdown-risk label.
+- `predicted_probability`: out-of-sample drawdown-risk probability from a
+  purged chronological fold.
+- `probability_decile`: within-model predicted-risk decile for calibration.
+- `lift`: event-rate multiple versus the out-of-sample base event rate.
 
 ## Model Notes
 
@@ -213,12 +226,31 @@ Event-study robustness compares end-of-window cumulative abnormal returns across
 10-trading-day post-shock windows. Endpoint p-values use a cross-sectional
 t-test over event-ticker cumulative abnormal returns.
 
-The drawdown classifier compares three purged chronological-validation rows per
-fold: a constant baseline, a rolling-volatility-only logistic regression, and
-the full feature logistic regression. Its GPR inputs use an expanding daily
-GPR-change z-score and the expanding-window GPR-change shock flag. Training
-dates immediately before each test fold are embargoed by the forward-label
-horizon, and incomplete end-of-series forward labels are dropped.
+Prediction Lab compares six purged chronological-validation model variants per
+fold: `constant_baseline`, `volatility_only`, `gpr_only`,
+`market_controls_only`, `volatility_plus_gpr`, and `full_features`. Every saved
+`predicted_probability` is out of sample. Training dates immediately before each
+test fold are embargoed by the forward-label horizon, and incomplete
+end-of-series forward labels are dropped.
+
+Prediction Lab writes five diagnostic outputs beyond the original dataset,
+metrics, and feature-importance files:
+
+- `drawdown_model_predictions.csv`: fold/model probabilities with train/test
+  date windows.
+- `drawdown_model_threshold_metrics.csv`: precision, recall, F1, share flagged,
+  and flagged event rate at thresholds 0.10 through 0.50.
+- `drawdown_model_calibration.csv`: realized event rates by predicted-risk
+  decile.
+- `drawdown_model_lift.csv`: top-10-percent and top-20-percent event-rate lift.
+- `drawdown_country_risk_summary.csv`: average predicted risk and realized
+  event rate by country, market group, and model.
+
+The latest rebuild shows modest ranking signal. The full-features model has
+mean ROC AUC around `0.617`, average precision around `0.373`, and top-decile
+lift around `1.47x`. The `gpr_only` model is weak, so the Prediction Lab should
+be read as an exploratory risk-classification experiment, not a trading signal
+or proof that GPR alone forecasts drawdowns.
 
 The evidence summary table is not a new model. It gathers headline rows from
 the existing event-study, regression, quantile, local-projection, and ML outputs
