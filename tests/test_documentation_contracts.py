@@ -10,6 +10,7 @@ def test_phase8_documentation_files_exist():
         "METHODOLOGY.md",
         "ROADMAP.md",
         "FUTURE_AGENT_HANDOFF.md",
+        "FEATURE_LOCK.md",
     ]:
         assert (DOCS / filename).exists()
 
@@ -70,3 +71,30 @@ def test_future_agent_handoff_records_branch_checks_and_boundaries():
 
     for phrase in required_phrases:
         assert phrase in handoff
+
+
+def test_feature_lock_blocks_new_scope_without_user_unlock():
+    feature_lock = (DOCS / "FEATURE_LOCK.md").read_text(
+        encoding="utf-8"
+    ).lower()
+    handoff = (DOCS / "FUTURE_AGENT_HANDOFF.md").read_text(
+        encoding="utf-8"
+    ).lower()
+    roadmap = (DOCS / "ROADMAP.md").read_text(encoding="utf-8").lower()
+
+    required_feature_lock_phrases = [
+        "feature locked",
+        "release-hardening mode",
+        "new features require an explicit user decision",
+        "add fred controls",
+        "add gdelt ingestion or analysis",
+        "add country-specific gpr data",
+        "commit raw third-party data",
+        "config/sources.yml",
+    ]
+
+    for phrase in required_feature_lock_phrases:
+        assert phrase in feature_lock
+
+    assert "this branch is feature locked" in handoff
+    assert "post-lock work" in roadmap

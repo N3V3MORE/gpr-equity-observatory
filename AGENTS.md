@@ -7,6 +7,10 @@ Before making project-level changes, read `docs/FUTURE_AGENT_HANDOFF.md`. It is
 the current handoff entry point for the completed merge branch, release state,
 verification commands, and remaining decisions.
 
+This branch is feature locked. Read `docs/FEATURE_LOCK.md` before editing. Do
+not add new research, data, model, dashboard, or product features unless the
+user explicitly unlocks feature work.
+
 ## Project Direction
 
 - Keep GPR Equity Observatory as the public Streamlit app and research product.

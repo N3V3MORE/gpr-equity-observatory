@@ -2,6 +2,10 @@
 
 This roadmap separates finished merge work from future research extensions.
 
+Feature lock is active on branch `codex/pre-merge-gpr-cleanup`. V0.2 is in
+release-hardening mode. V0.3 and V1.0 items are post-lock work and should not be
+started unless the user explicitly unlocks feature work.
+
 ## Current Integrated State
 
 The repository now combines:
@@ -30,6 +34,8 @@ Included:
 
 ## V0.3 Research Extensions
 
+Status: post-lock only.
+
 Potential next work:
 
 - add FRED macro controls if an API key is available
@@ -41,6 +47,8 @@ These should be added only with source validation and explicit interpretation
 rules.
 
 ## V1.0 Research Upgrade
+
+Status: post-lock only.
 
 Potential larger upgrade:
 

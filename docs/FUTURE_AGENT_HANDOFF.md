@@ -6,6 +6,10 @@ This is the entry point for a fresh agent picking up the GeoRiskLab + GPR Equity
 Observatory merge work. Read this before changing code, docs, data, or Git
 state.
 
+This branch is feature locked. Read `docs/FEATURE_LOCK.md` before making any
+change. Release hardening is allowed; new features require an explicit user
+unlock.
+
 ## Current Answer
 
 The merge implementation is complete through Phases 0 through 9 on branch
@@ -28,6 +32,7 @@ delete them unless the user explicitly asks.
 - GitHub remote for this repo:
   `https://github.com/N3V3MORE/gpr-equity-observatory.git`
 - Canonical merge plan: `docs/GEORISKLAB_GPR_MERGE_PLAN.txt`
+- Feature-lock policy: `docs/FEATURE_LOCK.md`
 - Project status note: `docs/PROJECT_STATUS.md`
 - Requirement audit: `docs/IMPLEMENTATION_CHECKLIST.md`
 - Reproducibility contract: `docs/REPRODUCIBILITY.md`
@@ -41,6 +46,7 @@ The merge branch is `codex/pre-merge-gpr-cleanup`.
 
 Current merge commits, newest first:
 
+- `1025f5e docs: add future agent handoff`
 - `f34792d docs: refresh final result metrics`
 - `8c2835c docs: consolidate merged observatory story`
 - `7fe03c2 feat: add monthly benchmark dashboard tab`
@@ -194,7 +200,9 @@ Keep this cautious framing unless new validated evidence changes it.
 ## Known Remaining Choices
 
 These are not blockers for the completed merge branch. They are product or
-research choices for the user:
+research choices for the user. Because the branch is feature locked, treat the
+data/research items as post-lock work unless the user explicitly unlocks feature
+work:
 
 - Push this branch and open a pull request.
 - Capture refreshed dashboard screenshots with the Monthly Benchmark tab.
@@ -219,7 +227,7 @@ research choices for the user:
 ## First Five Minutes For A New Agent
 
 1. Run `git status -sb`.
-2. Read `AGENTS.md` and this file.
+2. Read `AGENTS.md`, `docs/FEATURE_LOCK.md`, and this file.
 3. Read `docs/PROJECT_STATUS.md` for the current user-facing status.
 4. Read `docs/GEORISKLAB_GPR_MERGE_PLAN.txt` only if the task concerns merge
    history or unresolved planning detail.

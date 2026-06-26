@@ -12,6 +12,10 @@ For future-agent continuation context, including branch state, completed merge
 commits, verification commands, and remaining decisions, see
 `docs/FUTURE_AGENT_HANDOFF.md`.
 
+Feature lock is active on `codex/pre-merge-gpr-cleanup`. See
+`docs/FEATURE_LOCK.md`; new research, data, model, dashboard, or product
+features require an explicit user unlock.
+
 ## Implemented
 
 - 20-country ETF universe: 10 developed market proxies and 10 emerging market
