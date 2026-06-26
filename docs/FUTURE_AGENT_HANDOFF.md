@@ -19,8 +19,9 @@ A forward-plan packaging branch, `codex/polish-readme-reviewer-path`, now sits
 on top of the locked merge branch. It adds reviewer navigation, reproducibility
 checklists, local-first launch guidance, refreshed screenshots, screenshot
 refresh instructions, PR/issue template guardrails, setup-command alignment,
-local path hygiene, and links to the GitHub backlog issues. It does not add new
-research, data, model, dashboard, or product behavior.
+documentation-contract tests for those release guardrails, local path hygiene,
+and links to the GitHub backlog issues. It does not add new research, data,
+model, dashboard, or product behavior.
 
 GPR Equity Observatory remains the destination repository and public Streamlit
 research product. GeoRiskLab has been absorbed selectively as reproducibility,
@@ -61,6 +62,8 @@ The current forward-plan packaging branch is
 
 Key packaging branch commits include, newest first:
 
+- `c4aff24 test: cover setup command docs`
+- `0ad135c test: cover template guardrails`
 - `1416412 docs: omit local GeoRiskLab path`
 - `f6e0d34 docs: align setup commands`
 - `e73bced docs: tighten issue templates`
@@ -122,8 +125,9 @@ explicitly.
   screenshot refresh guide, local-first launch guidance, launch checklist,
   draft pull request text, refreshed dashboard screenshots, a feature-lock-aware
   pull request template, feature-lock-aware issue templates, aligned setup
-  commands, machine-specific local-path cleanup, and a roadmap section linking
-  to the controlled GitHub backlog.
+  commands, documentation-contract coverage for release guardrails,
+  machine-specific local-path cleanup, and a roadmap section linking to the
+  controlled GitHub backlog.
 
 ## What Was Intentionally Not Done
 
@@ -212,8 +216,10 @@ The packaging branch screenshot refresh was also validated with:
 - `uv run --all-extras ruff check .`
 - `uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q`
 
-The latest setup-command and local-path hardening docs were validated with:
+The latest setup-command, GitHub-template, and local-path hardening docs were
+validated with:
 
+- `uv run --all-extras pytest tests\test_documentation_contracts.py -q`
 - `uv run --all-extras ruff check .`
 - `uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q`
 

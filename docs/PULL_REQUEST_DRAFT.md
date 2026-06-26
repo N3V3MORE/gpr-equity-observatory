@@ -30,6 +30,8 @@ dashboard, or product behavior.
 - Tightened data-source and method issue templates with feature-lock gates.
 - Aligned setup commands across README, technical appendix, deployment guide,
   and reproducibility docs.
+- Added documentation-contract tests that keep GitHub template guardrails and
+  public setup commands from drifting.
 - Removed machine-specific GeoRiskLab local path details from committed handoff
   and merge-plan docs.
 - Linked the controlled GitHub backlog issues from `docs/ROADMAP.md`.
