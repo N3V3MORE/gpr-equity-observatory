@@ -33,8 +33,8 @@ delete them unless the user explicitly asks.
 ## Important Paths
 
 - Destination repo: `C:\Users\Sushmit\Desktop\Code\GPR_Observer`
-- Original GeoRiskLab local source inspected during planning:
-  `C:\Users\Sushmit\Desktop\Code\New folder`
+- Original GeoRiskLab local source was inspected during planning; the
+  machine-specific local path is intentionally omitted from committed docs.
 - GitHub remote for this repo:
   `https://github.com/N3V3MORE/gpr-equity-observatory.git`
 - Canonical merge plan: `docs/GEORISKLAB_GPR_MERGE_PLAN.txt`

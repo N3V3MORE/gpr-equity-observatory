@@ -96,9 +96,9 @@ Local projects
 2. GeoRiskLab
 
    Important path correction:
-   C:\Users\Sushmit\Desktop\Code\New folder\georisklab is only the package
-   directory. The Git repository root is:
-   C:\Users\Sushmit\Desktop\Code\New folder
+   The GeoRiskLab `georisklab` directory is only the package directory. The
+   Git repository root is the parent local source tree; its machine-specific
+   path is intentionally omitted from committed docs.
 
    GitHub remote:
    https://github.com/N3V3MORE/georisklab.git
@@ -194,7 +194,7 @@ Findings
    C:\Users\Sushmit\Desktop\Code\GPR_Observer\.serena
 
    GeoRiskLab:
-   C:\Users\Sushmit\Desktop\Code\New folder\.serena
+   local GeoRiskLab .serena directory, with the machine-specific path omitted
 
    These folders are ignored and should be treated as local agent state, not
    portable project source.
@@ -482,7 +482,7 @@ Current architecture
 --------------------
 
 Repository root:
-C:\Users\Sushmit\Desktop\Code\New folder
+GeoRiskLab local repository root, with the machine-specific path omitted.
 
 Important files and directories:
 
@@ -655,8 +655,8 @@ Current GeoRiskLab weaknesses and merge caveats
 
    Subagent found:
    - expected analysis_panel_manifest_real.json is absent locally.
-   - source_manifest_real.json records old raw paths under
-     C:\Users\Sushmit\Desktop\New folder\...
+   - source_manifest_real.json records old raw paths under the previous local
+     GeoRiskLab root.
 
    Required action:
    - Treat local real artifacts as non-authoritative.
@@ -664,8 +664,8 @@ Current GeoRiskLab weaknesses and merge caveats
 
 6. GeoRiskLab project root name is poor.
 
-   The local root is named "New folder". Do not carry that name into committed
-   docs, configs, or Serena project metadata.
+   The local root had a non-portable placeholder name. Do not carry local root
+   names into committed docs, configs, or Serena project metadata.
 
 
 5. Recommended Merge Strategy
@@ -1081,7 +1081,7 @@ Port ProjectPaths-style path management, but adapt names to GPR's existing
 data/report layout.
 
 Notes:
-Do not carry local root name "New folder". Keep root injectable for tests.
+Do not carry local root names. Keep root injectable for tests.
 
 GeoRiskLab source:
 georisklab/utils/datasets.py
@@ -2284,7 +2284,7 @@ The merge should preserve:
 - GeoRiskLab's task-runner discipline
 
 The merge should not preserve:
-- GeoRiskLab's local root name "New folder"
+- GeoRiskLab's local root name
 - stale local real artifacts
 - raw third-party data
 - local .serena cache
