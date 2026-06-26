@@ -15,6 +15,12 @@ unlock.
 The merge implementation is complete through Phases 0 through 9 on branch
 `codex/pre-merge-gpr-cleanup`.
 
+A forward-plan packaging branch, `codex/polish-readme-reviewer-path`, now sits
+on top of the locked merge branch. It adds reviewer navigation, reproducibility
+checklists, local-first launch guidance, screenshot refresh instructions, and
+links to the GitHub backlog issues. It does not add new research, data, model,
+dashboard, or product behavior.
+
 GPR Equity Observatory remains the destination repository and public Streamlit
 research product. GeoRiskLab has been absorbed selectively as reproducibility,
 provenance, validation, sample/real mode discipline, and a separate monthly
@@ -34,6 +40,9 @@ delete them unless the user explicitly asks.
 - Canonical merge plan: `docs/GEORISKLAB_GPR_MERGE_PLAN.txt`
 - Feature-lock policy: `docs/FEATURE_LOCK.md`
 - Project status note: `docs/PROJECT_STATUS.md`
+- Reviewer guide: `docs/REVIEWER_GUIDE.md`
+- Reproducibility checklist: `docs/REPRODUCIBILITY_CHECKLIST.md`
+- Screenshot refresh guide: `docs/SCREENSHOT_REFRESH.md`
 - Requirement audit: `docs/IMPLEMENTATION_CHECKLIST.md`
 - Reproducibility contract: `docs/REPRODUCIBILITY.md`
 - Source policy: `docs/DATA_SOURCES.md`
@@ -43,6 +52,17 @@ delete them unless the user explicitly asks.
 ## Branch And Commit State
 
 The merge branch is `codex/pre-merge-gpr-cleanup`.
+
+The current forward-plan packaging branch is
+`codex/polish-readme-reviewer-path`.
+
+Packaging branch commits, newest first:
+
+- `655cc92 docs: add screenshot refresh guide`
+- `1cf8451 docs: link project backlog issues`
+- `76a2a45 docs: clarify local-first launch path`
+- `bef1e46 docs: add reviewer guide`
+- `bf1e60f docs: clarify reviewer path`
 
 Current merge commits, newest first:
 
@@ -85,6 +105,9 @@ explicitly.
   pipeline job.
 - Docs now explain daily/monthly separation, sample/real boundaries, current
   findings, limitations, deployment, reproducibility, and profile packaging.
+- The packaging branch adds a reviewer guide, reproducibility checklist,
+  screenshot refresh guide, local-first launch guidance, and a roadmap section
+  linking to the controlled GitHub backlog.
 
 ## What Was Intentionally Not Done
 
@@ -99,6 +122,19 @@ explicitly.
 - FRED controls are not integrated because that requires an API-key decision.
 - No custom project MCP server was added; existing local filesystem, Git,
   semantic navigation, GitHub tools, and search tools were sufficient.
+- Dashboard CSV downloads and missing-data message simplification were not
+  implemented on the packaging branch because they are dashboard feature work
+  under the active feature lock. They are tracked in GitHub issue #2.
+
+## GitHub Backlog Issues
+
+Open backlog issues created from the forward plan:
+
+- [#1 Package current project for portfolio use](https://github.com/N3V3MORE/gpr-equity-observatory/issues/1)
+- [#2 Improve dashboard usability without changing models](https://github.com/N3V3MORE/gpr-equity-observatory/issues/2)
+- [#3 Decide deployment data strategy](https://github.com/N3V3MORE/gpr-equity-observatory/issues/3)
+- [#4 Plan future FRED macro-controls extension](https://github.com/N3V3MORE/gpr-equity-observatory/issues/4)
+- [#5 Scope later country-specific GPR or GDELT extension](https://github.com/N3V3MORE/gpr-equity-observatory/issues/5)
 
 ## Commands Future Agents Should Use
 
@@ -205,7 +241,8 @@ data/research items as post-lock work unless the user explicitly unlocks feature
 work:
 
 - Push this branch and open a pull request.
-- Capture refreshed dashboard screenshots with the Monthly Benchmark tab.
+- Capture refreshed dashboard screenshots with the Monthly Benchmark tab if the
+  current screenshots are no longer representative.
 - Decide whether to deploy the dashboard publicly.
 - Decide whether to publish real monthly benchmark outputs.
 - Decide whether to add FRED controls with an API key.
@@ -228,7 +265,8 @@ work:
 
 1. Run `git status -sb`.
 2. Read `AGENTS.md`, `docs/FEATURE_LOCK.md`, and this file.
-3. Read `docs/PROJECT_STATUS.md` for the current user-facing status.
+3. Read `docs/PROJECT_STATUS.md` and `docs/ROADMAP.md` for the current
+   user-facing status and issue backlog.
 4. Read `docs/GEORISKLAB_GPR_MERGE_PLAN.txt` only if the task concerns merge
    history or unresolved planning detail.
 5. Run focused checks for the requested change before editing.
