@@ -56,6 +56,8 @@ tracked in issue #2.
 - [x] `uv run --all-extras python scripts/run_task.py monthly-sample --min-train-months 24`
 - [x] `uv run --all-extras python scripts/run_task.py build-daily`
 - [x] Browser smoke check of the refreshed dashboard screenshots.
+- [x] Recent docs-only wording updates: `git diff --check` and
+      `uv run --all-extras pytest tests\test_documentation_contracts.py -q`
 
 ## Notes For Reviewers
 
