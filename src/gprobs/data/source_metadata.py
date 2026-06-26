@@ -11,6 +11,7 @@ def write_source_manifest(
     raw_file_path: str,
     license_or_terms_note: str,
     script_version: str,
+    public_raw_file_path: str | None = None,
 ) -> dict:
     path.parent.mkdir(parents=True, exist_ok=True)
     manifest = source_manifest(
@@ -19,6 +20,7 @@ def write_source_manifest(
         raw_file_path=raw_file_path,
         license_or_terms_note=license_or_terms_note,
         script_version=script_version,
+        public_raw_file_path=public_raw_file_path,
     )
     path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     return manifest
@@ -40,13 +42,14 @@ def source_manifest(
     raw_file_path: str,
     license_or_terms_note: str,
     script_version: str,
+    public_raw_file_path: str | None = None,
 ) -> dict:
     return {
         "source_name": source_name,
         "source_url": source_url,
         "download_timestamp_utc": datetime.now(UTC).isoformat(),
         "file_hash_sha256": _sha256_if_local(raw_file_path),
-        "raw_file_path": raw_file_path,
+        "raw_file_path": public_raw_file_path or raw_file_path,
         "license_or_terms_note": license_or_terms_note,
         "script_version": script_version,
     }

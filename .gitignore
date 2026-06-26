@@ -6,9 +6,13 @@ __pycache__/
 *.pyc
 
 .env
+config/sources.yml
 
 data/raw/
 data/processed/
 data/interim/
+data/metadata/monthly_benchmark/*_real.json
 
 reports/figures/
+reports/tables/monthly_benchmark/*_real.csv
+reports/monthly_benchmark/*_real*
