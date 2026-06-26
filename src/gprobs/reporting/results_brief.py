@@ -1,36 +1,13 @@
-import math
-
 import pandas as pd
 
-
-def format_percent(value: float, digits: int = 3) -> str:
-    """Format a decimal return or coefficient as percentage text."""
-    if value is None or math.isnan(float(value)):
-        return "n/a"
-    return f"{float(value) * 100:.{digits}f}%"
-
-
-def format_basis_points(value: float, digits: int = 1) -> str:
-    """Format a decimal return or coefficient as basis points."""
-    if value is None or math.isnan(float(value)):
-        return "n/a"
-    return f"{float(value) * 10000:.{digits}f} bps"
-
-
-def format_p_value(value: float) -> str:
-    """Format p-values without false precision."""
-    if value is None or math.isnan(float(value)):
-        return "n/a"
-    if float(value) < 0.001:
-        return "<0.001"
-    return f"{float(value):.3f}"
+from gprobs.reporting.formatting import format_basis_points, format_p_value, format_percent, format_score
 
 
 def format_estimate(row: pd.Series) -> str:
     """Format estimate values using the row's structured unit."""
     unit = row.get("unit")
     if unit == "score":
-        return f"{float(row['estimate']):.3f}"
+        return format_score(row["estimate"])
     if unit == "basis_points":
         return format_basis_points(row["estimate"])
     if unit == "percent":

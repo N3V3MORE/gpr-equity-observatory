@@ -14,7 +14,7 @@ The older controlled interaction alone is not strong evidence of a reliably larg
 | Date fixed-effects emerging interaction | -0.6 bps | 0.563 | two-way clustered by ticker/date |
 | Tail-risk quantile regression | -0.8 bps | 0.271 | i.i.d. QuantReg asymptotic p-value |
 | Local projection developed | 0.010% | 0.858 | two-way clustered by ticker/date |
-| Local projection emerging | -0.057% | 0.587 | two-way clustered by ticker/date |
+| Local projection emerging | -0.057% | 0.692 | two-way clustered by ticker/date |
 | Drawdown classifier | 0.617 | n/a | cross-validation metric |
 
 Local projection rows are market-model abnormal return responses, not raw cumulative ETF returns.

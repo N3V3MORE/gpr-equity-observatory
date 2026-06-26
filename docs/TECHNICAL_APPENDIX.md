@@ -213,7 +213,11 @@ for horizons 0 through 20 trading days after a GPR shock. For each ticker and
 base date, the expected return path comes from a trailing pre-date market model
 using `global_market_return`; the projection dependent variable is the forward
 sum of observed ETF returns minus those expected returns.
-Standard errors are clustered by ticker and date.
+Standard errors are clustered by ticker and date. The developed row reports the
+base GPR-shock response. The emerging row reports the combined
+developed-plus-interaction response, and its p-value is computed from that
+combined estimate and standard error rather than from the interaction term
+alone.
 
 Event studies use daily GPR-change shocks. When multiple shock days occur inside
 the minimum-gap window, the event date is the largest `gpr_change` in that

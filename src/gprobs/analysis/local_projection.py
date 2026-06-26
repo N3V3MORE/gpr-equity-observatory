@@ -274,7 +274,7 @@ def _response_rows(result, horizon: int) -> list[dict]:
             "emerging",
             emerging_estimate,
             emerging_se,
-            result.pvalues.get(interaction_term, float("nan")),
+            _two_sided_normal_p_value(emerging_estimate, emerging_se),
         ),
     ]
 
@@ -284,6 +284,13 @@ def _covariance_value(result, first_term: str, second_term: str) -> float:
     if first_term not in covariance.index or second_term not in covariance.columns:
         return 0.0
     return float(covariance.loc[first_term, second_term])
+
+
+def _two_sided_normal_p_value(estimate: float, std_error: float) -> float:
+    if not math.isfinite(estimate) or not math.isfinite(std_error) or std_error <= 0:
+        return float("nan")
+    z_stat = abs(estimate / std_error)
+    return math.erfc(z_stat / math.sqrt(2.0))
 
 
 def _format_response_row(

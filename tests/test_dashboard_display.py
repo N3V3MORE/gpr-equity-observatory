@@ -1,6 +1,7 @@
 from importlib import import_module
 
 import pandas as pd
+import pytest
 
 import app
 
@@ -9,10 +10,22 @@ def test_formatting_helpers_render_reader_values():
     formatting = import_module("gprobs.dashboard.formatting")
 
     assert formatting.format_percent(0.1234) == "12.3%"
-    assert formatting.format_basis_points(-0.0042) == "-42.0 bp"
+    assert formatting.format_basis_points(-0.0042) == "-42.0 bps"
     assert formatting.format_p_value(0.0321) == "0.032"
-    assert formatting.format_p_value(pd.NA) == ""
-    assert formatting.format_metric(pd.NA) == ""
+    assert formatting.format_p_value(0.0004) == "<0.001"
+    assert formatting.format_p_value(pd.NA) == "n/a"
+    assert formatting.format_metric(pd.NA) == "n/a"
+
+
+def test_format_evidence_estimate_uses_structured_units():
+    formatting = import_module("gprobs.dashboard.formatting")
+
+    assert formatting.format_evidence_estimate(-0.0042, "basis_points") == "-42.0 bps"
+    assert formatting.format_evidence_estimate(0.1234, "percent") == "12.3%"
+    assert formatting.format_evidence_estimate(0.6142, "score") == "0.614"
+
+    with pytest.raises(ValueError, match="Unknown estimate unit"):
+        formatting.format_evidence_estimate(1.0, "basis points")
 
 
 def test_classify_evidence_strength_uses_cautious_labels():
@@ -48,12 +61,21 @@ def test_build_evidence_map_adds_strength_and_reader_columns():
             {
                 "method": "Panel regression",
                 "focus": "Emerging-market interaction",
-                "estimate": -0.5,
-                "unit": "basis points",
+                "estimate": -0.00005,
+                "unit": "basis_points",
                 "p_value": 0.57,
                 "inference": "weak evidence",
                 "plain_english": "No strong asymmetry evidence.",
-            }
+            },
+            {
+                "method": "Drawdown classifier",
+                "focus": "Mean ROC AUC",
+                "estimate": 0.6142,
+                "unit": "score",
+                "p_value": pd.NA,
+                "inference": "exploratory classifier",
+                "plain_english": "Exploratory risk-ranking metric.",
+            },
         ]
     )
 
@@ -69,10 +91,15 @@ def test_build_evidence_map_adds_strength_and_reader_columns():
         "Plain-English takeaway",
     ]
     assert evidence_map.loc[0, "Evidence strength"] == "Weak"
+    assert evidence_map.loc[0, "Estimate"] == "-0.5 bps"
+    assert evidence_map.loc[0, "p-value / metric"] == "0.570"
     assert (
         evidence_map.loc[0, "Plain-English takeaway"]
         == "No strong asymmetry evidence."
     )
+    assert evidence_map.loc[1, "Evidence strength"] == "Exploratory"
+    assert evidence_map.loc[1, "Estimate"] == "0.614"
+    assert evidence_map.loc[1, "p-value / metric"] == "n/a"
 
 
 def test_build_gpr_shock_timeline_marks_top_shocks():

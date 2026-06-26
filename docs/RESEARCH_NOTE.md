@@ -129,6 +129,9 @@ horizons from 0 to 20 trading days after a GPR shock. For each ticker and base
 date, the expected return path is estimated from pre-date ETF sensitivity to the
 global market return, then subtracted from the forward ETF return path. This
 keeps the response path aligned with the abnormal-return event-study design.
+The developed row is the base GPR-shock response. The emerging row is the
+combined emerging-market response, equal to the developed response plus the
+emerging interaction, and its p-value is computed for that combined estimate.
 
 ### Prediction Lab
 

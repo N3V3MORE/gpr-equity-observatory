@@ -1,11 +1,43 @@
+import math
+
 import pandas as pd
 import pytest
 
 from gprobs.analysis.local_projection import (
     _fit_horizon_model,
+    _response_rows,
     build_local_projection_data,
     estimate_local_projections,
 )
+
+
+class _FakeProjectionResult:
+    params = pd.Series(
+        {
+            "gpr_shock": 0.02,
+            "gpr_shock:emerging_market": 0.03,
+        }
+    )
+    pvalues = pd.Series(
+        {
+            "gpr_shock": 0.20,
+            "gpr_shock:emerging_market": 0.90,
+        }
+    )
+
+    def cov_params(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "gpr_shock": {
+                    "gpr_shock": 0.0004,
+                    "gpr_shock:emerging_market": 0.0,
+                },
+                "gpr_shock:emerging_market": {
+                    "gpr_shock": 0.0,
+                    "gpr_shock:emerging_market": 0.000225,
+                },
+            }
+        )
 
 
 def _minimal_projection_panel() -> pd.DataFrame:
@@ -20,6 +52,19 @@ def _minimal_projection_panel() -> pd.DataFrame:
             "gpr_shock": [False, True, False],
         }
     )
+
+
+def test_response_rows_p_value_matches_combined_emerging_response():
+    rows = _response_rows(_FakeProjectionResult(), horizon=2)
+
+    emerging = next(row for row in rows if row["market_group"] == "emerging")
+
+    emerging_se = math.sqrt(0.0004 + 0.000225)
+    expected_p_value = math.erfc(abs(0.05 / emerging_se) / math.sqrt(2.0))
+    assert emerging["estimate"] == pytest.approx(0.05)
+    assert emerging["std_error"] == pytest.approx(emerging_se)
+    assert emerging["p_value"] == pytest.approx(expected_p_value)
+    assert emerging["p_value"] != pytest.approx(0.90)
 
 
 @pytest.mark.parametrize(
