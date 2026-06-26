@@ -1,6 +1,7 @@
 from contextlib import suppress
 
 import app
+from gprobs.dashboard import outputs as dashboard_outputs
 
 EXPECTED_OUTPUT_COLUMNS = {
     "analysis_panel": {
@@ -104,7 +105,56 @@ EXPECTED_OUTPUT_COLUMNS = {
         "test_end",
         "roc_auc",
         "average_precision",
+        "brier_score",
         "base_rate",
+        "observation_count",
+    },
+    "drawdown_predictions": {
+        "date",
+        "ticker",
+        "country",
+        "market_group",
+        "fold",
+        "model_name",
+        "train_start",
+        "train_end",
+        "test_start",
+        "test_end",
+        "drawdown_risk",
+        "predicted_probability",
+        "forward_min_return",
+    },
+    "drawdown_threshold_metrics": {
+        "model_name",
+        "threshold",
+        "precision",
+        "recall",
+        "f1",
+        "share_flagged",
+        "event_rate_flagged",
+        "observation_count",
+    },
+    "drawdown_calibration": {
+        "model_name",
+        "probability_decile",
+        "mean_predicted_probability",
+        "realized_event_rate",
+        "observation_count",
+    },
+    "drawdown_lift": {
+        "model_name",
+        "bucket",
+        "event_rate",
+        "base_event_rate",
+        "lift",
+        "observation_count",
+    },
+    "drawdown_country_risk_summary": {
+        "country",
+        "market_group",
+        "model_name",
+        "average_predicted_probability",
+        "realized_event_rate",
         "observation_count",
     },
     "drawdown_importance": {"feature", "coefficient", "abs_coefficient"},
@@ -121,6 +171,42 @@ EXPECTED_OUTPUT_COLUMNS = {
     "large_returns": {"date", "ticker", "country", "return", "abs_return"},
 }
 
+EXPECTED_MONTHLY_OUTPUT_COLUMNS = {
+    "monthly_panel": {
+        "date_month",
+        "market_id",
+        "market_class",
+        "excess_return",
+        "ret_fwd_1m",
+        "gpr_global",
+        "gpr_change_z",
+        "spread_em_dev",
+        "gdelt_risk_raw",
+        "gdelt_risk_z",
+    },
+    "monthly_regressions": {
+        "horizon",
+        "term",
+        "estimate",
+        "std_error",
+        "t_value",
+        "p_value",
+        "se_type",
+        "nobs",
+        "adjusted_r2",
+    },
+    "monthly_forecasts": {
+        "model",
+        "rmse",
+        "mae",
+        "oos_r2",
+        "n_forecasts",
+        "first_forecast_date",
+        "last_forecast_date",
+        "forecast_window_aligned",
+    },
+}
+
 
 def test_app_uses_single_date_fe_panel_regression_filename():
     assert app.REQUIRED_FILES["date_fe_regression"].name == "panel_regression_date_fe.csv"
@@ -133,14 +219,21 @@ def test_dashboard_required_outputs_declare_expected_columns():
         assert expected_columns.issubset(set(app.OUTPUT_SPECS[name].required_columns))
 
 
+def test_monthly_dashboard_outputs_are_optional_and_schema_checked():
+    assert not set(app.MONTHLY_OUTPUT_SPECS).intersection(app.REQUIRED_FILES)
+
+    for name, expected_columns in EXPECTED_MONTHLY_OUTPUT_COLUMNS.items():
+        assert expected_columns.issubset(set(app.MONTHLY_OUTPUT_SPECS[name].required_columns))
+
+
 def test_load_outputs_rejects_missing_required_columns(monkeypatch, tmp_path):
     bad_path = tmp_path / "gpr_daily.csv"
     bad_path.write_text("date,gpr\n2024-01-01,120\n", encoding="utf-8")
     monkeypatch.setattr(
-        app,
+        dashboard_outputs,
         "OUTPUT_SPECS",
         {
-            "gpr": app.OutputSpec(
+            "gpr": dashboard_outputs.OutputSpec(
                 bad_path,
                 date_columns=("date",),
                 required_columns=("date", "gpr", "gpr_change"),
@@ -149,10 +242,10 @@ def test_load_outputs_rejects_missing_required_columns(monkeypatch, tmp_path):
     )
 
     with suppress(AttributeError):
-        app.load_outputs.clear()
+        dashboard_outputs.load_outputs.clear()
 
     try:
-        app.load_outputs()
+        dashboard_outputs.load_outputs()
     except ValueError as exc:
         assert "gpr_daily.csv is missing required columns: ['gpr_change']" in str(exc)
     else:

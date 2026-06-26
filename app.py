@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -6,232 +7,260 @@ import plotly.express as px
 import streamlit as st
 
 from gprobs.config import DRAWDOWN_HORIZON_DAYS, DRAWDOWN_THRESHOLD
+from gprobs.dashboard.charts import build_gpr_shock_timeline
+from gprobs.dashboard.components import (
+    DASHBOARD_INTRO,
+    DASHBOARD_MAIN_TAKEAWAY,
+    DASHBOARD_USE_NOTE,
+    HOW_TO_READ_NOTES,
+    render_csv_download,
+    render_how_to_read,
+    render_intro,
+    render_missing_data_message,
+    render_summary_cards,
+)
+from gprobs.dashboard.formatting import (
+    classify_evidence_strength,
+    format_evidence_direction,
+    format_evidence_estimate,
+    format_p_value,
+)
 from gprobs.dashboard.metrics import build_country_coverage, select_key_regression_terms
+from gprobs.dashboard.outputs import (
+    OUTPUT_SPECS,
+    PROJECT_ROOT,
+    REQUIRED_FILES,
+    OutputSpec,
+    load_outputs,
+    missing_files,
+    validate_output_schema,
+)
 
-PROJECT_ROOT = Path(__file__).resolve().parent
-DATA_DIR = PROJECT_ROOT / "data" / "processed"
+__all__ = [
+    "DASHBOARD_INTRO",
+    "DASHBOARD_MAIN_TAKEAWAY",
+    "DASHBOARD_USE_NOTE",
+    "HOW_TO_READ_NOTES",
+    "OUTPUT_SPECS",
+    "REQUIRED_FILES",
+    "OutputSpec",
+    "load_outputs",
+    "render_csv_download",
+    "render_how_to_read",
+    "render_intro",
+    "render_missing_data_message",
+    "render_summary_cards",
+    "missing_files",
+    "validate_output_schema",
+]
+
 ML_VALIDATION_HEADING = "Purged Chronological Validation"
 ML_VALIDATION_CAPTION = (
     "Splits are purged chronological, so the model trains only on earlier dates "
     "and excludes dates immediately before the test fold to reduce forward-label leakage."
 )
+MONTHLY_SAMPLE_NOTICE = "Sample mode is not empirical evidence. It only proves the monthly benchmark workflow runs."
+MONTHLY_REAL_NOTICE = "Real monthly aggregate mode is a benchmark, not a country-panel proof."
+MONTHLY_CLUSTER_NOTICE = "The two-market aggregate design cannot support country-clustered inference."
+MONTHLY_MODE_PRIORITY_NOTICE = "If real monthly outputs are present, the dashboard shows real mode before sample mode."
+DAILY_TAB_LABELS = [
+    "Overview",
+    "GPR Shock Timeline",
+    "Market Response",
+    "Regression Evidence",
+    "Downside Risk",
+    "Dynamic Response",
+    "Prediction Lab",
+    "Country Sensitivity",
+    "Monthly Benchmark",
+    "Data Quality",
+]
 
 
 @dataclass(frozen=True)
-class OutputSpec:
-    path: Path
-    date_columns: tuple[str, ...] = ()
-    required_columns: tuple[str, ...] = ()
-    low_memory: bool | None = None
+class MonthlyModeConfig:
+    root: Path = PROJECT_ROOT
+    mode_label: str = "Sample"
+    dataset_mode: str = "monthly_benchmark_sample"
+    panel: str = "data/processed/monthly_benchmark/sample_analysis_panel.csv"
+    source_manifest: str = "data/metadata/monthly_benchmark/source_manifest.json"
+    analysis_manifest: str = "data/metadata/monthly_benchmark/analysis_panel_manifest.json"
+    regressions: str = "reports/tables/monthly_benchmark/sample_table_02_baseline_regressions.csv"
+    forecasts: str = "reports/tables/monthly_benchmark/sample_table_03_forecast_comparison.csv"
+
+    def path(self, relative_path: str) -> Path:
+        return self.root / relative_path
 
 
-OUTPUT_SPECS = {
-    "analysis_panel": OutputSpec(
-        DATA_DIR / "analysis_panel.csv",
-        date_columns=("date",),
+@dataclass(frozen=True)
+class MonthlyOutputBundle:
+    mode: str
+    mode_label: str
+    panel: pd.DataFrame
+    source_manifest: dict
+    analysis_manifest: dict
+    source_names: list[str]
+    regressions: pd.DataFrame | None = None
+    forecasts: pd.DataFrame | None = None
+
+
+MONTHLY_MODES = {
+    "real": MonthlyModeConfig(
+        mode_label="Real",
+        dataset_mode="monthly_benchmark_real",
+        panel="data/processed/monthly_benchmark/analysis_panel.csv",
+        source_manifest="data/metadata/monthly_benchmark/source_manifest_real.json",
+        analysis_manifest="data/metadata/monthly_benchmark/analysis_panel_manifest_real.json",
+        regressions="reports/tables/monthly_benchmark/table_02_baseline_regressions_real.csv",
+        forecasts="reports/tables/monthly_benchmark/table_03_forecast_comparison_real.csv",
+    ),
+    "sample": MonthlyModeConfig(),
+}
+
+MONTHLY_OUTPUT_SPECS = {
+    "monthly_panel": OutputSpec(
+        Path("monthly_benchmark_analysis_panel.csv"),
+        date_columns=("date_month",),
         required_columns=(
-            "date",
-            "ticker",
-            "country",
-            "market_group",
-            "region",
-            "return",
-            "gpr",
-            "gpr_change",
+            "date_month",
+            "market_id",
+            "market_class",
+            "excess_return",
+            "ret_fwd_1m",
+            "gpr_global",
             "gpr_change_z",
-            "gpr_shock",
-            "gpr_change_shock",
-            "gpr_change_shock_full_sample",
-            "gpr_change_shock_expanding",
-        ),
-        low_memory=False,
-    ),
-    "gpr": OutputSpec(
-        DATA_DIR / "gpr_daily.csv",
-        date_columns=("date",),
-        required_columns=(
-            "date",
-            "gpr",
-            "gpr_act",
-            "gpr_threat",
-            "gpr_change",
-            "gpr_change_z",
-            "gpr_shock",
-            "gpr_shock_full_sample",
-            "gpr_shock_expanding",
-            "gpr_change_shock",
-            "gpr_change_shock_full_sample",
-            "gpr_change_shock_expanding",
-            "event",
+            "spread_em_dev",
+            "gdelt_risk_raw",
+            "gdelt_risk_z",
         ),
     ),
-    "group_returns": OutputSpec(
-        DATA_DIR / "group_return_summary.csv",
-        date_columns=("date",),
-        required_columns=("date", "market_group", "average_return", "country_count"),
-    ),
-    "event_study": OutputSpec(
-        DATA_DIR / "event_study_summary.csv",
-        required_columns=(
-            "market_group",
-            "relative_day",
-            "average_return",
-            "cumulative_average_return",
-            "observation_count",
-            "event_count",
-        ),
-    ),
-    "abnormal_event_study": OutputSpec(
-        DATA_DIR / "event_study_abnormal_summary.csv",
-        required_columns=(
-            "market_group",
-            "relative_day",
-            "average_abnormal_return",
-            "cumulative_average_abnormal_return",
-            "observation_count",
-            "event_count",
-            "std_error",
-            "t_stat",
-            "p_value",
-        ),
-    ),
-    "event_robustness": OutputSpec(
-        DATA_DIR / "event_robustness_summary.csv",
-        required_columns=(
-            "shock_quantile",
-            "window",
-            "market_group",
-            "cumulative_average_abnormal_return",
-            "event_count",
-            "std_error",
-            "t_stat",
-            "p_value",
-        ),
-    ),
-    "regression": OutputSpec(
-        DATA_DIR / "panel_regression_baseline.csv",
-        required_columns=("term", "estimate", "std_error", "t_stat", "p_value"),
-    ),
-    "controlled_regression": OutputSpec(
-        DATA_DIR / "panel_regression_controlled.csv",
-        required_columns=("term", "estimate", "std_error", "t_stat", "p_value"),
-    ),
-    "date_fe_regression": OutputSpec(
-        DATA_DIR / "panel_regression_date_fe.csv",
-        required_columns=("term", "estimate", "std_error", "t_stat", "p_value"),
-    ),
-    "panel_sample_robustness": OutputSpec(
-        DATA_DIR / "panel_sample_robustness.csv",
-        required_columns=(
-            "scenario",
-            "term",
-            "estimate",
-            "std_error",
-            "t_stat",
-            "p_value",
-            "observation_count",
-            "gpr_change_mean",
-            "gpr_change_std",
-        ),
-    ),
-    "quantile_regression": OutputSpec(
-        DATA_DIR / "quantile_regression_results.csv",
-        required_columns=(
-            "quantile",
-            "term",
-            "estimate",
-            "std_error",
-            "t_stat",
-            "p_value",
-            "inference",
-        ),
-    ),
-    "local_projections": OutputSpec(
-        DATA_DIR / "local_projection_results.csv",
+    "monthly_regressions": OutputSpec(
+        Path("monthly_benchmark_regressions.csv"),
         required_columns=(
             "horizon",
-            "market_group",
+            "term",
             "estimate",
             "std_error",
-            "ci_low",
-            "ci_high",
+            "t_value",
             "p_value",
+            "se_type",
+            "nobs",
+            "adjusted_r2",
         ),
     ),
-    "drawdown_metrics": OutputSpec(
-        DATA_DIR / "drawdown_model_metrics.csv",
-        date_columns=("train_start", "train_end", "test_start", "test_end"),
+    "monthly_forecasts": OutputSpec(
+        Path("monthly_benchmark_forecasts.csv"),
         required_columns=(
-            "fold",
-            "model_name",
-            "train_start",
-            "train_end",
-            "test_start",
-            "test_end",
-            "roc_auc",
-            "average_precision",
-            "base_rate",
-            "observation_count",
+            "model",
+            "rmse",
+            "mae",
+            "oos_r2",
+            "n_forecasts",
+            "first_forecast_date",
+            "last_forecast_date",
+            "forecast_window_aligned",
         ),
-    ),
-    "drawdown_importance": OutputSpec(
-        DATA_DIR / "drawdown_feature_importance.csv",
-        required_columns=("feature", "coefficient", "abs_coefficient"),
-    ),
-    "evidence_summary": OutputSpec(
-        DATA_DIR / "evidence_summary.csv",
-        required_columns=(
-            "method",
-            "focus",
-            "estimate",
-            "unit",
-            "p_value",
-            "inference",
-            "plain_english",
-        ),
-    ),
-    "rolling_beta": OutputSpec(
-        DATA_DIR / "rolling_gpr_beta.csv",
-        date_columns=("date",),
-        required_columns=("date", "ticker", "country", "market_group", "rolling_gpr_beta"),
-    ),
-    "large_returns": OutputSpec(
-        DATA_DIR / "large_return_flags.csv",
-        date_columns=("date",),
-        required_columns=("date", "ticker", "country", "return", "abs_return"),
     ),
 }
 
-REQUIRED_FILES = {name: spec.path for name, spec in OUTPUT_SPECS.items()}
+
+def load_monthly_outputs() -> MonthlyOutputBundle | None:
+    for mode, config in MONTHLY_MODES.items():
+        bundle = _load_monthly_output_mode(mode, config)
+        if bundle is not None:
+            return bundle
+    return None
 
 
-@st.cache_data
-def load_outputs():
-    outputs = {}
-    for name, spec in OUTPUT_SPECS.items():
-        read_options = {}
-        if spec.date_columns:
-            read_options["parse_dates"] = list(spec.date_columns)
-        if spec.low_memory is not None:
-            read_options["low_memory"] = spec.low_memory
-        output = pd.read_csv(spec.path, **read_options)
-        validate_output_schema(output, spec)
-        outputs[name] = output
-    return outputs
+def _load_monthly_output_mode(mode: str, config: MonthlyModeConfig) -> MonthlyOutputBundle | None:
+    panel_path = config.path(config.panel)
+    source_manifest_path = config.path(config.source_manifest)
+    analysis_manifest_path = config.path(config.analysis_manifest)
+    if not all(path.exists() for path in [panel_path, source_manifest_path, analysis_manifest_path]):
+        return None
 
-
-def validate_output_schema(output: pd.DataFrame, spec: OutputSpec) -> None:
-    missing_columns = [
-        column for column in spec.required_columns if column not in output.columns
+    panel = pd.read_csv(panel_path, parse_dates=["date_month"])
+    validate_output_schema(panel, MONTHLY_OUTPUT_SPECS["monthly_panel"])
+    source_manifest = _read_json(source_manifest_path)
+    analysis_manifest = _read_json(analysis_manifest_path)
+    source_names = [
+        source.get("source_name", "Unknown source")
+        for source in source_manifest.get("sources", [])
     ]
-    if missing_columns:
-        raise ValueError(
-            f"{spec.path.name} is missing required columns: {missing_columns}"
-        )
+
+    regressions = _read_optional_monthly_csv(
+        config.path(config.regressions),
+        MONTHLY_OUTPUT_SPECS["monthly_regressions"],
+    )
+    forecasts = _read_optional_monthly_csv(
+        config.path(config.forecasts),
+        MONTHLY_OUTPUT_SPECS["monthly_forecasts"],
+    )
+    return MonthlyOutputBundle(
+        mode=mode,
+        mode_label=config.mode_label,
+        panel=panel,
+        source_manifest=source_manifest,
+        analysis_manifest=analysis_manifest,
+        source_names=source_names,
+        regressions=regressions,
+        forecasts=forecasts,
+    )
 
 
-def missing_files():
-    return [path for path in REQUIRED_FILES.values() if not path.exists()]
+def _read_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _read_optional_monthly_csv(path: Path, spec: OutputSpec) -> pd.DataFrame | None:
+    if not path.exists():
+        return None
+    output = pd.read_csv(path)
+    validate_output_schema(output, spec)
+    return output
+
+
+def monthly_provenance_rows(bundle: MonthlyOutputBundle) -> pd.DataFrame:
+    manifest = bundle.analysis_manifest
+    rows = [
+        ("mode", bundle.mode_label),
+        ("dataset_mode", str(manifest.get("dataset_mode") or manifest.get("dataset") or "")),
+        ("source_count", str(len(bundle.source_names))),
+        ("row_count", str(manifest.get("row_count", ""))),
+        ("sample_start", str(manifest.get("sample_start") or manifest.get("start_date") or "")),
+        ("sample_end", str(manifest.get("sample_end") or manifest.get("end_date") or "")),
+        ("used_placeholder_gdelt", str(manifest.get("used_placeholder_gdelt", ""))),
+        ("used_placeholder_macro", str(manifest.get("used_placeholder_macro", ""))),
+    ]
+    return pd.DataFrame(rows, columns=["field", "value"])
+
+
+def build_evidence_map(evidence_summary: pd.DataFrame) -> pd.DataFrame:
+    evidence_map = evidence_summary.copy()
+    evidence_map["Evidence strength"] = evidence_map.apply(classify_evidence_strength, axis=1)
+    evidence_map["Direction"] = evidence_map["estimate"].map(format_evidence_direction)
+    evidence_map["Estimate"] = evidence_map.apply(
+        lambda row: format_evidence_estimate(row["estimate"], row["unit"]),
+        axis=1,
+    )
+    evidence_map["p-value / metric"] = evidence_map["p_value"].map(format_p_value)
+    return evidence_map.rename(
+        columns={
+            "method": "Method",
+            "focus": "Question answered",
+            "plain_english": "Plain-English takeaway",
+        }
+    )[
+        [
+            "Method",
+            "Question answered",
+            "Direction",
+            "Estimate",
+            "p-value / metric",
+            "Evidence strength",
+            "Plain-English takeaway",
+        ]
+    ]
 
 
 def render_overview_tab(
@@ -240,6 +269,9 @@ def render_overview_tab(
     group_returns: pd.DataFrame,
     evidence_summary: pd.DataFrame,
 ) -> None:
+    render_how_to_read("overview")
+    render_summary_cards()
+
     start_date = panel["date"].min().date()
     end_date = panel["date"].max().date()
     country_count = panel["country"].nunique()
@@ -251,8 +283,10 @@ def render_overview_tab(
     col3.metric("End date", str(end_date))
     col4.metric("GPR shock days", f"{shock_count:,}")
 
-    gpr_for_sample = gpr.loc[gpr["date"].between(panel["date"].min(), panel["date"].max())]
-    fig = px.line(gpr_for_sample, x="date", y="gpr", title="Daily Geopolitical Risk")
+    fig = px.line(
+        gpr.loc[gpr["date"].between(panel["date"].min(), panel["date"].max())],
+        x="date", y="gpr", title="Daily Geopolitical Risk",
+    )
     st.plotly_chart(fig, use_container_width=True)
 
     group_chart = group_returns.copy()
@@ -268,8 +302,10 @@ def render_overview_tab(
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("Evidence Summary")
-    st.dataframe(evidence_summary, use_container_width=True, hide_index=True)
+    st.subheader("Evidence Map")
+    evidence_map = build_evidence_map(evidence_summary)
+    st.dataframe(evidence_map, use_container_width=True, hide_index=True)
+    render_csv_download(evidence_map, "Download Evidence Map CSV", "evidence_map.csv")
     st.caption(
         "This table collects the main outputs in one place. Treat weak "
         "p-values and exploratory ML metrics as signals to investigate, "
@@ -278,18 +314,19 @@ def render_overview_tab(
 
 
 def render_shocks_tab(gpr: pd.DataFrame) -> None:
+    render_how_to_read("shocks")
+    st.plotly_chart(build_gpr_shock_timeline(gpr), use_container_width=True)
     top_shocks = gpr.sort_values("gpr_change", ascending=False).head(25)
-    st.dataframe(
-        top_shocks[["date", "gpr", "gpr_change", "gpr_act", "gpr_threat", "event"]],
-        use_container_width=True,
-        hide_index=True,
-    )
+    top_shocks_table = top_shocks[["date", "gpr", "gpr_change", "gpr_act", "gpr_threat", "event"]]
+    st.dataframe(top_shocks_table, use_container_width=True, hide_index=True)
+    render_csv_download(top_shocks_table, "Download Top Shocks CSV", "top_gpr_shocks.csv")
 
 
 def render_event_tab(
     event_study: pd.DataFrame,
     abnormal_event_study: pd.DataFrame,
 ) -> None:
+    render_how_to_read("market_response")
     fig = px.line(
         abnormal_event_study,
         x="relative_day",
@@ -301,6 +338,11 @@ def render_event_tab(
     fig.add_vline(x=0, line_dash="dash", line_color="black")
     st.plotly_chart(fig, use_container_width=True)
     st.dataframe(abnormal_event_study, use_container_width=True, hide_index=True)
+    render_csv_download(
+        abnormal_event_study,
+        "Download Abnormal Event Study CSV",
+        "event_study_abnormal_summary.csv",
+    )
 
     fig = px.line(
         event_study,
@@ -313,6 +355,7 @@ def render_event_tab(
     fig.add_vline(x=0, line_dash="dash", line_color="black")
     st.plotly_chart(fig, use_container_width=True)
     st.dataframe(event_study, use_container_width=True, hide_index=True)
+    render_csv_download(event_study, "Download Raw Event Study CSV", "event_study_summary.csv")
 
 
 def render_robustness_tab(event_robustness: pd.DataFrame) -> None:
@@ -332,6 +375,11 @@ def render_robustness_tab(event_robustness: pd.DataFrame) -> None:
     fig.add_hline(y=0, line_dash="dash", line_color="gray")
     st.plotly_chart(fig, use_container_width=True)
     st.dataframe(event_robustness, use_container_width=True, hide_index=True)
+    render_csv_download(
+        event_robustness,
+        "Download Event Robustness CSV",
+        "event_robustness_summary.csv",
+    )
     st.caption(
         "This compares whether the event-study conclusion changes when the GPR "
         "shock threshold or post-shock window is changed."
@@ -344,18 +392,26 @@ def render_regression_tab(
     date_fe_regression: pd.DataFrame,
     panel_sample_robustness: pd.DataFrame,
 ) -> None:
+    render_how_to_read("regression")
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Baseline")
         key_terms = select_key_regression_terms(regression)
         st.dataframe(key_terms, use_container_width=True, hide_index=True)
+        render_csv_download(key_terms, "Download Baseline Terms CSV", "panel_regression_baseline_terms.csv")
     with col2:
         st.subheader("With Market Controls")
         controlled_terms = select_key_regression_terms(controlled_regression)
         st.dataframe(controlled_terms, use_container_width=True, hide_index=True)
+        render_csv_download(
+            controlled_terms,
+            "Download Controlled Terms CSV",
+            "panel_regression_controlled_terms.csv",
+        )
     st.subheader("Date Fixed-Effects H1 Model")
     date_fe_terms = select_key_regression_terms(date_fe_regression)
     st.dataframe(date_fe_terms, use_container_width=True, hide_index=True)
+    render_csv_download(date_fe_terms, "Download Date FE Terms CSV", "panel_regression_date_fe_terms.csv")
     st.caption(
         "The interaction term is the extra association between a standardized "
         "daily GPR jump and returns for emerging market ETFs relative to developed "
@@ -368,6 +424,11 @@ def render_regression_tab(
         use_container_width=True,
         hide_index=True,
     )
+    render_csv_download(
+        panel_sample_robustness,
+        "Download Sample Robustness CSV",
+        "panel_sample_robustness.csv",
+    )
     st.caption(
         "These rows rerun the controlled model after excluding major crisis "
         "windows. Large sign or p-value changes would warn that one episode "
@@ -376,6 +437,7 @@ def render_regression_tab(
 
 
 def render_tail_tab(quantile_regression: pd.DataFrame) -> None:
+    render_how_to_read("downside_risk")
     key_quantile_terms = select_key_regression_terms(quantile_regression)
     fig = px.line(
         key_quantile_terms,
@@ -388,6 +450,7 @@ def render_tail_tab(quantile_regression: pd.DataFrame) -> None:
     fig.add_hline(y=0, line_dash="dash", line_color="gray")
     st.plotly_chart(fig, use_container_width=True)
     st.dataframe(key_quantile_terms, use_container_width=True, hide_index=True)
+    render_csv_download(key_quantile_terms, "Download Quantile Terms CSV", "quantile_regression_terms.csv")
     st.caption(
         "Lower quantiles describe worse return days. A more negative coefficient "
         "at the 10th percentile than at the median suggests stronger downside "
@@ -396,6 +459,7 @@ def render_tail_tab(quantile_regression: pd.DataFrame) -> None:
 
 
 def render_local_tab(local_projections: pd.DataFrame) -> None:
+    render_how_to_read("dynamic_response")
     fig = px.line(
         local_projections,
         x="horizon",
@@ -425,25 +489,96 @@ def render_local_tab(local_projections: pd.DataFrame) -> None:
     fig.add_hline(y=0, line_dash="dash", line_color="gray")
     st.plotly_chart(fig, use_container_width=True)
     st.dataframe(local_projections, use_container_width=True, hide_index=True)
+    render_csv_download(local_projections, "Download Local Projections CSV", "local_projection_results.csv")
 
 
 def render_ml_tab(
     drawdown_metrics: pd.DataFrame,
     drawdown_importance: pd.DataFrame,
+    drawdown_threshold_metrics: pd.DataFrame,
+    drawdown_calibration: pd.DataFrame,
+    drawdown_lift: pd.DataFrame,
+    drawdown_country_risk_summary: pd.DataFrame,
 ) -> None:
-    headline_metrics = drawdown_metrics
-    if "model_name" in drawdown_metrics.columns:
-        headline_metrics = drawdown_metrics.loc[
-            drawdown_metrics["model_name"] == "full_features"
-        ]
-    mean_auc = headline_metrics["roc_auc"].mean()
-    mean_ap = headline_metrics["average_precision"].mean()
-    mean_base_rate = headline_metrics["base_rate"].mean()
+    render_how_to_read("prediction_lab")
+    st.caption(
+        "This is an out-of-sample risk-classification experiment. It asks whether current GPR and market "
+        "conditions help rank short-horizon drawdown risk; it is not a trading signal."
+    )
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Mean ROC AUC", f"{mean_auc:.3f}")
-    col2.metric("Mean average precision", f"{mean_ap:.3f}")
-    col3.metric("Mean event rate", f"{mean_base_rate:.1%}")
+    model_summary = (
+        drawdown_metrics.groupby("model_name", as_index=False)
+        .agg(
+            mean_roc_auc=("roc_auc", "mean"),
+            mean_average_precision=("average_precision", "mean"),
+            mean_brier_score=("brier_score", "mean"),
+            mean_base_rate=("base_rate", "mean"),
+            observation_count=("observation_count", "sum"),
+        )
+        .sort_values("mean_roc_auc", ascending=False)
+    )
+    top_decile_lift = drawdown_lift.loc[drawdown_lift["bucket"] == "top_10_percent", ["model_name", "lift"]].rename(
+        columns={"lift": "top_decile_lift"}
+    )
+    model_summary = model_summary.merge(top_decile_lift, on="model_name", how="left")
+
+    best_auc = model_summary["mean_roc_auc"].max()
+    best_ap = model_summary["mean_average_precision"].max()
+    best_lift = model_summary["top_decile_lift"].max()
+    mean_base_rate = drawdown_metrics["base_rate"].mean()
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Best model AUC", "n/a" if pd.isna(best_auc) else f"{best_auc:.3f}")
+    col2.metric("Best model AP", "n/a" if pd.isna(best_ap) else f"{best_ap:.3f}")
+    col3.metric("Top-decile lift", "n/a" if pd.isna(best_lift) else f"{best_lift:.2f}x")
+    col4.metric("Mean event rate", f"{mean_base_rate:.1%}")
+
+    st.subheader("Model Comparison")
+    st.dataframe(model_summary, use_container_width=True, hide_index=True)
+    render_csv_download(model_summary, "Download Model Comparison CSV", "drawdown_model_comparison.csv")
+
+    st.subheader("Calibration")
+    calibration_fig = px.line(
+        drawdown_calibration,
+        x="probability_decile",
+        y="realized_event_rate",
+        color="model_name",
+        markers=True,
+        title="Realized Drawdown Rate by Predicted-Risk Decile",
+    )
+    calibration_fig.update_yaxes(tickformat=".0%")
+    st.plotly_chart(calibration_fig, use_container_width=True)
+    st.dataframe(drawdown_calibration, use_container_width=True, hide_index=True)
+    render_csv_download(drawdown_calibration, "Download Calibration CSV", "drawdown_model_calibration.csv")
+
+    st.subheader("Lift")
+    lift_fig = px.bar(
+        drawdown_lift,
+        x="bucket",
+        y="lift",
+        color="model_name",
+        barmode="group",
+        title="Drawdown Event Lift in Highest-Risk Buckets",
+    )
+    st.plotly_chart(lift_fig, use_container_width=True)
+    st.dataframe(drawdown_lift, use_container_width=True, hide_index=True)
+    render_csv_download(drawdown_lift, "Download Lift CSV", "drawdown_model_lift.csv")
+
+    st.subheader("Threshold Metrics")
+    st.dataframe(drawdown_threshold_metrics, use_container_width=True, hide_index=True)
+    render_csv_download(
+        drawdown_threshold_metrics,
+        "Download Threshold Metrics CSV",
+        "drawdown_model_threshold_metrics.csv",
+    )
+
+    st.subheader("Country Risk Summary")
+    st.dataframe(drawdown_country_risk_summary, use_container_width=True, hide_index=True)
+    render_csv_download(
+        drawdown_country_risk_summary,
+        "Download Country Risk Summary CSV",
+        "drawdown_country_risk_summary.csv",
+    )
 
     fig = px.bar(
         drawdown_importance,
@@ -454,9 +589,11 @@ def render_ml_tab(
     )
     fig.update_layout(yaxis={"categoryorder": "total ascending"})
     st.plotly_chart(fig, use_container_width=True)
+    render_csv_download(drawdown_importance, "Download Feature Importance CSV", "drawdown_feature_importance.csv")
 
     st.subheader(ML_VALIDATION_HEADING)
     st.dataframe(drawdown_metrics, use_container_width=True, hide_index=True)
+    render_csv_download(drawdown_metrics, "Download Drawdown Metrics CSV", "drawdown_model_metrics.csv")
     st.caption(
         f"This classifier predicts whether an ETF has a forward {DRAWDOWN_HORIZON_DAYS}-trading-day "
         f"cumulative log-return drawdown of at least {abs(DRAWDOWN_THRESHOLD):.0%}. "
@@ -465,6 +602,7 @@ def render_ml_tab(
 
 
 def render_rolling_tab(rolling_beta: pd.DataFrame) -> None:
+    render_how_to_read("country_sensitivity")
     countries = sorted(rolling_beta["country"].dropna().unique())
     selected_country = st.selectbox("Country", countries)
     country_beta = rolling_beta.loc[
@@ -482,42 +620,116 @@ def render_rolling_tab(rolling_beta: pd.DataFrame) -> None:
 
 
 def render_coverage_tab(panel: pd.DataFrame, large_returns: pd.DataFrame) -> None:
+    render_how_to_read("data_quality")
     coverage = build_country_coverage(panel)
     st.subheader("Country Coverage")
     st.dataframe(coverage, use_container_width=True, hide_index=True)
+    render_csv_download(coverage, "Download Country Coverage CSV", "country_coverage.csv")
     st.subheader("Large Daily Return Flags")
     st.dataframe(large_returns, use_container_width=True, hide_index=True)
+    render_csv_download(large_returns, "Download Large Return Flags CSV", "large_return_flags.csv")
+
+
+def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
+    if bundle is None:
+        st.info("Monthly benchmark outputs are not available yet.")
+        st.code(
+            "\n".join(
+                [
+                    "python scripts/run_task.py monthly-sample --min-train-months 24",
+                    "python scripts/run_task.py build-monthly-real",
+                    "python scripts/run_task.py validate-monthly-real",
+                ]
+            )
+        )
+        st.caption(f"{MONTHLY_SAMPLE_NOTICE} {MONTHLY_REAL_NOTICE} {MONTHLY_CLUSTER_NOTICE}")
+        return
+
+    panel = bundle.panel.copy()
+    panel["date_month"] = pd.to_datetime(panel["date_month"])
+    month_level = panel.drop_duplicates("date_month").sort_values("date_month")
+    start_date = panel["date_month"].min().date()
+    end_date = panel["date_month"].max().date()
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Mode", bundle.mode_label)
+    col2.metric("Start month", str(start_date))
+    col3.metric("End month", str(end_date))
+    col4.metric("Sources", len(bundle.source_names))
+
+    if bundle.mode == "sample":
+        st.warning(MONTHLY_SAMPLE_NOTICE)
+    else:
+        st.info(MONTHLY_REAL_NOTICE)
+    st.caption(MONTHLY_CLUSTER_NOTICE)
+    st.caption(MONTHLY_MODE_PRIORITY_NOTICE)
+
+    st.subheader("Source and Provenance Status")
+    provenance = monthly_provenance_rows(bundle)
+    st.dataframe(provenance, use_container_width=True, hide_index=True)
+    render_csv_download(provenance, "Download Monthly Provenance CSV", "monthly_provenance.csv")
+    if bundle.source_names:
+        sources = pd.DataFrame({"source_name": bundle.source_names})
+        st.dataframe(sources, use_container_width=True, hide_index=True)
+        render_csv_download(sources, "Download Monthly Sources CSV", "monthly_sources.csv")
+
+    gpr_fig = px.line(
+        month_level,
+        x="date_month",
+        y="gpr_change_z",
+        title="Monthly GPR Shock Measure",
+    )
+    gpr_fig.add_hline(y=0, line_dash="dash", line_color="gray")
+    st.plotly_chart(gpr_fig, use_container_width=True)
+
+    spread_fig = px.line(
+        month_level,
+        x="date_month",
+        y="spread_em_dev",
+        title="Emerging Minus Developed Aggregate Return Spread",
+    )
+    spread_fig.add_hline(y=0, line_dash="dash", line_color="gray")
+    st.plotly_chart(spread_fig, use_container_width=True)
+
+    st.subheader("Benchmark Regression Table")
+    if bundle.regressions is None:
+        st.info("Monthly benchmark regression output is not available yet.")
+    else:
+        st.dataframe(bundle.regressions, use_container_width=True, hide_index=True)
+        render_csv_download(
+            bundle.regressions,
+            "Download Monthly Regressions CSV",
+            "monthly_benchmark_regressions.csv",
+        )
+
+    st.subheader("Forecast Comparison")
+    if bundle.forecasts is None:
+        st.info("Monthly benchmark forecast output is not available yet.")
+    else:
+        forecast_fig = px.bar(
+            bundle.forecasts,
+            x="model",
+            y="oos_r2",
+            title="Monthly Forecast OOS R2 Versus Historical Mean",
+        )
+        forecast_fig.add_hline(y=0, line_dash="dash", line_color="gray")
+        st.plotly_chart(forecast_fig, use_container_width=True)
+        st.dataframe(bundle.forecasts, use_container_width=True, hide_index=True)
+        render_csv_download(
+            bundle.forecasts,
+            "Download Monthly Forecasts CSV",
+            "monthly_benchmark_forecasts.csv",
+        )
 
 
 def main():
     st.set_page_config(page_title="GPR Equity Observatory", layout="wide")
     st.title("GPR Equity Observatory")
+    render_intro()
 
     missing = missing_files()
     if missing:
-        st.error("Processed data files are missing.")
-        st.code(
-            "\n".join(
-                [
-                    "python scripts/build_returns_panel.py",
-                    "python scripts/build_gpr_dataset.py",
-                    "python scripts/build_market_controls.py",
-                    "python scripts/build_analysis_panel.py",
-                    "python scripts/run_data_diagnostics.py",
-                    "python scripts/run_event_study.py",
-                    "python scripts/run_event_robustness.py",
-                    "python scripts/run_panel_regression.py",
-                    "python scripts/run_panel_sample_robustness.py",
-                    "python scripts/run_quantile_regression.py",
-                    "python scripts/run_local_projections.py",
-                    "python scripts/run_drawdown_model.py",
-                    "python scripts/run_evidence_summary.py",
-                    "python scripts/run_rolling_sensitivity.py",
-                ]
-            )
-        )
-        st.write("Missing files:")
-        st.write([str(path) for path in missing])
+        render_missing_data_message(missing)
         return
 
     outputs = load_outputs()
@@ -534,36 +746,28 @@ def main():
     quantile_regression = outputs["quantile_regression"]
     local_projections = outputs["local_projections"]
     drawdown_metrics = outputs["drawdown_metrics"]
+    drawdown_threshold_metrics = outputs["drawdown_threshold_metrics"]
+    drawdown_calibration = outputs["drawdown_calibration"]
+    drawdown_lift = outputs["drawdown_lift"]
+    drawdown_country_risk_summary = outputs["drawdown_country_risk_summary"]
     drawdown_importance = outputs["drawdown_importance"]
     evidence_summary = outputs["evidence_summary"]
     rolling_beta = outputs["rolling_beta"]
     large_returns = outputs["large_returns"]
+    monthly_outputs = load_monthly_outputs()
 
     (
         tab_overview,
         tab_shocks,
         tab_event,
-        tab_robustness,
         tab_regression,
         tab_tail,
         tab_local,
         tab_ml,
         tab_rolling,
+        tab_monthly,
         tab_coverage,
-    ) = st.tabs(
-        [
-            "Overview",
-            "GPR Shocks",
-            "Event Study",
-            "Robustness",
-            "Panel Regression",
-            "Tail Risk",
-            "Local Projections",
-            "ML Drawdown",
-            "Rolling Beta",
-            "Data Coverage",
-        ]
-    )
+    ) = st.tabs(DAILY_TAB_LABELS)
 
     with tab_overview:
         render_overview_tab(panel, gpr, group_returns, evidence_summary)
@@ -573,8 +777,7 @@ def main():
 
     with tab_event:
         render_event_tab(event_study, abnormal_event_study)
-
-    with tab_robustness:
+        st.divider()
         render_robustness_tab(event_robustness)
 
     with tab_regression:
@@ -592,10 +795,20 @@ def main():
         render_local_tab(local_projections)
 
     with tab_ml:
-        render_ml_tab(drawdown_metrics, drawdown_importance)
+        render_ml_tab(
+            drawdown_metrics,
+            drawdown_importance,
+            drawdown_threshold_metrics,
+            drawdown_calibration,
+            drawdown_lift,
+            drawdown_country_risk_summary,
+        )
 
     with tab_rolling:
         render_rolling_tab(rolling_beta)
+
+    with tab_monthly:
+        render_monthly_benchmark_tab(monthly_outputs)
 
     with tab_coverage:
         render_coverage_tab(panel, large_returns)

@@ -12,6 +12,11 @@ quant economics project. The central question is simple:
 > Do emerging equity markets respond more strongly to geopolitical risk shocks
 > than developed markets?
 
+![Dashboard overview](../reports/screenshots/dashboard_overview.png)
+
+The project repository is
+[N3V3MORE/gpr-equity-observatory](https://github.com/N3V3MORE/gpr-equity-observatory).
+
 The project does not try to build a trading system. It studies risk
 transmission. The aim is to build a transparent empirical workflow that can be
 checked, extended, and explained.
@@ -88,7 +93,7 @@ developed-market abnormal returns over the 10-day event window. But the
 the controlled GPR-jump coefficient remains negative after excluding COVID and
 Russia-Ukraine windows, while the emerging-market interaction remains weak.
 
-The drawdown classifier has modest signal. Its mean ROC AUC is about 0.614, and
+The drawdown classifier has modest signal. Its mean ROC AUC is about 0.617, and
 rolling volatility is the most important feature. GPR variables are small in the
 current model.
 
@@ -114,15 +119,22 @@ That foundation makes it possible to add better macro controls, country-specific
 GPR data, and eventually news-event features without losing the empirical
 structure.
 
+The reproducibility layer is part of the point. The repository includes a
+single rebuild path, a reviewer guide, a technical appendix, tests, CI-oriented
+checks, and a generated results brief so the public explanation can be traced
+back to the code and outputs.
+
 ## Next Steps
 
-The next step is not to add complexity for its own sake. The priority should be
-better external data where it clearly improves interpretation: FRED macro
-controls if an API key is available, and country-specific GPR where coverage is
-reliable.
+The next step is not to add complexity for its own sake. The priority is to make
+the current project easier to review, reproduce, and present: a clearer reviewer
+path, current screenshots, practical reproducibility notes, and a controlled
+backlog for future extensions.
 
-Only after that would I add a GDELT extension. News-event data could be useful,
-but it is noisy and can easily distract from the main economics question.
+After that, FRED macro controls or country-specific GPR data could improve
+interpretation if the scope is narrow and the lagging rules are explicit. Only
+later would I add a GDELT extension. News-event data could be useful, but it is
+noisy and can easily distract from the main economics question.
 
 The current conclusion is therefore careful: geopolitical risk is associated
 with equity-market risk, but the emerging-versus-developed asymmetry is not yet

@@ -9,6 +9,7 @@ from gprobs.config import (
     EVENT_MIN_GAP_DAYS,
     EVENT_WINDOW_DAYS,
 )
+from gprobs.utils import require_columns
 
 EVENT_WINDOW_COLUMNS = [
     "event_date",
@@ -76,14 +77,7 @@ def select_peak_cluster_events(
     min_gap_days: int = EVENT_MIN_GAP_DAYS,
 ) -> pd.Series:
     """Select the largest shock inside each cluster of nearby shock days."""
-    missing_columns = [
-        column for column in ["date", shock_column, value_column] if column not in gpr.columns
-    ]
-    if missing_columns:
-        raise ValueError(f"GPR data is missing columns: {missing_columns}")
-    if min_gap_days < 1:
-        raise ValueError("min_gap_days must be at least 1.")
-
+    require_columns(gpr, ["date", shock_column, value_column], "GPR data")
     shock_rows = (
         gpr.loc[gpr[shock_column], ["date", value_column]]
         .sort_values("date")
@@ -275,7 +269,7 @@ def _abnormal_car_inference(windows: pd.DataFrame) -> pd.DataFrame:
         .sort_values(["market_group", "relative_day"])
         .reset_index(drop=True)
     )
-    inference["std_error"] = inference["car_std"] / inference["car_count"].pow(0.5)
+    inference["std_error"] = inference["car_std"] / np.sqrt(inference["car_count"])
     inference["t_stat"] = inference["cumulative_average_abnormal_return"] / inference["std_error"]
     inference["p_value"] = inference.apply(_two_sided_t_p_value, axis=1)
     return inference[

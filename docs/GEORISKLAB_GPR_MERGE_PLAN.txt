@@ -1,0 +1,2299 @@
+GeoRiskLab + GPR Equity Observatory Merge Plan
+Generated: 2026-06-26
+
+Purpose
+=======
+
+This plan records where the two projects live locally and on GitHub, what each
+project currently does, what is risky in the current working trees, and the best
+practical path for combining them.
+
+The recommended merge is not a blind file copy or raw history merge. The safest
+and most useful combined project should keep GPR Equity Observatory as the main
+public Streamlit research product, then port GeoRiskLab's stronger
+reproducibility, provenance, validation, sample/real mode, and monthly
+benchmark pipeline into it in staged slices.
+
+Implementation status as of 2026-06-26
+======================================
+
+Phases 0 through 9 are implemented on branch codex/pre-merge-gpr-cleanup.
+
+Completed rollback commits:
+- 77369e4 chore: stabilize pre-merge cleanup
+- fc0578f chore: add shared merge infrastructure
+- 3c76eac feat: add monthly benchmark sample mode
+- 778ddd7 chore: add MIT license
+- 3f60ae2 feat: add monthly benchmark real ingestion
+- b7e20db feat: add monthly benchmark models
+- 10e411c chore: add unified monthly task runner
+- 7fe03c2 feat: add monthly benchmark dashboard tab
+- 8c2835c docs: consolidate merged observatory story
+- f34792d docs: refresh final result metrics
+
+Phase 6 is implemented:
+- scripts/run_task.py provides the documented Windows-friendly command path.
+- scripts/validate_monthly_benchmark.py validates monthly data, manifests, and
+  optional model outputs.
+- CI runs a deterministic monthly sample pipeline through the task runner.
+
+Phase 7 is implemented:
+- app.py includes a Monthly Benchmark tab.
+- Monthly sample/real outputs are optional, so the daily dashboard can still run
+  without monthly files.
+- The tab shows mode, provenance, monthly GPR shock, developed/emerging spread,
+  regression outputs, forecast outputs, and limitation text.
+
+Phase 8 is implemented:
+- README.md, docs/PROJECT_STATUS.md, docs/TECHNICAL_APPENDIX.md, and
+  docs/DATA_SOURCE_DECISIONS.md describe the merged daily/monthly workflow.
+- docs/REPRODUCIBILITY.md, docs/DATA_SOURCES.md, docs/METHODOLOGY.md, and
+  docs/ROADMAP.md consolidate the operating and interpretation story.
+- docs/RESEARCH_NOTE.md, docs/DEPLOYMENT_GUIDE.md, docs/PROFILE_PACKAGING.md,
+  and docs/IMPLEMENTATION_CHECKLIST.md now include the monthly benchmark layer.
+
+Phase 9 is implemented:
+- uv run --all-extras ruff check . passed.
+- uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing
+  -q passed.
+- uv run --all-extras python scripts/run_task.py monthly-sample
+  --min-train-months 24 passed.
+- uv run --all-extras python scripts/run_task.py build-daily passed.
+- A headless Streamlit smoke test returned HTTP 200.
+- A direct dashboard-loader check found daily outputs and monthly sample
+  regression/forecast outputs.
+
+Current continuation guidance is in docs/FUTURE_AGENT_HANDOFF.md. Remaining
+work is optional release packaging: push/PR, refreshed screenshots, public
+deployment, and external-data decisions.
+
+
+1. Sources Inspected
+====================
+
+Local projects
+--------------
+
+1. GPR Equity Observatory
+
+   Local path:
+   C:\Users\Sushmit\Desktop\Code\GPR_Observer
+
+   GitHub remote:
+   https://github.com/N3V3MORE/gpr-equity-observatory.git
+
+   GitHub repository:
+   https://github.com/N3V3MORE/gpr-equity-observatory
+
+   Branch:
+   main
+
+   Local status at inspection:
+   - main is ahead of origin/main by 1 local commit.
+   - Working tree has uncommitted edits.
+   - Untracked file exists at src/gprobs/utils.py.
+
+2. GeoRiskLab
+
+   Important path correction:
+   The GeoRiskLab `georisklab` directory is only the package directory. The
+   Git repository root is the parent local source tree; its machine-specific
+   path is intentionally omitted from committed docs.
+
+   GitHub remote:
+   https://github.com/N3V3MORE/georisklab.git
+
+   GitHub repository:
+   https://github.com/N3V3MORE/georisklab
+
+   Branch:
+   main
+
+   Local status at inspection:
+   - main is clean.
+   - main matches origin/main.
+   - There is at least one non-current local/remote branch worth remembering:
+     analysis/v0-1a-real-findings.
+
+GitHub repositories confirmed
+-----------------------------
+
+1. N3V3MORE/gpr-equity-observatory
+
+   URL:
+   https://github.com/N3V3MORE/gpr-equity-observatory
+
+   Default branch:
+   main
+
+   Remote main commit observed by subagent:
+   bfe96d04844be2944fb5666740b09bd8000184dc
+
+   Repository traits:
+   - Public Python repository.
+   - No license detected in repository metadata during inspection.
+   - Main package name: gpr-equity-observatory.
+   - Uses hatchling.
+   - Requires Python >=3.11.
+
+2. N3V3MORE/georisklab
+
+   URL:
+   https://github.com/N3V3MORE/georisklab
+
+   Default branch:
+   main
+
+   Remote main commit observed by subagent:
+   172e5d65f2a6c95963116eb9523cfa75065e10e1
+
+   Repository traits:
+   - Public Python repository.
+   - MIT license.
+   - Main package name: georisklab.
+   - Uses setuptools.
+   - Requires Python >=3.10.
+
+
+2. Project-Specific Agent, Skill, and MCP Setup
+===============================================
+
+What was checked
+----------------
+
+The following project-level setup files were checked in both repositories:
+
+- AGENTS.md
+- CLAUDE.md
+- GEMINI.md
+- .mcp.json
+- repo-local SKILL.md
+- repo-local .codex skill setup
+- .claude
+- .serena
+- GitHub workflow and template files
+
+Findings
+--------
+
+1. No canonical project agent instruction file exists yet.
+
+   Missing in both repos:
+   - AGENTS.md
+   - CLAUDE.md
+   - GEMINI.md
+
+2. No project-specific MCP config exists yet.
+
+   Missing in both repos:
+   - .mcp.json
+
+3. Both repos already have local Serena project folders.
+
+   GPR:
+   C:\Users\Sushmit\Desktop\Code\GPR_Observer\.serena
+
+   GeoRiskLab:
+   local GeoRiskLab .serena directory, with the machine-specific path omitted
+
+   These folders are ignored and should be treated as local agent state, not
+   portable project source.
+
+4. GPR also has an ignored Claude worktree snapshot:
+
+   C:\Users\Sushmit\Desktop\Code\GPR_Observer\.claude\worktrees\flamboyant-moser-daf04b
+
+   This is not canonical project setup and should not be merged or used as a
+   source of truth.
+
+Setup performed during this planning pass
+-----------------------------------------
+
+Project-local Serena memories were created for the active GPR workspace:
+
+- project_overview
+- suggested_commands
+- style_and_conventions
+- merge_notes/georisklab_gpr_equity
+
+These are intended to help future local agents understand the two-repo merge
+context without rediscovering the same facts. They are local agent memory, not
+committed repository files.
+
+MCP recommendation
+------------------
+
+Do not add a project-specific .mcp.json yet.
+
+Reason:
+- The merge does not currently require a custom MCP server.
+- Existing tooling is sufficient:
+  - local filesystem and Git
+  - Serena semantic code navigation
+  - GitHub app/tools
+  - normal Python test/lint commands
+- Adding an MCP now would create setup surface without a clear maintenance
+  payoff.
+
+When a project MCP might become useful later:
+- If the merged project grows a stable local data catalog API.
+- If the project needs repeatable source-data provenance lookups through a
+  project-specific tool.
+- If GitHub issue/PR planning becomes part of a formal workflow.
+- If dashboards/reports need a local artifact browser exposed to agents.
+
+Recommended project setup before implementation
+-----------------------------------------------
+
+Add a committed AGENTS.md to GPR_Observer before the merge implementation starts.
+This file should be short and strict. It should tell future agents:
+
+- Use C:\Users\Sushmit\Desktop\Code\GPR_Observer as the destination repo unless
+  the user explicitly chooses a different repo strategy.
+- Do not edit or delete generated raw/processed data without user approval.
+- Keep GPR's Streamlit dashboard and daily ETF panel as the public product.
+- Port GeoRiskLab code selectively; do not copy the whole repo blindly.
+- Keep daily ETF and monthly aggregate datasets separate and clearly named.
+- Preserve sample/real data boundaries.
+- Preserve source manifests and validation guardrails.
+- Do not claim causality, trading signal, or strong emerging-market asymmetry
+  unless the model evidence supports it.
+- Run ruff and pytest before calling code work complete.
+- Update docs whenever methods, data contracts, or interpretation change.
+
+
+3. Current GPR Equity Observatory State
+=======================================
+
+Role in the merged project
+--------------------------
+
+GPR Equity Observatory should remain the main product shell.
+
+It is stronger as:
+- public-facing project
+- Streamlit dashboard
+- daily ETF empirical workflow
+- profile/interview-ready research artifact
+- broader empirical analysis suite
+
+Current architecture
+--------------------
+
+Repository root:
+C:\Users\Sushmit\Desktop\Code\GPR_Observer
+
+Important files and directories:
+
+- app.py
+  Streamlit dashboard. It declares expected output schemas and renders tabs.
+
+- src/gprobs/
+  Reusable Python package.
+
+- src/gprobs/data/
+  Data loading, GPR data, market data, market controls, analysis panel,
+  diagnostics, and download cache code.
+
+- src/gprobs/features/
+  Return feature construction.
+
+- src/gprobs/analysis/
+  Event study, event robustness, panel regression, panel sample robustness,
+  quantile regression, local projection, rolling sensitivity, drawdown model,
+  and evidence summary code.
+
+- src/gprobs/dashboard/
+  Dashboard-facing metric helpers.
+
+- src/gprobs/reporting/
+  Markdown results brief generator.
+
+- src/gprobs/visuals/
+  Plot helpers.
+
+- src/gprobs/pipeline.py
+  Pipeline orchestration.
+
+- scripts/
+  Script entrypoints for building data, running models, plotting, and writing
+  reports.
+
+- tests/
+  Pytest coverage over data contracts, analysis behavior, pipeline order,
+  dashboard schemas, and result wording.
+
+- docs/
+  Research note, technical appendix, deployment guide, project status, profile
+  packaging, and data-source decisions.
+
+- reports/
+  Committed profile artifacts such as RESULTS_BRIEF.md and screenshots.
+
+Current GPR commands
+--------------------
+
+Install:
+python -m pip install -e .
+
+Install dev/check dependencies:
+python -m pip install -r requirements.txt
+
+Locked environment:
+uv sync --all-extras
+
+Full rebuild:
+python scripts/build_all.py
+
+Dashboard:
+streamlit run app.py
+
+Checks:
+ruff check .
+pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+
+Current GPR dependencies
+------------------------
+
+Runtime:
+- linearmodels
+- matplotlib
+- numpy
+- pandas
+- plotly
+- python-dotenv
+- scikit-learn
+- statsmodels
+- streamlit
+- xlrd
+- yfinance
+
+Dev:
+- pytest
+- pytest-cov
+- ruff
+
+Current GPR strengths
+---------------------
+
+1. Strong public presentation.
+
+   The Streamlit dashboard, screenshots, README, results brief, and profile
+   docs are already built around communicating the project clearly.
+
+2. Broad daily empirical workflow.
+
+   The current project includes daily ETF returns, global daily GPR, no-key
+   market controls, event studies, market-model abnormal returns, panel
+   regressions, quantile regressions, local projections, rolling sensitivity,
+   and a drawdown-risk classifier.
+
+3. Cautious interpretation.
+
+   README and docs already avoid overclaiming. This is important and should be
+   preserved.
+
+4. Good tests around behavior and output schemas.
+
+   Tests cover dashboard-required output columns, data transforms, regressions,
+   local projections, drawdown behavior, reports, and pipeline order.
+
+5. Cross-platform CI.
+
+   Current GitHub Actions runs on Ubuntu and Windows for Python 3.11 and 3.12.
+
+Current GPR weaknesses and pre-merge fixes
+------------------------------------------
+
+These must be handled before importing GeoRiskLab code.
+
+1. Local GPR work is not fully preserved.
+
+   Current state:
+   - main is ahead of origin/main by 1 commit.
+   - There are uncommitted modifications in 10 tracked files.
+   - There is one untracked file: src/gprobs/utils.py.
+
+   Required action:
+   - Review the uncommitted diff.
+   - Decide whether to keep, amend, or revert each dirty change.
+   - Commit or intentionally stash the local work before merge work begins.
+   - Do not start a large merge on top of this dirty state.
+
+2. Concrete dirty-tree break: CONTROL_TICKERS import mismatch.
+
+   The GPR subagent found:
+   - scripts/build_market_controls.py imports CONTROL_TICKERS.
+   - The dirty version of src/gprobs/data/market_controls.py removed that alias.
+
+   Required action:
+   - Either restore CONTROL_TICKERS in market_controls.py, or update the script
+     to import the replacement constant.
+   - Add a script import smoke test so this does not slip through again.
+
+3. Dirty changes appear to remove validation guards.
+
+   The GPR subagent flagged removed or weakened guards around:
+   - retry validation in src/gprobs/data/download_cache.py
+   - GPR date uniqueness in src/gprobs/analysis/panel_regression.py
+   - local projection argument validation in src/gprobs/analysis/local_projection.py
+
+   Required action:
+   - Re-check the intent of these removals.
+   - Restore validation unless there is a documented reason not to.
+   - Add or keep tests for each guard.
+
+4. Untracked src/gprobs/utils.py must be resolved.
+
+   Current dirty files import or depend on the untracked utility module.
+
+   Required action:
+   - Commit it if it is intentional.
+   - Or remove the imports and keep the old local helper patterns.
+
+5. Line-ending warnings need to be controlled.
+
+   Git warned that several dirty files will have LF replaced by CRLF when Git
+   touches them.
+
+   Required action:
+   - Add or confirm a .gitattributes policy if line endings become noisy.
+   - Avoid mixing line-ending churn into merge commits.
+
+
+4. Current GeoRiskLab State
+===========================
+
+Role in the merged project
+--------------------------
+
+GeoRiskLab should be treated as a source of stronger research infrastructure,
+not as the destination shell.
+
+It is stronger as:
+- reusable package-style pipeline
+- sample/real data contract
+- provenance and manifest discipline
+- monthly aggregate developed/emerging benchmark
+- validation-heavy research workflow
+- simple task runner and CI contract
+
+Current architecture
+--------------------
+
+Repository root:
+GeoRiskLab local repository root, with the machine-specific path omitted.
+
+Important files and directories:
+
+- georisklab/
+  Python package.
+
+- georisklab/ingest/
+  GPR, Fama-French market returns, GDELT, World Bank, and source metadata
+  helpers.
+
+- georisklab/features/
+  Panel construction, returns, and shock features.
+
+- georisklab/econometrics/
+  Baseline regressions, local projections, and regression result wrappers.
+
+- georisklab/models/
+  Forecasting, metrics, and time splits.
+
+- georisklab/utils/
+  Project paths, dataset file naming, output paths, validation helpers.
+
+- georisklab/visualization/
+  Matplotlib figures.
+
+- scripts/run_task.py
+  Main task runner and pipeline orchestrator.
+
+- scripts/build_monthly_data.py
+  Deterministic sample monthly data generator.
+
+- scripts/build_real_monthly_data.py
+  Real-data ingestion using config/sources.yml.
+
+- scripts/build_features.py
+  Monthly panel construction.
+
+- scripts/validate_data.py
+  Metadata, source, panel, result, and forecast validation.
+
+- scripts/run_regressions.py
+  Baseline regressions.
+
+- scripts/run_forecasts.py
+  Forecast comparisons.
+
+- scripts/make_figures.py
+  Figure generation.
+
+- scripts/build_report.py
+  PDF/local report generation.
+
+- dashboard/index.html
+  Static dashboard.
+
+- docs/
+  Methodology, data sources, roadmap, and reproducibility docs.
+
+- config/sources.sample.yml
+  Real-data source config template.
+
+- data/processed/sample_*.csv
+  Committed deterministic sample outputs.
+
+- reports/tables and reports/figures
+  Committed sample output artifacts.
+
+Current GeoRiskLab commands
+---------------------------
+
+Install:
+python scripts/run_task.py setup
+
+Sample pipeline:
+python scripts/run_task.py pipeline
+
+Real pipeline:
+python scripts/run_task.py pipeline-real
+
+Tests:
+python scripts/run_task.py test
+
+Lint:
+python scripts/run_task.py lint
+
+Makefile equivalents where make is available:
+make pipeline
+make test
+make lint
+
+Current GeoRiskLab dependencies
+-------------------------------
+
+Runtime:
+- matplotlib
+- numpy
+- pandas
+- PyYAML
+- statsmodels
+
+Dev:
+- pytest
+- ruff
+
+Current GeoRiskLab strengths
+----------------------------
+
+1. Strong sample/real data separation.
+
+   Sample mode is deterministic and safe for CI. Real mode uses user-supplied
+   sources and provenance checks.
+
+2. Strong provenance contracts.
+
+   Source manifests, local hashes, source redaction, and real-data path policies
+   are first-class concepts.
+
+3. Strong validation.
+
+   GeoRiskLab validates:
+   - duplicate keys
+   - month-start dates
+   - source metadata
+   - common real-data sample alignment
+   - placeholder inputs
+   - generated result schemas
+   - forecast windows
+   - weak-cluster inference guardrails
+
+4. CI exercises the actual sample pipeline.
+
+   GeoRiskLab CI runs lint, the sample pipeline, generated-output freshness, and
+   tests. This is stronger than testing functions only.
+
+5. Useful monthly benchmark layer.
+
+   GeoRiskLab can provide a lower-frequency benchmark based on global GPR and
+   Kenneth French developed/emerging returns.
+
+6. Lean package code.
+
+   The reusable code is compact and easier to port than a large app.
+
+Current GeoRiskLab weaknesses and merge caveats
+-----------------------------------------------
+
+1. Different data frequency and research grain.
+
+   GeoRiskLab is monthly and aggregate. GPR is daily and country ETF based.
+   These cannot be merged as though they are the same panel.
+
+2. Two-market aggregate inference is limited.
+
+   GeoRiskLab docs correctly state that the two-market aggregate sample cannot
+   support credible clustered panel inference. This limitation must remain
+   visible in the merged project.
+
+3. UI is not directly compatible.
+
+   GeoRiskLab has a static HTML dashboard and PDF report. GPR has Streamlit.
+   The static dashboard should not be copied wholesale into the Streamlit app.
+   Port the data and selected charts instead.
+
+4. GDELT and macro controls are staged, not current findings.
+
+   GeoRiskLab includes sample/staged GDELT and macro paths. Do not present these
+   as real empirical results until real ingestion and validation are complete.
+
+5. Some ignored local real artifacts are stale or incomplete.
+
+   Subagent found:
+   - expected analysis_panel_manifest_real.json is absent locally.
+   - source_manifest_real.json records old raw paths under the previous local
+     GeoRiskLab root.
+
+   Required action:
+   - Treat local real artifacts as non-authoritative.
+   - Rebuild real mode from a fresh config before using real results.
+
+6. GeoRiskLab project root name is poor.
+
+   The local root had a non-portable placeholder name. Do not carry local root
+   names into committed docs, configs, or Serena project metadata.
+
+
+5. Recommended Merge Strategy
+=============================
+
+Recommendation
+--------------
+
+Use GPR Equity Observatory as the destination repository and product identity.
+Port GeoRiskLab into GPR in phases as infrastructure and a monthly benchmark.
+
+Recommended destination:
+C:\Users\Sushmit\Desktop\Code\GPR_Observer
+
+Recommended public repo after merge:
+https://github.com/N3V3MORE/gpr-equity-observatory
+
+Recommended combined product name:
+GPR Equity Observatory
+
+Optional subtitle:
+Powered by GeoRiskLab research infrastructure
+
+Why GPR should be the destination
+---------------------------------
+
+1. It already has the stronger public product.
+
+   The Streamlit dashboard, screenshots, README, results brief, and profile docs
+   make it better as the visible project.
+
+2. It has the richer daily empirical analysis.
+
+   The GPR app covers more analysis modes and a 20-country ETF panel.
+
+3. It is already structured as the user's profile-ready output.
+
+   Renaming the public project to GeoRiskLab would make the existing docs and
+   dashboard less coherent.
+
+4. GeoRiskLab's best parts are portable.
+
+   Its provenance, validation, task runner, sample/real separation, and monthly
+   benchmark can be imported without forcing a full identity swap.
+
+Why not use a raw Git merge
+---------------------------
+
+A raw merge of repositories or a full copy of GeoRiskLab into GPR would create
+several avoidable problems:
+
+- duplicate package roots: src/gprobs and georisklab
+- duplicate scripts with overlapping names
+- conflicting data policies
+- conflicting generated-output policies
+- two dashboard systems
+- different Python versions
+- different packaging backends
+- different line lengths
+- ambiguous "real" versus "sample" outputs
+- ambiguous daily versus monthly analysis results
+
+Better approach:
+- Start with a clean GPR branch.
+- Add GeoRiskLab as a remote only for reference.
+- Port code module-by-module with tests.
+- Preserve provenance and validation semantics.
+- Keep monthly benchmark outputs separate from daily outputs.
+
+Repository strategy options
+---------------------------
+
+Option A: Single merged repository, GPR as destination.
+
+Recommended.
+
+Shape:
+- Keep src/gprobs as the package.
+- Port GeoRiskLab modules into src/gprobs under clear names.
+- Keep Streamlit app.py as primary UI.
+- Add monthly benchmark tabs to Streamlit only after outputs are stable.
+- Add task runner or Makefile-style Python runner for repeatable commands.
+
+Pros:
+- One public project.
+- One dashboard.
+- One test suite.
+- One docs set.
+- Easiest profile story.
+- Best for future users.
+
+Cons:
+- Requires careful module mapping.
+- Requires decisions about sample outputs and generated artifacts.
+
+Option B: Monorepo with both packages.
+
+Acceptable but not recommended for this project stage.
+
+Shape:
+- Keep src/gprobs.
+- Add georisklab/ as a second package.
+- Adjust pyproject to include both packages.
+- Streamlit imports georisklab where useful.
+
+Pros:
+- Less initial code movement.
+- Easier to preserve GeoRiskLab history and package boundaries.
+
+Cons:
+- Public story becomes muddier.
+- Two packages for one small research project is likely overkill.
+- Duplicated concepts will linger longer.
+- More import and packaging complexity.
+
+Option C: Keep repos separate and integrate through dependency.
+
+Not recommended unless GeoRiskLab is meant to become a general toolkit.
+
+Shape:
+- Publish or install georisklab as a dependency of GPR.
+- GPR imports georisklab for monthly/provenance features.
+
+Pros:
+- Clean separation.
+- GeoRiskLab remains independently reusable.
+
+Cons:
+- Slower iteration.
+- Harder local setup.
+- Two repos to maintain.
+- Harder for profile reviewers to understand.
+
+Final recommendation:
+Use Option A.
+
+
+6. Target Architecture After Merge
+==================================
+
+Package structure
+-----------------
+
+Keep:
+src/gprobs/
+
+Suggested target layout:
+
+src/gprobs/
+  __init__.py
+  config.py
+  pipeline.py
+  utils.py
+
+  data/
+    __init__.py
+    analysis_panel.py
+    diagnostics.py
+    download_cache.py
+    gpr_data.py
+    market_controls.py
+    market_data.py
+    sources.py
+    source_metadata.py
+    datasets.py
+    monthly_sources.py
+    fama_french.py
+    gdelt.py
+    world_bank.py
+
+  features/
+    __init__.py
+    returns.py
+    shocks.py
+    monthly_panel.py
+
+  analysis/
+    __init__.py
+    event_study.py
+    event_robustness.py
+    panel_regression.py
+    panel_sample_robustness.py
+    quantile_regression.py
+    local_projection.py
+    rolling_sensitivity.py
+    drawdown_model.py
+    evidence_summary.py
+    monthly_benchmark.py
+    forecasting.py
+    forecast_metrics.py
+
+  validation/
+    __init__.py
+    schemas.py
+    data_contracts.py
+    result_contracts.py
+
+  reporting/
+    __init__.py
+    results_brief.py
+    monthly_report.py
+
+  dashboard/
+    __init__.py
+    metrics.py
+    monthly_metrics.py
+
+  visuals/
+    __init__.py
+    initial_plots.py
+    monthly_plots.py
+
+This layout keeps GeoRiskLab's useful concepts but translates them into the
+existing GPR package instead of adding a second top-level georisklab package.
+
+Dataset model
+-------------
+
+The merged project should define explicit dataset modes:
+
+1. daily_etf
+
+   Existing GPR workflow:
+   - daily 20-country ETF proxy panel
+   - daily global GPR
+   - yfinance market controls
+   - event studies, regressions, local projections, rolling sensitivity,
+     drawdown classifier
+   - Streamlit dashboard findings
+
+2. monthly_benchmark_sample
+
+   Ported GeoRiskLab sample workflow:
+   - deterministic monthly sample data
+   - sample GPR
+   - sample developed/emerging returns
+   - sample GDELT-like and macro controls
+   - safe for CI
+   - never presented as empirical findings
+
+3. monthly_benchmark_real
+
+   Ported GeoRiskLab real workflow:
+   - user-supplied Caldara-Iacoviello GPR
+   - user-supplied Kenneth French developed/emerging factors
+   - source manifests and hashes
+   - common-sample validation
+   - monthly benchmark outputs
+   - limited interpretation due to aggregate two-market design
+
+4. future_country_monthly
+
+   Later extension:
+   - country-level monthly panel
+   - real GDELT country-month data
+   - macro controls
+   - enough country clusters for more credible panel inference
+
+Output policy
+-------------
+
+Current conflict:
+- GPR ignores data/raw, data/processed, data/interim, and reports/figures.
+- GeoRiskLab commits deterministic sample processed data, sample tables, sample
+  figures, and static dashboard artifacts.
+
+Recommended merged policy:
+
+1. Continue ignoring raw third-party files.
+
+   Always ignore:
+   - data/raw/
+   - credentials
+   - config/sources.yml
+   - downloaded provider files
+   - local real-data outputs unless intentionally publishing a release artifact
+
+2. Commit small deterministic sample fixtures, not large generated sample
+   outputs by default.
+
+   The better compromise for GPR is:
+   - commit tests/fixtures/
+   - commit data/country_universe.csv
+   - commit config/sources.sample.yml
+   - do not commit full generated data/processed outputs unless they are small,
+     stable, and intentionally part of public reproducibility
+
+3. Keep profile artifacts committed.
+
+   Continue committing:
+   - reports/RESULTS_BRIEF.md
+   - reports/screenshots/*.png
+   - docs/*.md
+
+4. Add generated-output freshness only for committed artifacts.
+
+   Do not copy GeoRiskLab's check-generated target directly. Adapt it so it
+   checks only artifacts the merged repo intentionally commits.
+
+5. Use manifests for all generated datasets.
+
+   Even if generated CSVs are ignored, write manifests locally and validate them
+   during pipeline/test runs.
+
+Dashboard strategy
+------------------
+
+Keep Streamlit as the primary dashboard.
+
+Do not port GeoRiskLab's static dashboard wholesale.
+
+Add one new dashboard section only after monthly outputs are stable:
+
+Suggested tab:
+"Monthly Benchmark"
+
+This tab should show:
+- dataset mode: sample or real
+- source manifest status
+- sample date range
+- developed/emerging aggregate spread
+- GPR monthly shock series
+- baseline monthly benchmark results
+- forecast comparison if available
+- explicit warning if data are sample mode
+- explicit warning that two-market aggregate results cannot support country
+  clustered inference
+
+Do not mix daily ETF findings and monthly aggregate findings in the same chart
+without clear labels.
+
+Docs strategy
+-------------
+
+Keep and update GPR's docs:
+- README.md
+- docs/PROJECT_STATUS.md
+- docs/RESEARCH_NOTE.md
+- docs/TECHNICAL_APPENDIX.md
+- docs/DATA_SOURCE_DECISIONS.md
+- docs/DEPLOYMENT_GUIDE.md
+- docs/PROFILE_PACKAGING.md
+
+Port and adapt from GeoRiskLab:
+- START_HERE.md content into README or docs/START_HERE.md
+- docs/REPRODUCIBILITY.md
+- docs/DATA_SOURCES.md
+- docs/METHODOLOGY.md
+- docs/ROADMAP.md
+
+Avoid duplicating docs with conflicting claims. The merged docs should explain:
+- daily ETF pipeline
+- monthly benchmark pipeline
+- sample versus real mode
+- what is empirical evidence versus software check
+- why causal language is avoided
+- what generated artifacts are committed or ignored
+
+CI strategy
+-----------
+
+Keep GPR's cross-platform CI matrix, then strengthen it with GeoRiskLab's
+sample-pipeline idea.
+
+Recommended CI jobs:
+
+1. lint-test
+
+   Matrix:
+   - OS: ubuntu-latest, windows-latest
+   - Python: 3.11, 3.12
+
+   Commands:
+   - python -m pip install -r requirements.txt
+   - ruff check .
+   - pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+
+2. sample-pipeline
+
+   OS:
+   - ubuntu-latest initially
+
+   Commands:
+   - python -m pip install -r requirements.txt
+   - python scripts/run_task.py pipeline --dataset monthly_benchmark_sample
+     or equivalent after task runner exists
+   - python scripts/validate_monthly_benchmark.py --dataset sample
+
+3. script-smoke
+
+   Purpose:
+   Catch import mismatches like CONTROL_TICKERS.
+
+   Commands:
+   - python -m py_compile app.py
+   - python -m py_compile scripts/*.py
+   - optionally import every scripts/*.py module through a test
+
+
+7. Module Mapping Plan
+======================
+
+The table below maps GeoRiskLab pieces to their likely destination in GPR.
+
+GeoRiskLab source:
+georisklab/utils/config.py
+
+Suggested GPR destination:
+src/gprobs/config.py or new src/gprobs/project_paths.py
+
+Action:
+Port ProjectPaths-style path management, but adapt names to GPR's existing
+data/report layout.
+
+Notes:
+Do not carry local root names. Keep root injectable for tests.
+
+GeoRiskLab source:
+georisklab/utils/datasets.py
+
+Suggested GPR destination:
+src/gprobs/data/datasets.py
+
+Action:
+Port DatasetFiles and dataset_output_filename concepts.
+
+Notes:
+Extend beyond sample/real to daily_etf, monthly_benchmark_sample, and
+monthly_benchmark_real.
+
+GeoRiskLab source:
+georisklab/utils/outputs.py
+
+Suggested GPR destination:
+src/gprobs/reporting/outputs.py or src/gprobs/data/outputs.py
+
+Action:
+Port consistent output-path helpers.
+
+Notes:
+Must respect GPR's ignored generated-output policy.
+
+GeoRiskLab source:
+georisklab/utils/validation.py
+
+Suggested GPR destination:
+src/gprobs/validation/data_contracts.py or src/gprobs/utils.py
+
+Action:
+Port ensure_columns, month-start validation, duplicate-key checks, future
+leakage checks, and missingness reports.
+
+Notes:
+GPR currently has an untracked utils.py. Resolve that first, then avoid
+duplicating validation helpers across modules.
+
+GeoRiskLab source:
+georisklab/ingest/source_metadata.py
+
+Suggested GPR destination:
+src/gprobs/data/source_metadata.py
+
+Action:
+Port source manifest and collection manifest writers.
+
+Notes:
+This is one of the highest-value imports.
+
+GeoRiskLab source:
+scripts/build_real_monthly_data.py
+
+Suggested GPR destination:
+scripts/build_monthly_benchmark_data.py plus reusable code in
+src/gprobs/data/monthly_sources.py
+
+Action:
+Extract business logic out of the script and place reusable loaders in package
+code. Keep script thin.
+
+Notes:
+Use config/sources.sample.yml and ignored config/sources.yml.
+
+GeoRiskLab source:
+georisklab/ingest/gpr.py
+
+Suggested GPR destination:
+src/gprobs/data/gpr_data.py or src/gprobs/data/monthly_gpr.py
+
+Action:
+Port monthly GPR normalization and Caldara-Iacoviello column mapping.
+
+Notes:
+Do not break existing daily GPR ingestion. Keep daily and monthly functions
+separate.
+
+GeoRiskLab source:
+georisklab/ingest/market_returns.py
+
+Suggested GPR destination:
+src/gprobs/data/fama_french.py
+
+Action:
+Port Fama-French zip parsing and safety checks.
+
+Notes:
+Keep this separate from yfinance ETF ingestion.
+
+GeoRiskLab source:
+georisklab/ingest/gdelt.py
+
+Suggested GPR destination:
+src/gprobs/data/gdelt.py
+
+Action:
+Port only after deciding real GDELT scope.
+
+Notes:
+Initial merge can keep GDELT as sample/staged only. Do not present as current
+real finding.
+
+GeoRiskLab source:
+georisklab/ingest/world_bank.py
+
+Suggested GPR destination:
+src/gprobs/data/world_bank.py
+
+Action:
+Port later, after deciding macro-control scope.
+
+Notes:
+Monthly/annual macro controls must be lagged and documented to avoid look-ahead
+bias.
+
+GeoRiskLab source:
+georisklab/features/shocks.py
+
+Suggested GPR destination:
+src/gprobs/features/shocks.py
+
+Action:
+Port standardize_shocks, expanding_standardize_shocks, GPR shock feature
+construction, and AR(1) residual warnings.
+
+Notes:
+Be explicit about full-sample descriptive features versus forecasting-safe
+features.
+
+GeoRiskLab source:
+georisklab/features/returns.py
+
+Suggested GPR destination:
+src/gprobs/features/monthly_returns.py or extend src/gprobs/features/returns.py
+
+Action:
+Port forward monthly return construction.
+
+Notes:
+Keep separate from existing daily log-return functions.
+
+GeoRiskLab source:
+georisklab/features/panel.py
+
+Suggested GPR destination:
+src/gprobs/features/monthly_panel.py
+
+Action:
+Port monthly benchmark panel construction.
+
+Notes:
+Do not merge directly into daily analysis_panel.py unless columns and frequency
+are explicitly separated.
+
+GeoRiskLab source:
+georisklab/econometrics/baseline.py
+
+Suggested GPR destination:
+src/gprobs/analysis/monthly_benchmark.py
+
+Action:
+Port HAC spread regression and guarded panel interaction logic.
+
+Notes:
+Preserve weak-cluster guard.
+
+GeoRiskLab source:
+georisklab/econometrics/local_projection.py
+
+Suggested GPR destination:
+src/gprobs/analysis/monthly_local_projection.py or monthly_benchmark.py
+
+Action:
+Port only if the monthly benchmark tab/report needs it.
+
+Notes:
+Do not confuse with existing daily abnormal-return local projections.
+
+GeoRiskLab source:
+georisklab/models/forecasting.py
+
+Suggested GPR destination:
+src/gprobs/analysis/forecasting.py
+
+Action:
+Port expanding-window forecast code.
+
+Notes:
+Useful for both daily and monthly workflows later, but initial import should
+target monthly benchmark only.
+
+GeoRiskLab source:
+georisklab/models/metrics.py
+
+Suggested GPR destination:
+src/gprobs/analysis/forecast_metrics.py
+
+Action:
+Port finite-value checks and OOS forecast metrics.
+
+Notes:
+Keep benchmark definitions explicit.
+
+GeoRiskLab source:
+georisklab/models/splits.py
+
+Suggested GPR destination:
+src/gprobs/analysis/time_splits.py
+
+Action:
+Port time-split logic if not already covered by drawdown model folds.
+
+Notes:
+Could be reused to standardize validation across ML/forecasting code.
+
+GeoRiskLab source:
+georisklab/visualization/plots.py
+
+Suggested GPR destination:
+src/gprobs/visuals/monthly_plots.py
+
+Action:
+Port figure logic only after output contracts are stable.
+
+Notes:
+The Streamlit dashboard may use Plotly, so Matplotlib static plots may remain
+for reports only.
+
+GeoRiskLab source:
+scripts/run_task.py
+
+Suggested GPR destination:
+scripts/run_task.py
+
+Action:
+Port a task runner after the core pipeline modes exist.
+
+Notes:
+Prefer a Python runner over relying on Makefile because the user works on
+Windows.
+
+GeoRiskLab source:
+Makefile
+
+Suggested GPR destination:
+Optional Makefile or just docs.
+
+Action:
+Use as command reference, not as the primary Windows workflow.
+
+Notes:
+Do not copy check-generated directly.
+
+GeoRiskLab source:
+.github/PULL_REQUEST_TEMPLATE.md and issue templates
+
+Suggested GPR destination:
+.github/PULL_REQUEST_TEMPLATE.md and .github/ISSUE_TEMPLATE/
+
+Action:
+Port with wording updates.
+
+Notes:
+Good fit for research-code tasks.
+
+
+8. Phased Implementation Plan
+=============================
+
+Phase 0: Freeze and protect current work
+----------------------------------------
+
+Goal:
+Start merge work from a known-good state.
+
+Steps:
+
+1. In GPR_Observer, review local status.
+
+   Commands:
+   git status -sb
+   git log --oneline --decorate -5
+   git diff --stat
+   git diff
+
+2. Decide what to do with the dirty changes.
+
+   Minimum required decisions:
+   - Keep or undo changes in app.py.
+   - Keep or undo analysis module simplifications.
+   - Keep or undo removed validation guards.
+   - Add src/gprobs/utils.py if imports depend on it.
+   - Fix CONTROL_TICKERS break.
+
+3. Run quick checks after resolving dirty state.
+
+   Commands:
+   ruff check .
+   pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+
+4. Commit the resolved GPR state.
+
+   Suggested branch:
+   codex/pre-merge-gpr-cleanup
+
+   Suggested commit shape:
+   - commit 1: preserve/repair current local cleanup changes
+   - commit 2: add script import smoke tests if needed
+
+5. Push or otherwise preserve the branch before major merge work.
+
+Exit criteria:
+- GPR working tree is clean.
+- GPR tests pass.
+- Current local work is committed or intentionally parked.
+- CONTROL_TICKERS break is gone.
+
+Phase 1: Add merge guardrails and project setup
+-----------------------------------------------
+
+Goal:
+Make future agent/developer behavior consistent before importing code.
+
+Steps:
+
+1. Add AGENTS.md to GPR_Observer.
+
+   Include:
+   - destination repo
+   - data policy
+   - daily/monthly distinction
+   - sample/real distinction
+   - testing commands
+   - documentation expectations
+   - no causal/trading overclaim rule
+   - warning not to merge .claude, .serena/cache, raw data, or local real
+     artifacts
+
+2. Add adapted GitHub templates from GeoRiskLab.
+
+   Copy and revise:
+   - .github/PULL_REQUEST_TEMPLATE.md
+   - .github/ISSUE_TEMPLATE/data_source.md
+   - .github/ISSUE_TEMPLATE/method_task.md
+
+3. Decide license policy.
+
+   Issue:
+   - GeoRiskLab is MIT licensed.
+   - GPR repository metadata showed no license.
+
+   Recommended:
+   - Add a LICENSE file to GPR before importing GeoRiskLab code.
+   - MIT is simplest because GeoRiskLab already uses it and both repos appear
+     to be owned by the same user.
+   - If a different license is desired, decide before copying code.
+
+4. Add docs/MERGE_NOTES.md or keep this plan as the controlling reference.
+
+Exit criteria:
+- AGENTS.md exists.
+- License decision is made.
+- GitHub templates are present or intentionally deferred.
+
+Phase 2: Port shared infrastructure
+-----------------------------------
+
+Goal:
+Bring in low-risk reusable infrastructure before new datasets or models.
+
+Port first:
+- ProjectPaths-style root/path handling.
+- DatasetFiles/dataset naming.
+- output path helpers.
+- ensure_columns and validation helpers.
+- source manifest writers.
+- source redaction and hash helpers.
+
+Suggested files:
+- src/gprobs/data/datasets.py
+- src/gprobs/data/source_metadata.py
+- src/gprobs/validation/data_contracts.py
+- src/gprobs/reporting/outputs.py or src/gprobs/data/outputs.py
+
+Tests to port/adapt:
+- tests/test_utils.py
+- tests/test_validation.py subset for helpers
+- tests/test_real_monthly_pipeline.py subset for source resolution and redaction
+
+Rules:
+- Do not change daily pipeline outputs in this phase.
+- Do not add monthly benchmark yet.
+- Keep changes small enough to review.
+
+Exit criteria:
+- Existing GPR tests pass.
+- New helper tests pass.
+- No dashboard behavior changes.
+
+Phase 3: Add monthly benchmark sample mode
+------------------------------------------
+
+Goal:
+Add GeoRiskLab's deterministic sample monthly workflow as a safe CI/testable
+pipeline, without touching real data yet.
+
+Port/adapt:
+- scripts/build_monthly_data.py into GPR naming.
+- georisklab/features/shocks.py
+- georisklab/features/returns.py monthly functions.
+- georisklab/features/panel.py monthly panel builder.
+- scripts/build_features.py sample path.
+- relevant validation for sample monthly outputs.
+
+Suggested GPR files:
+- src/gprobs/data/monthly_sample.py
+- src/gprobs/features/shocks.py
+- src/gprobs/features/monthly_returns.py
+- src/gprobs/features/monthly_panel.py
+- scripts/build_monthly_benchmark_sample.py
+- scripts/validate_monthly_benchmark.py
+
+Output location:
+- data/processed/monthly_benchmark/sample_*.csv
+- data/metadata/monthly_benchmark/*.json
+
+Important:
+- Decide whether sample outputs are committed.
+- If not committed, tests should build them into tmp_path.
+
+Tests:
+- monthly shock standardization
+- forward return construction
+- no future leakage
+- panel schema
+- placeholder visibility
+- sample mode not presented as real empirical evidence
+
+Exit criteria:
+- Sample monthly pipeline can run locally.
+- It does not modify daily GPR outputs.
+- It is documented as software validation, not empirical evidence.
+
+Phase 4: Add monthly benchmark real mode
+----------------------------------------
+
+Goal:
+Port GeoRiskLab's real monthly ingestion with source manifests.
+
+Port/adapt:
+- config/sources.sample.yml
+- source config loading
+- GPR monthly file loader
+- Fama-French developed/emerging factor loader
+- source URL/path redaction
+- local file hashing
+- real source manifests
+- common-sample validation
+
+Suggested GPR files:
+- config/sources.sample.yml
+- src/gprobs/data/monthly_sources.py
+- src/gprobs/data/fama_french.py
+- scripts/build_monthly_benchmark_real.py
+
+Ignore policy:
+- config/sources.yml
+- data/raw/
+- real source manifests if they reveal local machine details
+- real generated outputs unless intentionally published
+
+Fix GeoRiskLab stale-artifact problem:
+- Never reuse old source_manifest_real.json from local GeoRiskLab.
+- Rebuild real mode from a fresh config.
+- Ensure manifests store redacted paths/URLs and stable hashes where needed.
+
+Tests:
+- GPR column mapping
+- Fama-French zip parsing
+- zip safety checks
+- unsupported URL scheme rejection
+- hash mismatch rejection
+- source redaction
+- common sample alignment
+
+Exit criteria:
+- Real monthly benchmark can be built from user-supplied local sources.
+- Missing/stale local real artifacts fail clearly.
+- No raw data or real local paths are committed.
+
+Phase 5: Port monthly benchmark models
+--------------------------------------
+
+Goal:
+Add GeoRiskLab's monthly regression and forecasting benchmark as a separate
+analysis layer.
+
+Port/adapt:
+- HAC spread regression.
+- guarded panel interaction helper.
+- monthly local projection wrapper if useful.
+- expanding-window forecasts.
+- forecast metrics.
+- time split helpers.
+
+Suggested GPR files:
+- src/gprobs/analysis/monthly_benchmark.py
+- src/gprobs/analysis/forecasting.py
+- src/gprobs/analysis/forecast_metrics.py
+- src/gprobs/analysis/time_splits.py
+- scripts/run_monthly_benchmark_regressions.py
+- scripts/run_monthly_benchmark_forecasts.py
+
+Rules:
+- Preserve weak-cluster guard.
+- Do not report two-market aggregate results as credible country-clustered
+  panel inference.
+- Keep monthly benchmark result files separate from daily result files.
+
+Tests:
+- HAC metadata
+- nonunique month predictor rejection
+- incomplete market-month rejection
+- weak-cluster rejection
+- fixed-effect absorption behavior if retained
+- expanding-window forecast no leakage
+- OOS R2 benchmark behavior
+
+Exit criteria:
+- Monthly benchmark model outputs are generated and validated.
+- Existing daily model outputs are unchanged unless intentionally updated.
+
+Phase 6: Unify task runner and CI
+---------------------------------
+
+Goal:
+Make the combined project easy to operate.
+
+Recommended:
+Port GeoRiskLab's Python task-runner idea, adapted for GPR.
+
+Suggested command interface:
+
+python scripts/run_task.py setup
+python scripts/run_task.py build-daily
+python scripts/run_task.py build-monthly-sample
+python scripts/run_task.py build-monthly-real
+python scripts/run_task.py validate-daily
+python scripts/run_task.py validate-monthly-sample
+python scripts/run_task.py validate-monthly-real
+python scripts/run_task.py dashboard
+python scripts/run_task.py test
+python scripts/run_task.py lint
+python scripts/run_task.py all
+
+Do not make Makefile the primary interface because the workspace is Windows.
+An optional Makefile can call the Python runner later.
+
+CI changes:
+- Keep current GPR lint/test matrix.
+- Add script import smoke tests.
+- Add monthly sample pipeline job.
+- Add generated-output freshness only for committed generated artifacts.
+
+Exit criteria:
+- One documented command path exists.
+- CI catches script import failures.
+- CI runs at least the monthly sample pipeline.
+
+Phase 7: Streamlit dashboard integration
+----------------------------------------
+
+Goal:
+Expose the monthly benchmark in the GPR dashboard without muddying the daily
+findings.
+
+Add dashboard tab:
+"Monthly Benchmark"
+
+Required content:
+- Mode badge: sample or real.
+- Source/provenance status.
+- Monthly GPR shock plot.
+- Developed/emerging aggregate return spread plot.
+- Benchmark regression table.
+- Forecast comparison table or plot if available.
+- Clear limitation text:
+  - sample mode is not empirical evidence
+  - real monthly aggregate mode is a benchmark, not a country-panel proof
+  - two-market aggregate design cannot support country-clustered inference
+
+Do not:
+- Mix monthly aggregate returns with daily ETF event study charts.
+- Hide sample-mode warnings.
+- Claim GDELT or macro controls are real unless real inputs are loaded and
+  validated.
+
+Tests:
+- dashboard required monthly output schemas
+- missing monthly outputs handled gracefully
+- sample-mode warnings present
+- tab render helpers defined
+
+Exit criteria:
+- Streamlit runs with daily outputs only.
+- Streamlit runs with daily + monthly benchmark outputs.
+- Tests verify dashboard schema expectations.
+
+Phase 8: Documentation consolidation
+------------------------------------
+
+Goal:
+Make the combined project coherent to a reader.
+
+Update:
+- README.md
+- docs/PROJECT_STATUS.md
+- docs/RESEARCH_NOTE.md
+- docs/TECHNICAL_APPENDIX.md
+- docs/DATA_SOURCE_DECISIONS.md
+- docs/DEPLOYMENT_GUIDE.md
+- docs/PROFILE_PACKAGING.md
+
+Add or adapt:
+- docs/REPRODUCIBILITY.md
+- docs/DATA_SOURCES.md
+- docs/METHODOLOGY.md
+- docs/ROADMAP.md
+
+Required explanation:
+- What the daily ETF pipeline does.
+- What the monthly benchmark pipeline does.
+- What sample mode means.
+- What real mode means.
+- What outputs are committed.
+- What outputs are local only.
+- What evidence supports the current conclusions.
+- What must not be claimed.
+
+Exit criteria:
+- Docs do not contradict each other.
+- README has one clear project story.
+- Profile materials remain honest and concise.
+
+Phase 9: Final verification and release decision
+------------------------------------------------
+
+Goal:
+Prove the merge works before public presentation or PR merge.
+
+Run:
+- ruff check .
+- pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+- python scripts/run_task.py build-monthly-sample
+- python scripts/run_task.py validate-monthly-sample
+- python scripts/build_all.py or python scripts/run_task.py build-daily
+- streamlit run app.py for manual dashboard check
+
+Optional:
+- Run on Windows and Ubuntu.
+- Capture new dashboard screenshots.
+- Create a release branch or draft PR.
+
+Exit criteria:
+- Clean working tree except expected regenerated ignored artifacts.
+- Tests pass.
+- Sample monthly pipeline passes.
+- Daily pipeline passes or known network/provider limitations are documented.
+- Dashboard renders daily and monthly sections without misleading labels.
+
+
+9. Specific Fix List
+====================
+
+Critical before merge
+---------------------
+
+1. Resolve GPR dirty working tree.
+
+   Files currently modified:
+   - app.py
+   - src/gprobs/analysis/drawdown_model.py
+   - src/gprobs/analysis/event_study.py
+   - src/gprobs/analysis/local_projection.py
+   - src/gprobs/analysis/panel_regression.py
+   - src/gprobs/data/download_cache.py
+   - src/gprobs/data/gpr_data.py
+   - src/gprobs/data/market_controls.py
+   - src/gprobs/data/market_data.py
+   - src/gprobs/visuals/initial_plots.py
+
+   Untracked:
+   - src/gprobs/utils.py
+
+2. Fix CONTROL_TICKERS import break.
+
+   Affected:
+   - scripts/build_market_controls.py
+   - src/gprobs/data/market_controls.py
+
+3. Restore or document removed validation guards.
+
+   Areas:
+   - retry validation
+   - GPR date uniqueness
+   - local projection argument validation
+
+4. Add script import smoke coverage.
+
+   This should catch script/module mismatches.
+
+5. Decide GPR license before importing MIT GeoRiskLab code.
+
+High priority during merge
+--------------------------
+
+1. Add AGENTS.md.
+
+2. Add adapted GitHub PR and issue templates.
+
+3. Port source manifests.
+
+4. Port DatasetFiles/path helpers.
+
+5. Port monthly source config sample.
+
+6. Add sample/real dataset language to docs.
+
+7. Keep daily/monthly output schemas separate.
+
+8. Add monthly benchmark tests before dashboard work.
+
+Medium priority
+---------------
+
+1. Add task runner.
+
+2. Add monthly sample pipeline to CI.
+
+3. Add dashboard monthly benchmark tab.
+
+4. Add PDF/static report generation only if it serves a clear public artifact.
+
+5. Add generated-output freshness checks only after deciding which generated
+   artifacts are committed.
+
+Defer
+-----
+
+1. Real GDELT country-month pipeline.
+
+2. Real macro controls.
+
+3. Country-specific GPR scraping.
+
+4. Country-level monthly panel with enough clusters.
+
+5. Tree-based or elastic-net forecasting models.
+
+6. Full static dashboard import.
+
+7. Project-specific MCP.
+
+
+10. Data and Research Interpretation Rules
+==========================================
+
+These rules should survive the merge.
+
+1. No trading-system framing.
+
+   This is an educational/applied economics project, not investment advice.
+
+2. No causal claims from simple regressions.
+
+   Use language like:
+   - associated with
+   - conditional response
+   - benchmark estimate
+   - within this validation design
+
+   Avoid:
+   - proves
+   - causes
+   - tradeable signal
+   - markets are inefficient
+
+3. Sample mode is not evidence.
+
+   Sample mode proves the workflow runs. It does not support empirical claims.
+
+4. Real mode must show provenance.
+
+   Any real-data output must have:
+   - source manifest
+   - input period
+   - source hashes where applicable
+   - clear source descriptions
+   - validation status
+
+5. Daily and monthly findings are not interchangeable.
+
+   Daily ETF event studies and monthly aggregate Fama-French benchmarks answer
+   related but different questions.
+
+6. Two-market aggregate monthly results are limited.
+
+   They are useful as a benchmark but not as credible country-clustered panel
+   inference.
+
+7. GDELT and macro controls require explicit real-data validation.
+
+   Until real inputs exist, they should be described as staged extensions or
+   sample-mode software checks.
+
+
+11. Testing Plan
+================
+
+Existing GPR tests to preserve
+------------------------------
+
+Keep tests around:
+- dashboard output schemas
+- app structure
+- country universe
+- download cache
+- GPR cleaning
+- return construction
+- market controls
+- diagnostics
+- analysis panel
+- event study
+- event robustness
+- panel regression
+- panel sample robustness
+- quantile regression
+- local projection
+- rolling sensitivity
+- drawdown model
+- evidence summary
+- results brief
+- pipeline order
+
+GeoRiskLab tests to port/adapt
+------------------------------
+
+Port concepts from:
+- tests/test_utils.py
+- tests/test_validation.py
+- tests/test_ingest.py
+- tests/test_features.py
+- tests/test_econometrics.py
+- tests/test_forecasting.py
+- tests/test_real_monthly_pipeline.py
+- tests/test_ci_contracts.py
+- tests/test_scripts.py
+- tests/test_public_outputs.py
+- tests/test_visualization.py
+
+New tests needed
+----------------
+
+1. Script import smoke test.
+
+   Purpose:
+   Catch import mismatches like CONTROL_TICKERS.
+
+2. Dataset mode tests.
+
+   Validate:
+   - daily_etf
+   - monthly_benchmark_sample
+   - monthly_benchmark_real
+
+3. Source manifest tests.
+
+   Validate:
+   - source redaction
+   - local hash recording
+   - unsupported URL rejection
+   - missing source clarity
+
+4. Monthly benchmark panel tests.
+
+   Validate:
+   - month-start dates
+   - no duplicate keys
+   - forward returns use future months only
+   - common-sample alignment
+   - placeholder columns are visible
+
+5. Monthly benchmark model tests.
+
+   Validate:
+   - HAC regression metadata
+   - weak-cluster guard
+   - forecast split chronology
+   - OOS metrics
+   - result schema columns
+
+6. Dashboard monthly tab tests.
+
+   Validate:
+   - missing monthly outputs do not crash the app
+   - sample warnings are displayed
+   - required monthly output schemas are enforced
+
+
+12. Git Plan
+============
+
+Recommended branch flow
+-----------------------
+
+1. Clean current GPR work.
+
+   Branch:
+   codex/pre-merge-gpr-cleanup
+
+2. Add setup and guardrails.
+
+   Branch:
+   codex/merge-setup-georisklab
+
+3. Port shared infrastructure.
+
+   Branch:
+   codex/port-georisklab-infra
+
+4. Add monthly sample benchmark.
+
+   Branch:
+   codex/monthly-benchmark-sample
+
+5. Add monthly real benchmark.
+
+   Branch:
+   codex/monthly-benchmark-real
+
+6. Add monthly models.
+
+   Branch:
+   codex/monthly-benchmark-models
+
+7. Add dashboard integration.
+
+   Branch:
+   codex/monthly-benchmark-dashboard
+
+8. Consolidate docs and CI.
+
+   Branch:
+   codex/docs-ci-merged-observatory
+
+How to bring GeoRiskLab code in
+-------------------------------
+
+Preferred:
+- Add GeoRiskLab as a remote for reference.
+- Copy/adapt modules intentionally.
+- Commit each conceptual slice.
+
+Example:
+git remote add georisklab https://github.com/N3V3MORE/georisklab.git
+git fetch georisklab
+
+Do not:
+- merge georisklab/main directly into GPR main
+- copy the entire repo into a subdirectory and sort it out later
+- commit local GeoRiskLab real artifacts
+- commit .serena/cache or .claude worktrees
+
+Commit style
+------------
+
+Use small commits by behavior:
+
+1. chore: add merge guardrails and templates
+2. chore: add dataset path helpers
+3. feat: add source manifest helpers
+4. feat: add monthly benchmark sample data builder
+5. feat: add monthly benchmark validation
+6. feat: add monthly benchmark real source ingestion
+7. feat: add monthly benchmark regressions
+8. feat: add monthly benchmark forecasts
+9. feat: add monthly benchmark dashboard tab
+10. docs: consolidate methodology and reproducibility notes
+
+
+13. Documentation Plan
+======================
+
+README.md
+---------
+
+Update to explain:
+- The project now has a daily ETF observatory and a monthly benchmark layer.
+- Daily pipeline is the main dashboard product.
+- Monthly sample mode is for reproducibility/CI.
+- Monthly real mode uses user-supplied GPR/Fama-French data.
+- Results remain conditional and non-causal.
+
+docs/PROJECT_STATUS.md
+----------------------
+
+Update implemented list with:
+- source manifests
+- sample/real monthly benchmark
+- monthly validation
+- monthly benchmark regressions/forecasts if implemented
+- dashboard monthly tab if implemented
+
+docs/TECHNICAL_APPENDIX.md
+--------------------------
+
+Add:
+- dataset mode definitions
+- frequency distinctions
+- source manifest details
+- monthly benchmark formulas
+- validation guardrails
+- weak-cluster limitations
+
+docs/DATA_SOURCE_DECISIONS.md
+-----------------------------
+
+Add:
+- Kenneth French developed/emerging factors
+- source config policy
+- local source hashing
+- why monthly benchmark uses aggregate returns
+- why daily ETF and monthly benchmark coexist
+
+docs/REPRODUCIBILITY.md
+-----------------------
+
+Port from GeoRiskLab.
+
+Must include:
+- install commands
+- daily pipeline commands
+- monthly sample commands
+- monthly real commands
+- what is ignored
+- what is committed
+- how to verify outputs
+
+docs/METHODOLOGY.md
+-------------------
+
+Port/adapt from GeoRiskLab.
+
+Must include:
+- identification logic
+- allowed and disallowed claims
+- shock measures
+- return construction
+- regression designs
+- inference limitations
+- forecasting validation
+
+docs/ROADMAP.md
+---------------
+
+Use a staged roadmap:
+
+V0.2:
+- merge infrastructure
+- monthly benchmark sample/real
+- dashboard monthly tab
+
+V0.3:
+- real macro controls
+- selected GDELT extension
+
+V1.0:
+- country-level monthly panel
+- enough clusters for credible panel inference
+- richer robustness package
+
+
+14. Risk Register
+=================
+
+Risk 1: Dirty GPR state hides broken code.
+
+Evidence:
+CONTROL_TICKERS import mismatch found in current local dirty tree.
+
+Mitigation:
+Clean and test GPR before merge work.
+
+Risk 2: Daily and monthly data are accidentally combined.
+
+Mitigation:
+Use explicit dataset modes, separate filenames, separate dashboard sections, and
+schema tests.
+
+Risk 3: Sample outputs get presented as real findings.
+
+Mitigation:
+Use mode badges, warnings, tests for sample warning text, and docs language.
+
+Risk 4: GeoRiskLab generated-output policy conflicts with GPR.
+
+Mitigation:
+Decide committed artifacts explicitly. Adapt check-generated only to committed
+outputs.
+
+Risk 5: License ambiguity.
+
+Mitigation:
+Add or decide GPR license before importing MIT GeoRiskLab code.
+
+Risk 6: Stale local real artifacts contaminate results.
+
+Mitigation:
+Ignore old local real manifests. Rebuild from config/sources.yml and validate.
+
+Risk 7: GDELT/macro staged features overclaim.
+
+Mitigation:
+Defer real GDELT/macro or keep them labeled as staged/sample until validated.
+
+Risk 8: CI becomes too slow or network-dependent.
+
+Mitigation:
+Keep CI on deterministic sample mode. Do not require real downloads in CI.
+
+Risk 9: Two package names cause confusion.
+
+Mitigation:
+Prefer porting into src/gprobs over adding top-level georisklab package.
+
+Risk 10: Dashboard becomes overloaded.
+
+Mitigation:
+Add one monthly benchmark tab only after outputs are stable. Keep daily tabs as
+the main product.
+
+
+15. Immediate Next Action Checklist
+===================================
+
+Do these in order.
+
+1. In GPR_Observer, inspect and resolve dirty changes.
+
+2. Fix CONTROL_TICKERS import mismatch.
+
+3. Decide whether src/gprobs/utils.py should be committed.
+
+4. Run:
+   ruff check .
+   pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+
+5. Commit the cleaned GPR state.
+
+6. Add AGENTS.md.
+
+7. Decide/add license.
+
+8. Add adapted GitHub templates from GeoRiskLab.
+
+9. Port shared validation/path/source-metadata helpers.
+
+10. Add monthly sample benchmark pipeline.
+
+11. Add monthly real benchmark ingestion.
+
+12. Add monthly benchmark models.
+
+13. Add Streamlit monthly benchmark tab.
+
+14. Consolidate docs.
+
+15. Strengthen CI.
+
+
+16. Bottom-Line Recommendation
+==============================
+
+The best combined project is:
+
+GPR Equity Observatory as the public app and research product, with GeoRiskLab
+absorbed as its reproducibility and monthly-benchmark engine.
+
+The merge should preserve:
+- GPR's Streamlit dashboard
+- GPR's daily 20-country ETF panel
+- GPR's broad empirical analysis suite
+- GPR's profile-ready docs and screenshots
+- GeoRiskLab's sample/real split
+- GeoRiskLab's source manifests
+- GeoRiskLab's validation guardrails
+- GeoRiskLab's monthly developed/emerging benchmark
+- GeoRiskLab's task-runner discipline
+
+The merge should not preserve:
+- GeoRiskLab's local root name
+- stale local real artifacts
+- raw third-party data
+- local .serena cache
+- local .claude worktrees
+- static dashboard as a competing primary UI
+- sample-mode outputs as empirical findings
+- two-market aggregate results as strong panel inference
+
+Implementation should proceed in small, tested slices. The first real code
+change should not be importing GeoRiskLab models. It should be cleaning GPR's
+current dirty tree, then adding guardrails, paths, dataset naming, source
+manifests, and validation contracts.

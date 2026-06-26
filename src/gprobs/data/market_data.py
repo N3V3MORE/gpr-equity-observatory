@@ -9,17 +9,14 @@ from gprobs.config import (
     DEFAULT_RETRY_BACKOFF_SECONDS,
 )
 from gprobs.data.download_cache import retry
+from gprobs.utils import require_columns
 
 COUNTRY_COLUMNS = ["country", "ticker", "market_group", "region"]
 
 
 def load_country_universe(path: str | Path = "data/country_universe.csv") -> pd.DataFrame:
-    """Load the MVP country and ETF list."""
     universe = pd.read_csv(path)
-    missing_columns = [column for column in COUNTRY_COLUMNS if column not in universe.columns]
-    if missing_columns:
-        raise ValueError(f"Country universe is missing columns: {missing_columns}")
-
+    require_columns(universe, COUNTRY_COLUMNS, "Country universe")
     return universe[COUNTRY_COLUMNS].copy()
 
 

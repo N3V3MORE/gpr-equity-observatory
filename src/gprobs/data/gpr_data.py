@@ -12,6 +12,7 @@ from gprobs.config import (
     RAW_DATA_DIR,
 )
 from gprobs.data.download_cache import download_url_to_cache, fetch_url_bytes, retry
+from gprobs.utils import require_columns
 
 DAILY_GPR_URL = "https://www.matteoiacoviello.com/gpr_files/data_gpr_daily_recent.xls"
 DEFAULT_GPR_CACHE_PATH = RAW_DATA_DIR / "gpr_daily_recent.xls"
@@ -84,10 +85,7 @@ def download_daily_gpr(
 
 
 def clean_daily_gpr(raw: pd.DataFrame) -> pd.DataFrame:
-    """Clean official daily GPR data into project-friendly column names."""
-    missing_columns = [column for column in GPR_COLUMN_MAP if column not in raw.columns]
-    if missing_columns:
-        raise ValueError(f"Daily GPR data is missing columns: {missing_columns}")
+    require_columns(raw, list(GPR_COLUMN_MAP), "Daily GPR data")
 
     cleaned = raw[list(GPR_COLUMN_MAP)].rename(columns=GPR_COLUMN_MAP).copy()
     cleaned["date"] = pd.to_datetime(cleaned["date"])

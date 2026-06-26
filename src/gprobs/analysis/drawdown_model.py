@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
@@ -13,6 +15,7 @@ from gprobs.config import (
     DRAWDOWN_VOLATILITY_WINDOW_DAYS,
     GPR_EXPANDING_SHOCK_MIN_PERIODS,
 )
+from gprobs.utils import coerce_shock_to_int
 
 DEFAULT_FEATURE_COLUMNS = [
     "gpr_change_z",
@@ -27,7 +30,10 @@ DEFAULT_FEATURE_COLUMNS = [
     "emerging_market",
 ]
 
+GPR_FEATURE_COLUMNS = ["gpr_change_z", "gpr_change_shock_expanding"]
+MARKET_CONTROL_FEATURE_COLUMNS = CONTROL_COLUMNS.copy()
 VOLATILITY_FEATURE_COLUMNS = ["rolling_volatility"]
+VOLATILITY_PLUS_GPR_FEATURE_COLUMNS = VOLATILITY_FEATURE_COLUMNS + GPR_FEATURE_COLUMNS
 
 METRIC_COLUMNS = [
     "fold",
@@ -38,9 +44,84 @@ METRIC_COLUMNS = [
     "test_end",
     "roc_auc",
     "average_precision",
+    "brier_score",
     "base_rate",
     "observation_count",
 ]
+
+PREDICTION_COLUMNS = [
+    "date",
+    "ticker",
+    "country",
+    "market_group",
+    "fold",
+    "model_name",
+    "train_start",
+    "train_end",
+    "test_start",
+    "test_end",
+    "drawdown_risk",
+    "predicted_probability",
+    "forward_min_return",
+]
+
+THRESHOLD_METRIC_COLUMNS = [
+    "model_name",
+    "threshold",
+    "precision",
+    "recall",
+    "f1",
+    "share_flagged",
+    "event_rate_flagged",
+    "observation_count",
+]
+
+CALIBRATION_COLUMNS = [
+    "model_name",
+    "probability_decile",
+    "mean_predicted_probability",
+    "realized_event_rate",
+    "observation_count",
+]
+
+LIFT_COLUMNS = [
+    "model_name",
+    "bucket",
+    "event_rate",
+    "base_event_rate",
+    "lift",
+    "observation_count",
+]
+
+COUNTRY_RISK_COLUMNS = [
+    "country",
+    "market_group",
+    "model_name",
+    "average_predicted_probability",
+    "realized_event_rate",
+    "observation_count",
+]
+
+DRAWDOWN_MODEL_SPECS = [
+    ("constant_baseline", []),
+    ("volatility_only", VOLATILITY_FEATURE_COLUMNS),
+    ("gpr_only", GPR_FEATURE_COLUMNS),
+    ("market_controls_only", MARKET_CONTROL_FEATURE_COLUMNS),
+    ("volatility_plus_gpr", VOLATILITY_PLUS_GPR_FEATURE_COLUMNS),
+    ("full_features", DEFAULT_FEATURE_COLUMNS),
+]
+
+DRAWDOWN_THRESHOLDS = (0.1, 0.2, 0.3, 0.4, 0.5)
+
+
+@dataclass(frozen=True)
+class DrawdownEvaluation:
+    metrics: pd.DataFrame
+    predictions: pd.DataFrame
+    threshold_metrics: pd.DataFrame
+    calibration: pd.DataFrame
+    lift: pd.DataFrame
+    country_risk_summary: pd.DataFrame
 
 
 def build_drawdown_dataset(
@@ -118,37 +199,178 @@ def evaluate_drawdown_classifier(
     embargo_dates: int | None = None,
 ) -> pd.DataFrame:
     """Evaluate drawdown classification with purged chronological validation folds."""
-    model_specs = _drawdown_model_specs(feature_columns)
+    return evaluate_drawdown_prediction_lab(
+        dataset,
+        n_splits=n_splits,
+        feature_columns=feature_columns,
+        embargo_dates=embargo_dates,
+    ).metrics
+
+
+def evaluate_drawdown_prediction_lab(
+    dataset: pd.DataFrame,
+    n_splits: int = 5,
+    feature_columns: list[str] | None = None,
+    embargo_dates: int | None = None,
+) -> DrawdownEvaluation:
+    """Evaluate out-of-sample drawdown risk models and derived Prediction Lab diagnostics."""
+    model_specs = _model_specs(feature_columns)
     if embargo_dates is None:
         embargo_dates = int(dataset.attrs.get("forward_horizon", DRAWDOWN_HORIZON_DAYS))
     folds = _date_folds(dataset, n_splits=n_splits, embargo_dates=embargo_dates)
 
     rows = []
+    prediction_frames = []
     for fold_number, (train_dates, test_dates) in enumerate(folds, start=1):
         train = dataset.loc[dataset["date"].isin(train_dates)]
         test = dataset.loc[dataset["date"].isin(test_dates)]
+        fold_metadata = {
+            "fold": fold_number,
+            "train_start": train["date"].min(),
+            "train_end": train["date"].max(),
+            "test_start": test["date"].min(),
+            "test_end": test["date"].max(),
+        }
         for model_name, model_features in model_specs:
             probabilities = _predict_probabilities(train, test, model_features)
+            probabilities = np.clip(probabilities, 0.0, 1.0)
+            roc = (
+                roc_auc_score(test["drawdown_risk"], probabilities)
+                if test["drawdown_risk"].nunique() >= 2
+                else float("nan")
+            )
 
             rows.append(
                 {
-                    "fold": fold_number,
+                    **fold_metadata,
                     "model_name": model_name,
-                    "train_start": train["date"].min(),
-                    "train_end": train["date"].max(),
-                    "test_start": test["date"].min(),
-                    "test_end": test["date"].max(),
-                    "roc_auc": _safe_roc_auc(test["drawdown_risk"], probabilities),
+                    "roc_auc": roc,
                     "average_precision": average_precision_score(
                         test["drawdown_risk"],
                         probabilities,
                     ),
+                    "brier_score": float(np.mean((test["drawdown_risk"].to_numpy() - probabilities) ** 2)),
                     "base_rate": test["drawdown_risk"].mean(),
                     "observation_count": len(test),
                 }
             )
+            prediction_frames.append(_prediction_frame(test, probabilities, model_name, fold_metadata))
 
-    return pd.DataFrame(rows, columns=METRIC_COLUMNS)
+    metrics = pd.DataFrame(rows, columns=METRIC_COLUMNS)
+    predictions = (
+        pd.concat(prediction_frames, ignore_index=True)
+        if prediction_frames
+        else pd.DataFrame(columns=PREDICTION_COLUMNS)
+    )
+
+    return DrawdownEvaluation(
+        metrics=metrics,
+        predictions=predictions,
+        threshold_metrics=build_drawdown_threshold_metrics(predictions),
+        calibration=build_drawdown_calibration(predictions),
+        lift=build_drawdown_lift(predictions),
+        country_risk_summary=build_drawdown_country_risk_summary(predictions),
+    )
+
+
+def build_drawdown_threshold_metrics(
+    predictions: pd.DataFrame,
+    thresholds: tuple[float, ...] = DRAWDOWN_THRESHOLDS,
+) -> pd.DataFrame:
+    rows = []
+    for model_name, group in predictions.groupby("model_name", sort=False):
+        actual = group["drawdown_risk"].astype(int)
+        probabilities = group["predicted_probability"]
+        for threshold in thresholds:
+            flagged = probabilities >= threshold
+            true_positive = int(((actual == 1) & flagged).sum())
+            false_positive = int(((actual == 0) & flagged).sum())
+            false_negative = int(((actual == 1) & ~flagged).sum())
+            precision = true_positive / (true_positive + false_positive) if flagged.any() else 0.0
+            recall = true_positive / (true_positive + false_negative) if actual.sum() else 0.0
+            f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+            rows.append(
+                {
+                    "model_name": model_name,
+                    "threshold": threshold,
+                    "precision": precision,
+                    "recall": recall,
+                    "f1": f1,
+                    "share_flagged": flagged.mean(),
+                    "event_rate_flagged": actual.loc[flagged].mean() if flagged.any() else np.nan,
+                    "observation_count": len(group),
+                }
+            )
+
+    return pd.DataFrame(rows, columns=THRESHOLD_METRIC_COLUMNS)
+
+
+def build_drawdown_calibration(predictions: pd.DataFrame, bucket_count: int = 10) -> pd.DataFrame:
+    rows = []
+    for model_name, group in predictions.groupby("model_name", sort=False):
+        if group.empty:
+            continue
+        working = group.copy()
+        n_buckets = min(bucket_count, len(working))
+        working["probability_decile"] = pd.qcut(
+            working["predicted_probability"].rank(method="first"),
+            q=n_buckets,
+            labels=range(1, n_buckets + 1),
+        ).astype(int)
+        summary = (
+            working.groupby("probability_decile", as_index=False)
+            .agg(
+                mean_predicted_probability=("predicted_probability", "mean"),
+                realized_event_rate=("drawdown_risk", "mean"),
+                observation_count=("drawdown_risk", "size"),
+            )
+            .assign(model_name=model_name)
+        )
+        rows.extend(summary[CALIBRATION_COLUMNS].to_dict("records"))
+
+    return pd.DataFrame(rows, columns=CALIBRATION_COLUMNS)
+
+
+def build_drawdown_lift(predictions: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    bucket_specs = [("top_10_percent", 0.10), ("top_20_percent", 0.20)]
+    for model_name, group in predictions.groupby("model_name", sort=False):
+        if group.empty:
+            continue
+        ordered = group.sort_values("predicted_probability", ascending=False)
+        base_event_rate = group["drawdown_risk"].mean()
+        for bucket, share in bucket_specs:
+            top_count = max(1, int(np.ceil(len(ordered) * share)))
+            top_rows = ordered.head(top_count)
+            event_rate = top_rows["drawdown_risk"].mean()
+            rows.append(
+                {
+                    "model_name": model_name,
+                    "bucket": bucket,
+                    "event_rate": event_rate,
+                    "base_event_rate": base_event_rate,
+                    "lift": event_rate / base_event_rate if base_event_rate else np.nan,
+                    "observation_count": len(top_rows),
+                }
+            )
+
+    return pd.DataFrame(rows, columns=LIFT_COLUMNS)
+
+
+def build_drawdown_country_risk_summary(predictions: pd.DataFrame) -> pd.DataFrame:
+    if predictions.empty:
+        return pd.DataFrame(columns=COUNTRY_RISK_COLUMNS)
+
+    summary = (
+        predictions.groupby(["country", "market_group", "model_name"], dropna=False, as_index=False)
+        .agg(
+            average_predicted_probability=("predicted_probability", "mean"),
+            realized_event_rate=("drawdown_risk", "mean"),
+            observation_count=("drawdown_risk", "size"),
+        )
+        .sort_values(["model_name", "average_predicted_probability"], ascending=[True, False])
+    )
+    return summary[COUNTRY_RISK_COLUMNS]
 
 
 def fit_drawdown_feature_importance(
@@ -169,6 +391,34 @@ def fit_drawdown_feature_importance(
     )
     importance["abs_coefficient"] = importance["coefficient"].abs()
     return importance.sort_values("abs_coefficient", ascending=False).reset_index(drop=True)
+
+
+def _model_specs(feature_columns: list[str] | None = None) -> list[tuple[str, list[str]]]:
+    return [("full_features", feature_columns)] if feature_columns is not None else DRAWDOWN_MODEL_SPECS
+
+
+def _prediction_frame(
+    test: pd.DataFrame,
+    probabilities: np.ndarray,
+    model_name: str,
+    fold_metadata: dict,
+) -> pd.DataFrame:
+    prediction_data = test.copy()
+    for column in ["ticker", "country", "market_group", "forward_min_return"]:
+        if column not in prediction_data.columns:
+            prediction_data[column] = pd.NA
+
+    predictions = prediction_data[
+        ["date", "ticker", "country", "market_group", "drawdown_risk", "forward_min_return"]
+    ].copy()
+    predictions["fold"] = fold_metadata["fold"]
+    predictions["model_name"] = model_name
+    predictions["train_start"] = fold_metadata["train_start"]
+    predictions["train_end"] = fold_metadata["train_end"]
+    predictions["test_start"] = fold_metadata["test_start"]
+    predictions["test_end"] = fold_metadata["test_end"]
+    predictions["predicted_probability"] = probabilities
+    return predictions[PREDICTION_COLUMNS]
 
 
 def _add_time_aware_gpr_features(data: pd.DataFrame) -> pd.DataFrame:
@@ -198,7 +448,7 @@ def _add_time_aware_gpr_features(data: pd.DataFrame) -> pd.DataFrame:
     ].copy()
     gpr_features["gpr_change_shock_expanding"] = gpr_features[
         "gpr_change_shock_expanding"
-    ].map(_coerce_shock_to_int)
+    ].map(coerce_shock_to_int)
 
     drop_columns = [
         column
@@ -243,37 +493,17 @@ def _expanding_z_score(values: pd.Series) -> pd.Series:
     return z_score.replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
 
-def _drawdown_model_specs(
-    feature_columns: list[str] | None,
-) -> list[tuple[str, list[str]]]:
-    if feature_columns is not None:
-        return [("full_features", feature_columns)]
-
-    return [
-        ("constant_baseline", []),
-        ("volatility_only", VOLATILITY_FEATURE_COLUMNS),
-        ("full_features", DEFAULT_FEATURE_COLUMNS),
-    ]
-
-
 def _predict_probabilities(
     train: pd.DataFrame,
     test: pd.DataFrame,
     feature_columns: list[str],
 ) -> np.ndarray:
-    baseline_probability = train["drawdown_risk"].mean()
     if not feature_columns or train["drawdown_risk"].nunique() < 2:
-        return np.repeat(baseline_probability, len(test))
+        return np.repeat(train["drawdown_risk"].mean(), len(test))
 
     model = _make_classifier()
     model.fit(train[feature_columns], train["drawdown_risk"])
     return model.predict_proba(test[feature_columns])[:, 1]
-
-
-def _coerce_shock_to_int(value) -> int:
-    if isinstance(value, str):
-        return int(value.strip().lower() == "true")
-    return int(bool(value))
 
 
 def _forward_min_cumulative_return(returns: pd.Series, horizon: int) -> pd.Series:
@@ -334,9 +564,3 @@ def _make_classifier() -> Pipeline:
             ),
         ]
     )
-
-
-def _safe_roc_auc(target: pd.Series, probabilities: np.ndarray) -> float:
-    if target.nunique() < 2:
-        return float("nan")
-    return roc_auc_score(target, probabilities)

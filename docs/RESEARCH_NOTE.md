@@ -9,6 +9,11 @@ data, public market controls, event studies, panel regressions, quantile
 regressions, local projections, rolling sensitivities, and a simple drawdown-risk
 classifier.
 
+The repository also includes a separate monthly benchmark layer. That layer
+uses deterministic sample mode for software validation and user-supplied real
+mode for aggregate developed/emerging benchmark analysis. It is deliberately
+kept separate from the daily ETF evidence.
+
 The current evidence is mixed. Market-controlled regressions show small,
 statistically weak average responses to standardized daily GPR jumps. The
 date-fixed-effects interaction, which is the cleanest H1 test, does not show a
@@ -33,6 +38,8 @@ The project tests this question through several complementary views:
   later horizons?
 - Drawdown classification: do current risk conditions help identify future
   downside-risk episodes?
+- Monthly benchmark: do aggregate developed/emerging returns show a lower
+  frequency benchmark association with monthly GPR changes?
 
 ## Data
 
@@ -57,6 +64,11 @@ The current market controls use public no-key proxies:
 
 Oil is not treated as a log return because WTI futures traded below zero in
 April 2020. Using a level change avoids an invalid mathematical transformation.
+
+The monthly benchmark uses either deterministic sample mode or real mode. Sample
+mode is not empirical evidence. Real mode uses user-supplied monthly
+Caldara-Iacoviello GPR and Kenneth French developed/emerging factor files, with
+local source hashes and redacted manifests.
 
 ## Methods
 
@@ -133,13 +145,24 @@ model. It is a communication layer that places the main event-study, regression,
 quantile, local-projection, and drawdown-classifier outputs in one table with
 plain-English interpretation.
 
+### Monthly Benchmark
+
+The monthly benchmark builds an aggregate developed/emerging monthly panel. The
+main benchmark regression uses the emerging-minus-developed forward return
+spread and HAC standard errors. Forecast comparisons use expanding windows and
+OOS R2 against a historical-mean benchmark.
+
+This monthly layer is not a replacement for the daily ETF panel. With only two
+aggregate markets, it cannot support credible country-clustered inference and
+is not a country-panel proof.
+
 ## Current Results
 
 The controlled panel regression estimates the developed-market GPR-jump
 coefficient at about `-0.4` basis points per one-SD GPR jump, with a p-value
-around `0.328`. The controlled emerging-market interaction is about `-0.6` basis
-points, with a p-value around `0.551`. The date-fixed-effects H1 interaction is
-also about `-0.6` basis points, with a p-value around `0.557`. This is a sharper
+around `0.325`. The controlled emerging-market interaction is about `-0.5` basis
+points, with a p-value around `0.574`. The date-fixed-effects H1 interaction is
+also about `-0.6` basis points, with a p-value around `0.563`. This is a sharper
 and more interpretable specification, but it does not strongly support a
 differential average response for emerging markets.
 
@@ -152,16 +175,16 @@ but neither is statistically strong.
 The quantile regression results are more suggestive than conclusive. The
 10th-percentile GPR-jump coefficient is about `-0.8` basis points, which is
 directionally consistent with downside concentration. However, the p-value is
-around `0.280`, so this is not a firm result.
+around `0.271`, so this is not a firm result.
 
 The abnormal-return local projection estimates now line up better with the
 event-study framing. At the 20-day horizon, the developed-market estimate is
 near zero at about `0.01%`, while the emerging-market estimate is negative at
-about `-0.11%`. This is useful as a diagnostic response path, not as a
+about `-0.06%`. This is useful as a diagnostic response path, not as a
 standalone claim.
 
-The drawdown classifier has a mean ROC AUC of about `0.614` and average
-precision of about `0.370`, compared with a mean event rate of about `28.5%`.
+The drawdown classifier has a mean ROC AUC of about `0.617` and average
+precision of about `0.373`, compared with a mean event rate of about `28.6%`.
 This is modest predictive signal. Rolling volatility is the largest feature by
 standardized coefficient. GPR features are small in the current classifier, so
 the ML layer should be described as exploratory.
@@ -180,6 +203,10 @@ coefficient is negative, and the date-fixed-effects interaction is small and
 statistically weak. That is an important warning against over-selling a single
 headline result.
 
+Monthly sample-mode results, when generated, should not be included as empirical
+findings. Monthly real-mode benchmark outputs require user-supplied source files
+and provenance checks before interpretation.
+
 ## Interpretation
 
 The current evidence supports a cautious interpretation:
@@ -193,6 +220,8 @@ The current evidence supports a cautious interpretation:
   alone.
 - The ML model is useful for disciplined risk classification practice, but it is
   not a strong prediction engine.
+- The monthly benchmark is useful for reproducibility and aggregate comparison,
+  but it should not be mixed with daily ETF findings or described as causal.
 
 The project should therefore be presented as a transparent empirical platform,
 not as a finished proof of a single hypothesis.
@@ -226,11 +255,17 @@ some earlier events from controlled models.
 The current project uses global GPR, not country-specific GPR. Country-specific
 GPR could change the interpretation of country-level sensitivity.
 
+The monthly real workflow is local only by default. Source configs, raw inputs,
+and real generated outputs are not committed unless a separate data-publication
+decision is made.
+
 ## Next Steps
 
 The most useful next steps are:
 
 - Add FRED macro controls if an API key is available.
+- Add validated real macro controls to the monthly benchmark if source coverage
+  is strong enough.
 - Add country-specific GPR data where coverage is reliable.
 - Delay GDELT until the core empirical story is clearer.
 

@@ -14,9 +14,47 @@ python scripts/build_all.py
 streamlit run app.py
 ```
 
-The dashboard expects generated files in `data/processed/`. Those files are not
-committed to Git because the project keeps downloaded and generated market data
-out of version control.
+For the exact resolver-locked environment, run `uv sync --all-extras` first.
+If the local Python environment does not already have dependencies installed,
+run the same commands through `uv run --all-extras`.
+
+The dashboard expects generated daily files in `data/processed/`. Those files
+are not committed to Git because the project keeps downloaded and generated
+market data out of version control.
+
+The Monthly Benchmark tab is optional. If monthly benchmark outputs are absent,
+the app still runs with the daily ETF dashboard and shows build instructions in
+the monthly tab. To populate the deterministic monthly sample tab locally, run:
+
+```powershell
+python scripts/run_task.py monthly-sample --min-train-months 24
+```
+
+Before publishing screenshots, opening a pull request, or asking someone else
+to review the branch, run the same checks used elsewhere in the repo:
+
+```powershell
+ruff check .
+pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+```
+
+## Local-First Portfolio Path
+
+The lowest-risk public presentation path is local-first:
+
+- keep the Streamlit app as a locally runnable dashboard
+- use [reports/RESULTS_BRIEF.md](../reports/RESULTS_BRIEF.md) as the short
+  public result summary
+- use [reports/screenshots](../reports/screenshots) for dashboard visuals
+- use [docs/REVIEWER_GUIDE.md](REVIEWER_GUIDE.md) for reviewer navigation
+- use [docs/BLOG_POST_DRAFT.md](BLOG_POST_DRAFT.md) or a shortened LinkedIn
+  version for the project narrative
+- use [docs/LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) for the manual GitHub and
+  profile steps
+
+This path avoids committing generated market data and avoids a public app that
+starts without its required processed files. It is a complete portfolio option,
+not a fallback.
 
 ## Streamlit Community Cloud Path
 
@@ -61,6 +99,8 @@ Cons:
 - Needs a data-licensing comfort check.
 - Generated outputs can become stale.
 - The repo becomes larger.
+- Monthly sample outputs are not empirical evidence and must be labelled as
+  sample mode if published.
 
 ### Option B: Build Data During Deployment
 
@@ -93,6 +133,13 @@ Cons:
 - Adds operational complexity.
 - Requires deciding who can access the files.
 
+### Monthly Real-Mode Warning
+
+Do not commit `config/sources.yml`, raw monthly source files, or real local
+paths. Real monthly outputs are local only by default. If they are published,
+the source manifests must be checked for redaction and the dashboard must label
+them as real monthly aggregate benchmark outputs.
+
 ## Recommendation
 
 For a student profile project, use one of these paths:
@@ -105,3 +152,5 @@ For a student profile project, use one of these paths:
 Do not deploy a public app that silently fails because processed data is
 missing. That would weaken the project more than keeping it local and well
 documented.
+
+Do not deploy sample-mode monthly outputs as if they were empirical findings.

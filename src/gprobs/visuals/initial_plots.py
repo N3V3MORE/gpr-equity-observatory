@@ -23,8 +23,7 @@ def plot_gpr_and_group_returns(
 ) -> None:
     """Plot daily GPR and cumulative average ETF returns by market group."""
     cumulative_returns = build_group_cumulative_returns(group_summary)
-    first_return_date = cumulative_returns["date"].min()
-    gpr = gpr.loc[gpr["date"] >= first_return_date]
+    gpr = gpr.loc[gpr["date"] >= cumulative_returns["date"].min()]
 
     fig, axes = plt.subplots(2, 1, figsize=(11, 7), sharex=True)
 

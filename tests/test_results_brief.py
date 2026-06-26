@@ -74,6 +74,7 @@ def test_build_results_brief_summarizes_mixed_evidence_cautiously():
     assert "Date fixed-effects emerging interaction" in brief
     assert "-0.6 bps" in brief
     assert "| Drawdown classifier | 0.614 | n/a | cross-validation metric |" in brief
+    assert "Prediction Lab treats the drawdown model as an out-of-sample risk-classification experiment" in brief
     assert "i.i.d. QuantReg asymptotic p-value" in brief
     assert "market-model abnormal return responses" in brief
     assert "not strong evidence" in brief

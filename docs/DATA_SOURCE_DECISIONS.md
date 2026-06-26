@@ -62,6 +62,33 @@ Recommendation:
 - Do not scrape the pages until we choose a narrow country list and confirm that
   the extracted data can be validated.
 
+## Monthly Benchmark Sources
+
+Current status:
+
+- The monthly benchmark layer has two modes:
+  - `monthly_benchmark_sample`: deterministic generated data for CI and
+    software validation.
+  - `monthly_benchmark_real`: user-supplied GPR and Kenneth French factor
+    files.
+- Real monthly source configuration lives in local-only `config/sources.yml`,
+  copied from `config/sources.sample.yml`.
+- Real source manifests hash local input files but redact absolute local paths.
+- HTTPS real sources require an expected SHA-256 hash. Non-HTTPS URL schemes are
+  rejected.
+
+Source choices:
+
+- Monthly GPR uses the Caldara-Iacoviello monthly export format with `GPR`,
+  `GPRT`, and `GPRA` columns mapped to project-standard names.
+- Monthly developed/emerging returns use Kenneth French factor zip files and the
+  `Mkt-RF` and `RF` monthly columns.
+
+Interpretation rule:
+
+- The developed/emerging monthly benchmark is an aggregate comparison. It should
+  not be presented as country-level or country-clustered panel evidence.
+
 ## GDELT News/Event Data
 
 Official source:

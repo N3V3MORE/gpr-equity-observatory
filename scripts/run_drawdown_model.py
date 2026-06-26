@@ -4,7 +4,7 @@ import pandas as pd
 
 from gprobs.analysis.drawdown_model import (
     build_drawdown_dataset,
-    evaluate_drawdown_classifier,
+    evaluate_drawdown_prediction_lab,
     fit_drawdown_feature_importance,
 )
 from gprobs.config import DRAWDOWN_HORIZON_DAYS, DRAWDOWN_N_SPLITS, DRAWDOWN_THRESHOLD
@@ -29,17 +29,23 @@ def main():
         horizon=DRAWDOWN_HORIZON_DAYS,
         threshold=DRAWDOWN_THRESHOLD,
     )
-    metrics = evaluate_drawdown_classifier(dataset, n_splits=DRAWDOWN_N_SPLITS)
+    evaluation = evaluate_drawdown_prediction_lab(dataset, n_splits=DRAWDOWN_N_SPLITS)
     importance = fit_drawdown_feature_importance(dataset)
 
     dataset.to_csv(processed_dir / "drawdown_model_dataset.csv", index=False)
-    metrics.to_csv(processed_dir / "drawdown_model_metrics.csv", index=False)
+    evaluation.metrics.to_csv(processed_dir / "drawdown_model_metrics.csv", index=False)
+    evaluation.predictions.to_csv(processed_dir / "drawdown_model_predictions.csv", index=False)
+    evaluation.threshold_metrics.to_csv(processed_dir / "drawdown_model_threshold_metrics.csv", index=False)
+    evaluation.calibration.to_csv(processed_dir / "drawdown_model_calibration.csv", index=False)
+    evaluation.lift.to_csv(processed_dir / "drawdown_model_lift.csv", index=False)
+    evaluation.country_risk_summary.to_csv(processed_dir / "drawdown_country_risk_summary.csv", index=False)
     importance.to_csv(processed_dir / "drawdown_feature_importance.csv", index=False)
 
     event_rate = dataset["drawdown_risk"].mean()
     print(f"Saved {len(dataset):,} drawdown model rows.")
     print(f"Forward {DRAWDOWN_HORIZON_DAYS}-day drawdown event rate: {event_rate:.2%}.")
-    print(f"Saved {len(metrics):,} purged chronological validation folds.")
+    print(f"Saved {len(evaluation.metrics):,} purged chronological validation fold/model rows.")
+    print(f"Saved {len(evaluation.predictions):,} out-of-sample prediction rows.")
     print(f"Saved {len(importance):,} feature-importance rows.")
 
 

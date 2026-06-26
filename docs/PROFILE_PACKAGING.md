@@ -5,6 +5,9 @@
 Use this project as a GitHub/profile research project first. You do not need to
 deploy it publicly or add more datasets before showing it.
 
+For the concrete GitHub/profile launch checklist, see
+`docs/LAUNCH_CHECKLIST.md`.
+
 Recommended next actions:
 
 1. Put the GitHub repository on your profile.
@@ -16,7 +19,8 @@ Recommended next actions:
 Simple GitHub repository description:
 
 > Reproducible quant economics project studying geopolitical risk and equity
-> market responses across developed and emerging market ETF proxies.
+> market responses across developed and emerging market ETF proxies, with a
+> separate monthly benchmark layer for reproducibility checks.
 
 ## What Not To Claim
 
@@ -27,6 +31,13 @@ Do not claim that it is a trading system. It is not.
 Do not claim strong emerging-market asymmetry. The current evidence is mixed:
 the controlled and date fixed-effects GPR-jump interactions are small and not
 statistically strong.
+
+Do not claim monthly sample mode is empirical evidence. It is not empirical
+evidence.
+
+Do not claim the monthly benchmark is a country-panel proof. The current monthly
+benchmark is an aggregate developed/emerging comparison and not a country-panel
+proof.
 
 The strongest honest claim is:
 
@@ -45,14 +56,17 @@ You said the future options were confusing, so here is the short version.
 - GDELT or country-specific GPR means adding more advanced news/geopolitical
   data. This is a bigger extension and should wait.
 
-For now, the best choice is to present the current project clearly.
+For now, the best choice is to present the current project clearly: polish the
+reviewer path, keep screenshots current, use the generated results brief, and
+capture future extensions as backlog items instead of starting them immediately.
 
 ## CV Bullet
 
 Built a reproducible Python research platform measuring equity-market responses
 to geopolitical risk across 20 country ETF proxies, implementing event studies,
 panel fixed-effects regressions, quantile regressions, local projections, a
-drawdown-risk classifier, and an interactive Streamlit dashboard.
+drawdown-risk classifier, a monthly benchmark pipeline, and an interactive
+Streamlit dashboard.
 
 ## Short Project Summary
 
@@ -61,6 +75,10 @@ markets respond to geopolitical risk shocks across emerging and developed market
 ETF proxies. It combines daily GPR data, ETF returns, market controls, event
 studies, panel regressions, local projections, tail-risk analysis, and a simple
 time-aware ML classifier in a reproducible Python pipeline.
+
+The monthly benchmark layer adds deterministic sample mode, user-supplied real
+mode, source manifests, HAC spread regressions, and expanding-window forecast
+comparisons. It is a benchmark layer, not the main country ETF panel.
 
 ## LinkedIn Summary
 
@@ -71,6 +89,9 @@ Caldara-Iacoviello GPR index, public market controls, event studies, panel
 regressions, quantile regressions, local projections, and a simple drawdown-risk
 classifier. The output includes a tested Python pipeline, a Streamlit dashboard,
 a research note, and a technical appendix.
+
+It also includes a monthly benchmark layer that keeps sample mode and real mode
+separate and documents which outputs are local only.
 
 The current evidence is intentionally reported cautiously: GPR is associated
 with equity-market risk, but the emerging-market asymmetry result is not yet a
@@ -91,6 +112,9 @@ and reproducible empirical workflow.
   response paths.
 - The ML model is deliberately simple and time-aware. It is exploratory, not a
   trading signal.
+- The monthly benchmark is useful for reproducibility and aggregate comparison,
+  but sample mode is not empirical evidence and real monthly aggregate mode is
+  not a country-panel proof.
 
 ## Three-Minute Walkthrough Script
 
@@ -111,6 +135,11 @@ and a simple drawdown-risk classifier.
 The dashboard lets a user inspect GPR shocks, event-study responses, regression
 coefficients, tail-risk estimates, local projection paths, ML drawdown metrics,
 rolling betas, and data coverage.
+
+There is also a Monthly Benchmark tab. It shows whether the monthly layer is in
+sample mode or real mode, displays provenance status, plots monthly GPR shocks
+and the developed/emerging aggregate spread, and shows regression and forecast
+tables when available.
 
 The current results are mixed. The controlled panel regression finds a negative
 association between GPR and returns, but the emerging-market interaction is not
@@ -151,8 +180,9 @@ avoid look-ahead bias and keep the model simple enough to interpret.
 
 ### What would improve the project next?
 
-The best next steps are FRED macro controls, country-specific GPR where
-reliable, and later a carefully scoped GDELT extension.
+The best immediate next steps are packaging and review polish. FRED macro
+controls, country-specific GPR where reliable, and a carefully scoped GDELT
+extension are later research decisions.
 
 ## Quick Results Brief
 
@@ -167,3 +197,6 @@ Profile-ready screenshots are saved in `reports/screenshots/`:
 - `dashboard_overview.png`: data scope and main GPR chart.
 - `dashboard_robustness.png`: event-study robustness chart.
 - `dashboard_panel_regression.png`: regression and sample-robustness tables.
+
+Refresh them only when the visible dashboard changes materially. See
+`docs/SCREENSHOT_REFRESH.md` for the repeatable refresh process.

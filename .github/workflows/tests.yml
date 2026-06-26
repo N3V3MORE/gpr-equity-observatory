@@ -36,3 +36,28 @@ jobs:
         run: |
           ruff check .
           pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+
+  monthly-sample-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Run monthly sample pipeline
+        run: |
+          python scripts/run_task.py monthly-sample --min-train-months 24

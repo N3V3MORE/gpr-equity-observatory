@@ -10,6 +10,7 @@ from gprobs.config import (
     EVENT_MIN_ESTIMATION_OBS,
     LOCAL_PROJECTION_MAX_HORIZON,
 )
+from gprobs.utils import coerce_shock_to_int, require_columns
 
 LOCAL_PROJECTION_COLUMNS = [
     "horizon",
@@ -63,12 +64,10 @@ def build_local_projection_data(
     if include_controls:
         base_columns = base_columns + [column for column in CONTROL_COLUMNS if column not in base_columns]
 
-    missing_columns = [column for column in base_columns if column not in panel.columns]
-    if missing_columns:
-        raise ValueError(f"Local projection panel is missing columns: {missing_columns}")
+    require_columns(panel, base_columns, "Local projection panel")
 
     data = panel[base_columns].dropna(subset=["date", "ticker", "return", "global_market_return", "gpr_shock"]).copy()
-    data["gpr_shock"] = data["gpr_shock"].map(_coerce_shock_to_int)
+    data["gpr_shock"] = data["gpr_shock"].map(coerce_shock_to_int)
     data["emerging_market"] = (data["market_group"] == "emerging").astype(int)
 
     frames = []
@@ -129,12 +128,6 @@ def _projection_columns(include_controls: bool) -> list[str]:
     if include_controls:
         columns.extend(CONTROL_COLUMNS)
     return columns
-
-
-def _coerce_shock_to_int(value) -> int:
-    if isinstance(value, str):
-        return int(value.strip().lower() == "true")
-    return int(bool(value))
 
 
 def _ticker_projection_rows(
@@ -224,13 +217,8 @@ def _fit_horizon_model(
     cluster_by_ticker: bool,
     cluster_by_date: bool | None = None,
 ):
-    formula = "cumulative_abnormal_return ~ gpr_shock + gpr_shock:emerging_market + C(ticker)"
-    if include_controls:
-        controls = " + ".join(CONTROL_COLUMNS)
-        formula = (
-            "cumulative_abnormal_return ~ gpr_shock + gpr_shock:emerging_market + "
-            f"{controls} + C(ticker)"
-        )
+    control_terms = " + " + " + ".join(CONTROL_COLUMNS) if include_controls else ""
+    formula = f"cumulative_abnormal_return ~ gpr_shock + gpr_shock:emerging_market{control_terms} + C(ticker)"
 
     if cluster_by_date is None:
         cluster_by_date = cluster_by_ticker

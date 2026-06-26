@@ -5,9 +5,7 @@ import pandas as pd
 import statsmodels.formula.api as smf
 from linearmodels.panel import PanelOLS
 
-BASELINE_FORMULA = (
-    "etf_return ~ gpr_change_z + gpr_change_z:emerging_market + C(ticker)"
-)
+BASELINE_FORMULA = "etf_return ~ gpr_change_z + gpr_change_z:emerging_market + C(ticker)"
 CONTROL_COLUMNS = [
     "global_market_return",
     "vix_change",
@@ -57,11 +55,7 @@ def _fit_with_clustered_covariance(
     if cluster_by_date:
         groups["date"] = pd.factorize(pd.to_datetime(data["date"]))[0]
 
-    cluster_groups = (
-        next(iter(groups.values()))
-        if len(groups) == 1
-        else pd.DataFrame(groups, index=data.index)
-    )
+    cluster_groups = next(iter(groups.values())) if len(groups) == 1 else pd.DataFrame(groups, index=data.index)
     return model.fit(cov_type="cluster", cov_kwds={"groups": cluster_groups})
 
 
