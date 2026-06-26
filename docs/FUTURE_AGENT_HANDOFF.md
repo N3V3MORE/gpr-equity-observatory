@@ -61,9 +61,9 @@ The merge branch is `codex/pre-merge-gpr-cleanup`.
 The current forward-plan packaging branch is
 `codex/polish-readme-reviewer-path`.
 
-Use `git log --oneline --decorate --max-count=16` for the freshest exact
-commit list. Representative packaging branch milestone commits include, newest
-first:
+Use `git log --oneline --decorate` for the full exact branch state, or add
+`--max-count=16` for a short current view. Representative packaging branch
+milestone commits include, newest first:
 
 - `1dbd57e docs: refresh issue template summary`
 - `1ba17fd docs: add issue template chooser`
