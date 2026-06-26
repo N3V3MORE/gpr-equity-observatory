@@ -121,6 +121,39 @@ EXPECTED_OUTPUT_COLUMNS = {
     "large_returns": {"date", "ticker", "country", "return", "abs_return"},
 }
 
+EXPECTED_MONTHLY_OUTPUT_COLUMNS = {
+    "monthly_panel": {
+        "date_month",
+        "market_id",
+        "market_class",
+        "excess_return",
+        "ret_fwd_1m",
+        "gpr_global",
+        "gpr_change_z",
+        "spread_em_dev",
+        "gdelt_risk_raw",
+        "gdelt_risk_z",
+    },
+    "monthly_regressions": {
+        "horizon",
+        "term",
+        "estimate",
+        "std_error",
+        "t_value",
+        "p_value",
+        "se_type",
+    },
+    "monthly_forecasts": {
+        "model",
+        "rmse",
+        "mae",
+        "oos_r2",
+        "n_forecasts",
+        "first_forecast_date",
+        "last_forecast_date",
+    },
+}
+
 
 def test_app_uses_single_date_fe_panel_regression_filename():
     assert app.REQUIRED_FILES["date_fe_regression"].name == "panel_regression_date_fe.csv"
@@ -131,6 +164,13 @@ def test_dashboard_required_outputs_declare_expected_columns():
 
     for name, expected_columns in EXPECTED_OUTPUT_COLUMNS.items():
         assert expected_columns.issubset(set(app.OUTPUT_SPECS[name].required_columns))
+
+
+def test_monthly_dashboard_outputs_are_optional_and_schema_checked():
+    assert not set(app.MONTHLY_OUTPUT_SPECS).intersection(app.REQUIRED_FILES)
+
+    for name, expected_columns in EXPECTED_MONTHLY_OUTPUT_COLUMNS.items():
+        assert expected_columns.issubset(set(app.MONTHLY_OUTPUT_SPECS[name].required_columns))
 
 
 def test_load_outputs_rejects_missing_required_columns(monkeypatch, tmp_path):

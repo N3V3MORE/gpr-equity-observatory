@@ -13,6 +13,7 @@ def test_dashboard_tab_render_helpers_are_defined():
         "render_ml_tab",
         "render_rolling_tab",
         "render_coverage_tab",
+        "render_monthly_benchmark_tab",
     ]
 
     for helper_name in expected_helpers:
@@ -25,3 +26,9 @@ def test_ml_tab_uses_purged_validation_wording():
         "Splits are purged chronological, so the model trains only on earlier dates "
         "and excludes dates immediately before the test fold to reduce forward-label leakage."
     )
+
+
+def test_monthly_tab_uses_required_limitation_wording():
+    assert "not empirical evidence" in app.MONTHLY_SAMPLE_NOTICE
+    assert "benchmark" in app.MONTHLY_REAL_NOTICE
+    assert "country-clustered" in app.MONTHLY_CLUSTER_NOTICE

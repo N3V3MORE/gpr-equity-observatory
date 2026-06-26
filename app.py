@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -15,6 +16,9 @@ ML_VALIDATION_CAPTION = (
     "Splits are purged chronological, so the model trains only on earlier dates "
     "and excludes dates immediately before the test fold to reduce forward-label leakage."
 )
+MONTHLY_SAMPLE_NOTICE = "Sample mode is not empirical evidence. It only proves the monthly benchmark workflow runs."
+MONTHLY_REAL_NOTICE = "Real monthly aggregate mode is a benchmark, not a country-panel proof."
+MONTHLY_CLUSTER_NOTICE = "The two-market aggregate design cannot support country-clustered inference."
 
 
 @dataclass(frozen=True)
@@ -23,6 +27,33 @@ class OutputSpec:
     date_columns: tuple[str, ...] = ()
     required_columns: tuple[str, ...] = ()
     low_memory: bool | None = None
+
+
+@dataclass(frozen=True)
+class MonthlyModeConfig:
+    root: Path = PROJECT_ROOT
+    mode_label: str = "Sample"
+    dataset_mode: str = "monthly_benchmark_sample"
+    panel: str = "data/processed/monthly_benchmark/sample_analysis_panel.csv"
+    source_manifest: str = "data/metadata/monthly_benchmark/source_manifest.json"
+    analysis_manifest: str = "data/metadata/monthly_benchmark/analysis_panel_manifest.json"
+    regressions: str = "reports/tables/monthly_benchmark/sample_table_02_baseline_regressions.csv"
+    forecasts: str = "reports/tables/monthly_benchmark/sample_table_03_forecast_comparison.csv"
+
+    def path(self, relative_path: str) -> Path:
+        return self.root / relative_path
+
+
+@dataclass(frozen=True)
+class MonthlyOutputBundle:
+    mode: str
+    mode_label: str
+    panel: pd.DataFrame
+    source_manifest: dict
+    analysis_manifest: dict
+    source_names: list[str]
+    regressions: pd.DataFrame | None = None
+    forecasts: pd.DataFrame | None = None
 
 
 OUTPUT_SPECS = {
@@ -204,6 +235,62 @@ OUTPUT_SPECS = {
 
 REQUIRED_FILES = {name: spec.path for name, spec in OUTPUT_SPECS.items()}
 
+MONTHLY_MODES = {
+    "real": MonthlyModeConfig(
+        mode_label="Real",
+        dataset_mode="monthly_benchmark_real",
+        panel="data/processed/monthly_benchmark/analysis_panel.csv",
+        source_manifest="data/metadata/monthly_benchmark/source_manifest_real.json",
+        analysis_manifest="data/metadata/monthly_benchmark/analysis_panel_manifest_real.json",
+        regressions="reports/tables/monthly_benchmark/table_02_baseline_regressions_real.csv",
+        forecasts="reports/tables/monthly_benchmark/table_03_forecast_comparison_real.csv",
+    ),
+    "sample": MonthlyModeConfig(),
+}
+
+MONTHLY_OUTPUT_SPECS = {
+    "monthly_panel": OutputSpec(
+        Path("monthly_benchmark_analysis_panel.csv"),
+        date_columns=("date_month",),
+        required_columns=(
+            "date_month",
+            "market_id",
+            "market_class",
+            "excess_return",
+            "ret_fwd_1m",
+            "gpr_global",
+            "gpr_change_z",
+            "spread_em_dev",
+            "gdelt_risk_raw",
+            "gdelt_risk_z",
+        ),
+    ),
+    "monthly_regressions": OutputSpec(
+        Path("monthly_benchmark_regressions.csv"),
+        required_columns=(
+            "horizon",
+            "term",
+            "estimate",
+            "std_error",
+            "t_value",
+            "p_value",
+            "se_type",
+        ),
+    ),
+    "monthly_forecasts": OutputSpec(
+        Path("monthly_benchmark_forecasts.csv"),
+        required_columns=(
+            "model",
+            "rmse",
+            "mae",
+            "oos_r2",
+            "n_forecasts",
+            "first_forecast_date",
+            "last_forecast_date",
+        ),
+    ),
+}
+
 
 @st.cache_data
 def load_outputs():
@@ -232,6 +319,62 @@ def validate_output_schema(output: pd.DataFrame, spec: OutputSpec) -> None:
 
 def missing_files():
     return [path for path in REQUIRED_FILES.values() if not path.exists()]
+
+
+def load_monthly_outputs() -> MonthlyOutputBundle | None:
+    for mode, config in MONTHLY_MODES.items():
+        bundle = _load_monthly_output_mode(mode, config)
+        if bundle is not None:
+            return bundle
+    return None
+
+
+def _load_monthly_output_mode(mode: str, config: MonthlyModeConfig) -> MonthlyOutputBundle | None:
+    panel_path = config.path(config.panel)
+    source_manifest_path = config.path(config.source_manifest)
+    analysis_manifest_path = config.path(config.analysis_manifest)
+    if not all(path.exists() for path in [panel_path, source_manifest_path, analysis_manifest_path]):
+        return None
+
+    panel = pd.read_csv(panel_path, parse_dates=["date_month"])
+    validate_output_schema(panel, MONTHLY_OUTPUT_SPECS["monthly_panel"])
+    source_manifest = _read_json(source_manifest_path)
+    analysis_manifest = _read_json(analysis_manifest_path)
+    source_names = [
+        source.get("source_name", "Unknown source")
+        for source in source_manifest.get("sources", [])
+    ]
+
+    regressions = _read_optional_monthly_csv(
+        config.path(config.regressions),
+        MONTHLY_OUTPUT_SPECS["monthly_regressions"],
+    )
+    forecasts = _read_optional_monthly_csv(
+        config.path(config.forecasts),
+        MONTHLY_OUTPUT_SPECS["monthly_forecasts"],
+    )
+    return MonthlyOutputBundle(
+        mode=mode,
+        mode_label=config.mode_label,
+        panel=panel,
+        source_manifest=source_manifest,
+        analysis_manifest=analysis_manifest,
+        source_names=source_names,
+        regressions=regressions,
+        forecasts=forecasts,
+    )
+
+
+def _read_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _read_optional_monthly_csv(path: Path, spec: OutputSpec) -> pd.DataFrame | None:
+    if not path.exists():
+        return None
+    output = pd.read_csv(path)
+    validate_output_schema(output, spec)
+    return output
 
 
 def render_overview_tab(
@@ -491,6 +634,86 @@ def render_coverage_tab(panel: pd.DataFrame, large_returns: pd.DataFrame) -> Non
     st.dataframe(large_returns, use_container_width=True, hide_index=True)
 
 
+def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
+    if bundle is None:
+        st.info("Monthly benchmark outputs are not available yet.")
+        st.code(
+            "\n".join(
+                [
+                    "python scripts/run_task.py monthly-sample --min-train-months 24",
+                    "python scripts/run_task.py build-monthly-real",
+                    "python scripts/run_task.py validate-monthly-real",
+                ]
+            )
+        )
+        st.caption(f"{MONTHLY_SAMPLE_NOTICE} {MONTHLY_REAL_NOTICE} {MONTHLY_CLUSTER_NOTICE}")
+        return
+
+    panel = bundle.panel.copy()
+    panel["date_month"] = pd.to_datetime(panel["date_month"])
+    month_level = panel.drop_duplicates("date_month").sort_values("date_month")
+    start_date = panel["date_month"].min().date()
+    end_date = panel["date_month"].max().date()
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Mode", bundle.mode_label)
+    col2.metric("Start month", str(start_date))
+    col3.metric("End month", str(end_date))
+    col4.metric("Sources", len(bundle.source_names))
+
+    if bundle.mode == "sample":
+        st.warning(MONTHLY_SAMPLE_NOTICE)
+    else:
+        st.info(MONTHLY_REAL_NOTICE)
+    st.caption(MONTHLY_CLUSTER_NOTICE)
+
+    if bundle.source_names:
+        st.subheader("Source and Provenance Status")
+        st.dataframe(
+            pd.DataFrame({"source_name": bundle.source_names}),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    gpr_fig = px.line(
+        month_level,
+        x="date_month",
+        y="gpr_change_z",
+        title="Monthly GPR Shock Measure",
+    )
+    gpr_fig.add_hline(y=0, line_dash="dash", line_color="gray")
+    st.plotly_chart(gpr_fig, use_container_width=True)
+
+    spread_fig = px.line(
+        month_level,
+        x="date_month",
+        y="spread_em_dev",
+        title="Emerging Minus Developed Aggregate Return Spread",
+    )
+    spread_fig.add_hline(y=0, line_dash="dash", line_color="gray")
+    st.plotly_chart(spread_fig, use_container_width=True)
+
+    st.subheader("Benchmark Regression Table")
+    if bundle.regressions is None:
+        st.info("Monthly benchmark regression output is not available yet.")
+    else:
+        st.dataframe(bundle.regressions, use_container_width=True, hide_index=True)
+
+    st.subheader("Forecast Comparison")
+    if bundle.forecasts is None:
+        st.info("Monthly benchmark forecast output is not available yet.")
+    else:
+        forecast_fig = px.bar(
+            bundle.forecasts,
+            x="model",
+            y="oos_r2",
+            title="Monthly Forecast OOS R2 Versus Historical Mean",
+        )
+        forecast_fig.add_hline(y=0, line_dash="dash", line_color="gray")
+        st.plotly_chart(forecast_fig, use_container_width=True)
+        st.dataframe(bundle.forecasts, use_container_width=True, hide_index=True)
+
+
 def main():
     st.set_page_config(page_title="GPR Equity Observatory", layout="wide")
     st.title("GPR Equity Observatory")
@@ -523,6 +746,7 @@ def main():
     evidence_summary = outputs["evidence_summary"]
     rolling_beta = outputs["rolling_beta"]
     large_returns = outputs["large_returns"]
+    monthly_outputs = load_monthly_outputs()
 
     (
         tab_overview,
@@ -534,6 +758,7 @@ def main():
         tab_local,
         tab_ml,
         tab_rolling,
+        tab_monthly,
         tab_coverage,
     ) = st.tabs(
         [
@@ -546,6 +771,7 @@ def main():
             "Local Projections",
             "ML Drawdown",
             "Rolling Beta",
+            "Monthly Benchmark",
             "Data Coverage",
         ]
     )
@@ -581,6 +807,9 @@ def main():
 
     with tab_rolling:
         render_rolling_tab(rolling_beta)
+
+    with tab_monthly:
+        render_monthly_benchmark_tab(monthly_outputs)
 
     with tab_coverage:
         render_coverage_tab(panel, large_returns)
