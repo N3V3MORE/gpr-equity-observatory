@@ -84,7 +84,6 @@ If dashboard behavior changes, also run a Streamlit smoke test.
 The next moves are release choices, not feature work:
 
 - push this branch and open a pull request
-- refresh screenshots
 - decide public deployment policy
 - decide whether real monthly benchmark outputs can be published
 - review and merge

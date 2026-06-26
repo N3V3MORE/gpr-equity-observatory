@@ -55,6 +55,8 @@ features require an explicit user unlock.
   result tables.
 - Automated test workflow for GitHub Actions.
 - CI monthly sample pipeline job.
+- Refreshed profile screenshots that show the current dashboard tab set,
+  including the Monthly Benchmark tab.
 
 ## Current Results
 
@@ -119,12 +121,11 @@ interpreted as aggregate benchmark evidence, not country-panel proof.
 
 Good release-hardening options are:
 
-- Capture refreshed dashboard screenshots now that the Monthly Benchmark tab is
-  implemented.
-- Polish the reviewer path in the README and supporting docs.
-- Add a practical reproducibility checklist.
+- Push the packaging branch and open a draft pull request.
+- Review the packaging branch before merge.
 - Decide whether the project stays local-first for portfolio use or gets a
   documented public deployment snapshot.
+- Publish or adapt the blog draft for the chosen platform.
 
 Post-lock research extensions, such as FRED controls, country-specific GPR data,
 or a narrow GDELT extension, require an explicit feature unlock before

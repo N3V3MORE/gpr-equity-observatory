@@ -57,11 +57,10 @@ The merge branch is `codex/pre-merge-gpr-cleanup`.
 The current forward-plan packaging branch is
 `codex/polish-readme-reviewer-path`.
 
-Packaging branch commits, newest first:
+Key packaging branch commits include:
 
 - `41e060e docs: refresh dashboard screenshots`
 - `33305db docs: add launch checklist`
-- `dda1504 docs: refresh forward-plan handoff`
 - `655cc92 docs: add screenshot refresh guide`
 - `1cf8451 docs: link project backlog issues`
 - `76a2a45 docs: clarify local-first launch path`
@@ -192,6 +191,15 @@ The final merge pass completed these checks successfully:
 If a future agent changes code, rerun the relevant full checks. Do not rely only
 on this historical verification.
 
+The packaging branch screenshot refresh was also validated with:
+
+- in-app browser check against `http://127.0.0.1:8507/`
+- page title `GPR Equity Observatory`
+- Monthly Benchmark tab visible in the rendered app
+- no browser console warnings or errors
+- `uv run --all-extras ruff check .`
+- `uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q`
+
 ## Data And Output Policy
 
 - Do not commit raw third-party market data.
@@ -246,8 +254,6 @@ data/research items as post-lock work unless the user explicitly unlocks feature
 work:
 
 - Push this branch and open a pull request.
-- Capture refreshed dashboard screenshots with the Monthly Benchmark tab if the
-  current screenshots are no longer representative.
 - Decide whether to deploy the dashboard publicly.
 - Decide whether to publish real monthly benchmark outputs.
 - Decide whether to add FRED controls with an API key.

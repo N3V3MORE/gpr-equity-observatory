@@ -65,7 +65,7 @@ Potential larger upgrade:
 - country-level monthly panel with enough countries for credible clustered
   inference
 - richer robustness package
-- refreshed dashboard screenshots
+- screenshot refreshes after future visual dashboard changes
 - optional public deployment after deciding data-publication policy
 
 ## Do Not Add Casually
