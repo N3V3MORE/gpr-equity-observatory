@@ -14,5 +14,5 @@ data/interim/
 data/metadata/monthly_benchmark/*_real.json
 
 reports/figures/
-reports/tables/monthly_benchmark/*_real.csv
-reports/monthly_benchmark/*_real*
+reports/tables/monthly_benchmark/*.csv
+reports/monthly_benchmark/*

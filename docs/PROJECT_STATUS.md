@@ -1,6 +1,6 @@
 # GPR Equity Observatory Status
 
-Last updated: 2026-06-14
+Last updated: 2026-06-26
 
 This document is a plain-English status note for the current project state. It
 separates what is implemented from what the evidence currently says.
@@ -30,7 +30,20 @@ For a requirement-by-requirement audit against the original project plan, see
 - Generated plain-English results brief for quick review.
 - Streamlit dashboard.
 - One-command pipeline rebuild: `python scripts/build_all.py`.
+- Unified task runner: `python scripts/run_task.py ...`.
+- Deterministic monthly benchmark sample mode under the
+  `monthly_benchmark_sample` dataset.
+- User-supplied monthly benchmark real mode under the
+  `monthly_benchmark_real` dataset.
+- Source manifests and redaction rules for monthly real GPR and Kenneth French
+  factor inputs.
+- Monthly developed/emerging HAC spread regressions.
+- Monthly expanding-window forecast comparisons with historical-mean
+  benchmarks and OOS R2.
+- Monthly benchmark validation for data contracts, source manifests, and model
+  result tables.
 - Automated test workflow for GitHub Actions.
+- CI monthly sample pipeline job.
 
 ## Current Results
 
@@ -72,6 +85,11 @@ negative. That is a warning not to overstate a single headline result.
 `reports/RESULTS_BRIEF.md` now gives a short generated summary of these results
 for interviews, profile packaging, or quick project review.
 
+The monthly benchmark layer is newly integrated as infrastructure. The
+deterministic monthly sample pipeline is a software validation target. Real
+monthly benchmark outputs require user-supplied source files and should be
+interpreted as aggregate benchmark evidence, not country-panel proof.
+
 ## Interpretation Rules
 
 - This is not a trading system.
@@ -82,12 +100,16 @@ for interviews, profile packaging, or quick project review.
 - The controlled sample starts in 2008 because ACWI starts then.
 - WTI crude oil is used as a level change, not a log return, because WTI futures
   traded below zero in April 2020.
+- Monthly sample outputs are not empirical findings.
+- Monthly developed/emerging outputs must remain separate from the daily ETF
+  panel.
 
 ## Next Useful Work
 
-The next step should improve interpretation rather than add complexity. Good
-options are:
+Good next options are:
 
+- Add the Streamlit monthly benchmark tab after deciding which monthly outputs
+  should be visible in the public app.
 - Add FRED controls if an API key is available.
 - Add country-specific GPR data where coverage is reliable.
 - Add GDELT only after the research note and robustness checks are clearer.

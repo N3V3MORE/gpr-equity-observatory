@@ -14,6 +14,31 @@ public Streamlit research product, then port GeoRiskLab's stronger
 reproducibility, provenance, validation, sample/real mode, and monthly
 benchmark pipeline into it in staged slices.
 
+Implementation status as of 2026-06-26
+======================================
+
+Phases 0 through 6 are implemented on branch codex/pre-merge-gpr-cleanup.
+
+Completed rollback commits:
+- 77369e4 chore: stabilize pre-merge cleanup
+- fc0578f chore: add shared merge infrastructure
+- 3c76eac feat: add monthly benchmark sample mode
+- 778ddd7 chore: add MIT license
+- 3f60ae2 feat: add monthly benchmark real ingestion
+- b7e20db feat: add monthly benchmark models
+
+Phase 6 is implemented in the current working slice:
+- scripts/run_task.py provides the documented Windows-friendly command path.
+- scripts/validate_monthly_benchmark.py validates monthly data, manifests, and
+  optional model outputs.
+- CI runs a deterministic monthly sample pipeline through the task runner.
+- README.md, docs/PROJECT_STATUS.md, docs/TECHNICAL_APPENDIX.md, and
+  docs/DATA_SOURCE_DECISIONS.md describe the merged daily/monthly workflow.
+
+Remaining planned work starts at Phase 7: Streamlit monthly benchmark
+integration. Phase 8 documentation consolidation and Phase 9 final release
+verification remain future work.
+
 
 1. Sources Inspected
 ====================

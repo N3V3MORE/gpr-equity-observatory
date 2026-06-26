@@ -35,6 +35,17 @@ Run the dashboard:
 streamlit run app.py
 ```
 
+Unified task runner:
+
+```powershell
+python scripts/run_task.py build-daily
+python scripts/run_task.py monthly-sample --min-train-months 24
+python scripts/run_task.py build-monthly-real
+python scripts/run_task.py validate-monthly-real
+python scripts/run_task.py lint
+python scripts/run_task.py test
+```
+
 ## Main Source Files
 
 - `data/country_universe.csv`: country, ETF ticker, market group, and region.
@@ -54,6 +65,20 @@ streamlit run app.py
 - `src/gprobs/analysis/drawdown_model.py`: drawdown-risk classifier.
 - `src/gprobs/analysis/evidence_summary.py`: compact model comparison table.
 - `src/gprobs/analysis/rolling_sensitivity.py`: rolling GPR beta.
+- `src/gprobs/data/monthly_sample.py`: deterministic monthly benchmark sample
+  data.
+- `src/gprobs/data/monthly_sources.py`: monthly real source config loading,
+  redaction, hashing, and common-sample alignment.
+- `src/gprobs/data/fama_french.py`: Kenneth French developed/emerging factor
+  zip parsing.
+- `src/gprobs/features/monthly_panel.py`: monthly aggregate analysis panel.
+- `src/gprobs/analysis/monthly_benchmark.py`: monthly HAC spread regression and
+  guarded panel interaction helper.
+- `src/gprobs/analysis/forecasting.py`: expanding-window forecast generation.
+- `src/gprobs/analysis/forecast_metrics.py`: forecast metrics and OOS R2.
+- `scripts/run_task.py`: unified Windows-friendly task runner.
+- `scripts/validate_monthly_benchmark.py`: monthly benchmark data/result
+  validation.
 - `src/gprobs/reporting/results_brief.py`: generated plain-English results brief.
 - `app.py`: Streamlit dashboard.
 
@@ -92,6 +117,26 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `reports/screenshots/dashboard_panel_regression.png`
 - `reports/figures/gpr_and_group_returns.png`
 
+Monthly benchmark generated files are also ignored by Git and can be rebuilt:
+
+- `data/processed/monthly_benchmark/sample_gpr_monthly.csv`
+- `data/processed/monthly_benchmark/sample_market_returns_monthly.csv`
+- `data/processed/monthly_benchmark/sample_gdelt_country_monthly.csv`
+- `data/processed/monthly_benchmark/sample_macro_controls_monthly.csv`
+- `data/processed/monthly_benchmark/sample_analysis_panel.csv`
+- `data/processed/monthly_benchmark/gpr_monthly.csv`
+- `data/processed/monthly_benchmark/market_returns_monthly.csv`
+- `data/processed/monthly_benchmark/gdelt_country_monthly.csv`
+- `data/processed/monthly_benchmark/macro_controls_monthly.csv`
+- `data/processed/monthly_benchmark/analysis_panel.csv`
+- `data/metadata/monthly_benchmark/source_manifest.json`
+- `data/metadata/monthly_benchmark/analysis_panel_manifest.json`
+- `data/metadata/monthly_benchmark/source_manifest_real.json`
+- `data/metadata/monthly_benchmark/analysis_panel_manifest_real.json`
+- `reports/tables/monthly_benchmark/sample_table_00_missingness.csv`
+- `reports/tables/monthly_benchmark/sample_table_02_baseline_regressions.csv`
+- `reports/tables/monthly_benchmark/sample_table_03_forecast_comparison.csv`
+
 ## Variable Definitions
 
 - `return`: daily ETF log return.
@@ -115,6 +160,15 @@ Generated files are intentionally ignored by Git and can be rebuilt:
 - `dollar_return`: daily UUP log return.
 - `us10y_change`: daily US 10-year yield proxy level change.
 - `emerging_market`: indicator equal to 1 for emerging-market ETF proxies.
+- `date_month`: month-start date for monthly benchmark observations.
+- `market_id`: monthly aggregate market label, currently `developed` or
+  `emerging`.
+- `market_class`: monthly market class label used for benchmark grouping.
+- `gpr_global`, `gprt_global`, `gpra_global`: monthly GPR level and subindexes.
+- `ret_fwd_1m`, `ret_fwd_3m`, `ret_fwd_6m`: forward monthly excess returns.
+- `spread_em_dev`: emerging minus developed monthly excess-return spread.
+- `gdelt_risk_raw`, `gdelt_risk_z`: monthly GDELT risk placeholders or
+  validated real features when added later.
 
 ## Model Notes
 
@@ -170,6 +224,22 @@ consistently.
 The results brief is a generated Markdown report. It is intended for quick
 review and profile packaging, not as a substitute for the research note.
 
+Monthly benchmark regressions use the developed/emerging aggregate return
+spread as the dependent variable and HAC standard errors. This is an aggregate
+benchmark layer. It must not be described as country-clustered panel evidence.
+
+The monthly panel-interaction helper preserves a weak-cluster guard. Clustered
+standard errors require at least three `market_id` clusters, so the current
+two-market aggregate design intentionally rejects clustered panel inference.
+
+Monthly forecasts use expanding windows. Each test month occurs after all
+training months, and forecast metrics are aligned to common evaluation dates
+before OOS R2 is calculated against the historical-mean benchmark.
+
+Monthly real mode reads user-supplied sources from `config/sources.yml`. Local
+source paths are hashed but redacted in manifests. HTTPS sources require an
+expected SHA-256 hash and unsupported URL schemes are rejected.
+
 ## Known Caveats
 
 - Free market data can revise or contain errors.
@@ -177,3 +247,6 @@ review and profile packaging, not as a substitute for the research note.
 - ETF returns are USD returns, not pure local-currency index returns.
 - GPR shocks can coincide with other macro-financial shocks.
 - Results are associations, not causal estimates.
+- Monthly sample mode is deterministic software validation only.
+- Monthly real mode currently includes explicit placeholder GDELT and macro
+  columns until validated real inputs are added.

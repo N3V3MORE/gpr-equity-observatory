@@ -22,6 +22,9 @@ market country ETF proxies.
 - Compares developed and emerging market ETF responses.
 - Runs event studies, panel regressions, quantile regressions, local
   projections, rolling sensitivity estimates, and a simple drawdown-risk model.
+- Adds a separate monthly developed/emerging benchmark layer with deterministic
+  sample mode, user-supplied real mode, source manifests, HAC regressions, and
+  expanding-window forecast comparisons.
 - Presents the results in a Streamlit dashboard and written research notes.
 
 This is not a trading system and it is not investment advice. It is an
@@ -84,6 +87,30 @@ Rebuild the data and results:
 python scripts/build_all.py
 ```
 
+Use the unified task runner for the combined daily/monthly workflow:
+
+```powershell
+python scripts/run_task.py build-daily
+python scripts/run_task.py monthly-sample --min-train-months 24
+python scripts/run_task.py lint
+python scripts/run_task.py test
+```
+
+The monthly sample pipeline is deterministic and is intended for software
+validation and CI. It is not empirical evidence.
+
+To run the monthly real benchmark, copy `config/sources.sample.yml` to
+`config/sources.yml`, point it at local GPR and Kenneth French factor files, and
+run:
+
+```powershell
+python scripts/run_task.py build-monthly-real
+python scripts/run_task.py validate-monthly-real
+```
+
+`config/sources.yml`, raw files, and real generated outputs are local-only and
+ignored by Git.
+
 Run the dashboard:
 
 ```powershell
@@ -110,6 +137,7 @@ resolved dependency graph for reproducible rebuilds.
 app.py                         Streamlit dashboard
 data/country_universe.csv      20-country ETF universe
 scripts/build_all.py           Full rebuild pipeline
+scripts/run_task.py            Unified task runner for daily/monthly commands
 scripts/build_*.py             Data construction scripts
 scripts/run_*.py               Empirical model scripts
 scripts/write_results_brief.py Plain-English results summary
@@ -134,11 +162,19 @@ docs/PROFILE_PACKAGING.md      CV, LinkedIn, and interview materials
 - Local projections for abnormal-return response paths
 - Rolling GPR sensitivity estimates
 - Time-aware drawdown-risk classification
+- Monthly developed/emerging benchmark HAC regressions
+- Monthly expanding-window forecast comparisons
 
 ## Important Limitations
 
 - ETF returns are USD returns, so they combine local equity-market movement and
   currency exposure against the US dollar.
+- Daily ETF findings and monthly aggregate benchmark findings answer related
+  but different questions and should not be mixed as one panel.
+- Monthly sample mode proves the workflow runs; it does not support empirical
+  market claims.
+- The two-market monthly benchmark is useful as an aggregate comparison, not as
+  credible country-clustered panel inference.
 - The results are associations, not clean causal estimates.
 - Free market data can contain revisions, missing values, or provider limits.
 - The current project runs locally. Public dashboard deployment is a separate
