@@ -251,8 +251,10 @@ def render_overview_tab(
     col3.metric("End date", str(end_date))
     col4.metric("GPR shock days", f"{shock_count:,}")
 
-    gpr_for_sample = gpr.loc[gpr["date"].between(panel["date"].min(), panel["date"].max())]
-    fig = px.line(gpr_for_sample, x="date", y="gpr", title="Daily Geopolitical Risk")
+    fig = px.line(
+        gpr.loc[gpr["date"].between(panel["date"].min(), panel["date"].max())],
+        x="date", y="gpr", title="Daily Geopolitical Risk",
+    )
     st.plotly_chart(fig, use_container_width=True)
 
     group_chart = group_returns.copy()
@@ -496,26 +498,9 @@ def main():
     missing = missing_files()
     if missing:
         st.error("Processed data files are missing.")
-        st.code(
-            "\n".join(
-                [
-                    "python scripts/build_returns_panel.py",
-                    "python scripts/build_gpr_dataset.py",
-                    "python scripts/build_market_controls.py",
-                    "python scripts/build_analysis_panel.py",
-                    "python scripts/run_data_diagnostics.py",
-                    "python scripts/run_event_study.py",
-                    "python scripts/run_event_robustness.py",
-                    "python scripts/run_panel_regression.py",
-                    "python scripts/run_panel_sample_robustness.py",
-                    "python scripts/run_quantile_regression.py",
-                    "python scripts/run_local_projections.py",
-                    "python scripts/run_drawdown_model.py",
-                    "python scripts/run_evidence_summary.py",
-                    "python scripts/run_rolling_sensitivity.py",
-                ]
-            )
-        )
+        from gprobs.pipeline import PIPELINE_STEPS
+
+        st.code("\n".join(f"python scripts/{step.script_name}" for step in PIPELINE_STEPS))
         st.write("Missing files:")
         st.write([str(path) for path in missing])
         return

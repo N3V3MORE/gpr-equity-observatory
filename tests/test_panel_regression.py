@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from gprobs.analysis.panel_regression import (
     prepare_panel_regression_data,
@@ -36,6 +37,21 @@ def test_prepare_panel_regression_data_adds_emerging_flag_and_standardized_gpr_c
     assert {"date", "ticker", "return", "gpr_change_z", "emerging_market"}.issubset(
         prepared.columns
     )
+
+
+def test_prepare_panel_regression_data_rejects_conflicting_gpr_levels_by_date():
+    panel = pd.DataFrame(
+        {
+            "date": pd.to_datetime(["2024-01-01", "2024-01-01", "2024-01-02", "2024-01-02"]),
+            "ticker": ["SPY", "EWZ", "SPY", "EWZ"],
+            "market_group": ["developed", "emerging"] * 2,
+            "return": [0.01, -0.02, 0.03, -0.01],
+            "gpr": [100.0, 101.0, 120.0, 120.0],
+        }
+    )
+
+    with pytest.raises(ValueError, match="GPR level must be unique within each date"):
+        prepare_panel_regression_data(panel)
 
 
 def test_run_baseline_panel_regression_estimates_expected_terms():

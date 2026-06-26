@@ -1,10 +1,39 @@
 import pandas as pd
+import pytest
 
 from gprobs.analysis.local_projection import (
     _fit_horizon_model,
     build_local_projection_data,
     estimate_local_projections,
 )
+
+
+def _minimal_projection_panel() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "date": pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"]),
+            "ticker": ["SPY"] * 3,
+            "country": ["United States"] * 3,
+            "market_group": ["developed"] * 3,
+            "return": [0.01, 0.02, -0.01],
+            "global_market_return": [0.01, 0.02, 0.01],
+            "gpr_shock": [False, True, False],
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"max_horizon": -1}, "max_horizon must be non-negative"),
+        ({"estimation_window": 1}, "estimation_window must be at least 2"),
+        ({"estimation_gap": -1}, "estimation_gap must be non-negative"),
+        ({"min_estimation_obs": 1}, "min_estimation_obs must be at least 2"),
+    ],
+)
+def test_build_local_projection_data_rejects_invalid_window_arguments(kwargs, message):
+    with pytest.raises(ValueError, match=message):
+        build_local_projection_data(_minimal_projection_panel(), **kwargs)
 
 
 def test_build_local_projection_data_creates_forward_cumulative_abnormal_returns():

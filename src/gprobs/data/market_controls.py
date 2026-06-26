@@ -2,6 +2,7 @@ import pandas as pd
 
 from gprobs.config import MARKET_CONTROL_TICKERS
 from gprobs.features.returns import calculate_log_returns
+from gprobs.utils import require_columns
 
 CONTROL_TICKERS = MARKET_CONTROL_TICKERS
 
@@ -15,11 +16,8 @@ CONTROL_COLUMNS = [
 
 
 def build_market_controls(prices: pd.DataFrame) -> pd.DataFrame:
-    """Build daily no-key market controls from public Yahoo Finance proxies."""
-    required_tickers = list(CONTROL_TICKERS)
-    missing_tickers = [ticker for ticker in required_tickers if ticker not in prices.columns]
-    if missing_tickers:
-        raise ValueError(f"Market control prices are missing tickers: {missing_tickers}")
+    required_tickers = list(MARKET_CONTROL_TICKERS)
+    require_columns(prices, required_tickers, "Market control prices")
 
     controls = pd.DataFrame(index=prices.index)
     controls["global_market_return"] = calculate_log_returns(prices["ACWI"])
@@ -27,16 +25,11 @@ def build_market_controls(prices: pd.DataFrame) -> pd.DataFrame:
     controls["oil_change"] = prices["CL=F"].diff()
     controls["dollar_return"] = calculate_log_returns(prices["UUP"])
     controls["us10y_change"] = prices["^TNX"].diff()
-
     controls = controls.dropna().reset_index()
     controls = controls.rename(columns={controls.columns[0]: "date"})
     return controls[["date"] + CONTROL_COLUMNS]
 
 
 def merge_market_controls(panel: pd.DataFrame, controls: pd.DataFrame) -> pd.DataFrame:
-    """Add same-day market controls to a country return panel."""
-    missing_columns = [column for column in CONTROL_COLUMNS if column not in controls.columns]
-    if missing_columns:
-        raise ValueError(f"Market controls are missing columns: {missing_columns}")
-
+    require_columns(controls, CONTROL_COLUMNS, "Market controls")
     return panel.merge(controls[["date"] + CONTROL_COLUMNS], on="date", how="left")

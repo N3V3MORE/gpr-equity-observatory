@@ -1,6 +1,7 @@
 from urllib.error import URLError
 
 import pandas as pd
+import pytest
 
 from gprobs.data.download_cache import download_url_to_cache, retry
 from gprobs.data.gpr_data import download_daily_gpr
@@ -33,6 +34,11 @@ def test_retry_recovers_from_transient_failure():
 
     assert retry(flaky_operation, retries=2, backoff_seconds=0) == "ok"
     assert attempts["count"] == 2
+
+
+def test_retry_rejects_non_positive_retry_count():
+    with pytest.raises(ValueError, match="retries must be at least 1"):
+        retry(lambda: "ok", retries=0, backoff_seconds=0)
 
 
 def test_retry_does_not_retry_non_transient_errors():

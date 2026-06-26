@@ -13,6 +13,7 @@ from gprobs.config import (
     DRAWDOWN_VOLATILITY_WINDOW_DAYS,
     GPR_EXPANDING_SHOCK_MIN_PERIODS,
 )
+from gprobs.utils import coerce_shock_to_int
 
 DEFAULT_FEATURE_COLUMNS = [
     "gpr_change_z",
@@ -118,7 +119,15 @@ def evaluate_drawdown_classifier(
     embargo_dates: int | None = None,
 ) -> pd.DataFrame:
     """Evaluate drawdown classification with purged chronological validation folds."""
-    model_specs = _drawdown_model_specs(feature_columns)
+    model_specs = (
+        [("full_features", feature_columns)]
+        if feature_columns is not None
+        else [
+            ("constant_baseline", []),
+            ("volatility_only", VOLATILITY_FEATURE_COLUMNS),
+            ("full_features", DEFAULT_FEATURE_COLUMNS),
+        ]
+    )
     if embargo_dates is None:
         embargo_dates = int(dataset.attrs.get("forward_horizon", DRAWDOWN_HORIZON_DAYS))
     folds = _date_folds(dataset, n_splits=n_splits, embargo_dates=embargo_dates)
@@ -129,6 +138,11 @@ def evaluate_drawdown_classifier(
         test = dataset.loc[dataset["date"].isin(test_dates)]
         for model_name, model_features in model_specs:
             probabilities = _predict_probabilities(train, test, model_features)
+            roc = (
+                roc_auc_score(test["drawdown_risk"], probabilities)
+                if test["drawdown_risk"].nunique() >= 2
+                else float("nan")
+            )
 
             rows.append(
                 {
@@ -138,7 +152,7 @@ def evaluate_drawdown_classifier(
                     "train_end": train["date"].max(),
                     "test_start": test["date"].min(),
                     "test_end": test["date"].max(),
-                    "roc_auc": _safe_roc_auc(test["drawdown_risk"], probabilities),
+                    "roc_auc": roc,
                     "average_precision": average_precision_score(
                         test["drawdown_risk"],
                         probabilities,
@@ -198,7 +212,7 @@ def _add_time_aware_gpr_features(data: pd.DataFrame) -> pd.DataFrame:
     ].copy()
     gpr_features["gpr_change_shock_expanding"] = gpr_features[
         "gpr_change_shock_expanding"
-    ].map(_coerce_shock_to_int)
+    ].map(coerce_shock_to_int)
 
     drop_columns = [
         column
@@ -243,37 +257,17 @@ def _expanding_z_score(values: pd.Series) -> pd.Series:
     return z_score.replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
 
-def _drawdown_model_specs(
-    feature_columns: list[str] | None,
-) -> list[tuple[str, list[str]]]:
-    if feature_columns is not None:
-        return [("full_features", feature_columns)]
-
-    return [
-        ("constant_baseline", []),
-        ("volatility_only", VOLATILITY_FEATURE_COLUMNS),
-        ("full_features", DEFAULT_FEATURE_COLUMNS),
-    ]
-
-
 def _predict_probabilities(
     train: pd.DataFrame,
     test: pd.DataFrame,
     feature_columns: list[str],
 ) -> np.ndarray:
-    baseline_probability = train["drawdown_risk"].mean()
     if not feature_columns or train["drawdown_risk"].nunique() < 2:
-        return np.repeat(baseline_probability, len(test))
+        return np.repeat(train["drawdown_risk"].mean(), len(test))
 
     model = _make_classifier()
     model.fit(train[feature_columns], train["drawdown_risk"])
     return model.predict_proba(test[feature_columns])[:, 1]
-
-
-def _coerce_shock_to_int(value) -> int:
-    if isinstance(value, str):
-        return int(value.strip().lower() == "true")
-    return int(bool(value))
 
 
 def _forward_min_cumulative_return(returns: pd.Series, horizon: int) -> pd.Series:
@@ -335,8 +329,3 @@ def _make_classifier() -> Pipeline:
         ]
     )
 
-
-def _safe_roc_auc(target: pd.Series, probabilities: np.ndarray) -> float:
-    if target.nunique() < 2:
-        return float("nan")
-    return roc_auc_score(target, probabilities)
