@@ -11,6 +11,12 @@ URL:
 Access method:
 Terms or licensing note:
 
+## Feature-Lock Gate
+
+- [ ] This is release hardening for an already implemented data contract.
+- [ ] This is post-lock data work and has an explicit unlock decision:
+- [ ] The source belongs to a narrow documented scope.
+
 ## Dataset Mode
 
 - [ ] Daily ETF observatory
@@ -34,6 +40,8 @@ Terms or licensing note:
 - [ ] Unit check
 - [ ] Source manifest written
 - [ ] Real/sample mode cannot be confused
+- [ ] Daily and monthly outputs stay separate in names, paths, docs, and
+      dashboard text
 
 ## Acceptance Criteria
 
@@ -41,4 +49,6 @@ Terms or licensing note:
 - [ ] Output schema documented
 - [ ] Tests added
 - [ ] Data source docs updated
+- [ ] Interpretation limits are documented before public-facing claims change
 - [ ] No raw restricted data or local secrets committed
+- [ ] `config/sources.yml` is not committed

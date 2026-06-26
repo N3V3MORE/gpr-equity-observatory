@@ -112,8 +112,8 @@ explicitly.
 - The packaging branch adds a reviewer guide, reproducibility checklist,
   screenshot refresh guide, local-first launch guidance, launch checklist,
   draft pull request text, refreshed dashboard screenshots, a feature-lock-aware
-  pull request template, and a roadmap section linking to the controlled GitHub
-  backlog.
+  pull request template, feature-lock-aware issue templates, and a roadmap
+  section linking to the controlled GitHub backlog.
 
 ## What Was Intentionally Not Done
 
