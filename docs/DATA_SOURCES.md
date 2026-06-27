@@ -37,11 +37,11 @@ environment and writes standalone artifacts:
 - processed controls at `data/processed/fred_macro_controls.csv`
 - a local source manifest at `data/metadata/fred_source_manifest.json`
 
-The first selected controls are high-yield option-adjusted spread
-(`BAMLH0A0HYM2`), effective federal funds rate (`DFF`), and 10-year breakeven
-inflation expectations (`T10YIE`). These controls are a macro robustness
-extension, not a new headline result. Current daily conclusions remain based on
-the existing no-key market controls.
+The first selected controls are Moody's Baa corporate spread over the 10-year
+Treasury (`BAA10Y`), effective federal funds rate (`DFF`), and 10-year
+breakeven inflation expectations (`T10YIE`). These controls are a macro
+robustness extension, not a new headline result. Current daily conclusions
+remain based on the existing no-key market controls.
 
 Only lagged FRED columns should be used in later predictive models. The raw
 same-date FRED columns are kept for provenance and inspection, not for immediate

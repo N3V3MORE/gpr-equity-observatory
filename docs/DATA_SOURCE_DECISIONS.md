@@ -21,7 +21,7 @@ Current status:
 
 Chosen first controls:
 
-- `BAMLH0A0HYM2`: ICE BofA US High Yield Index Option-Adjusted Spread.
+- `BAA10Y`: Moody's Seasoned Baa Corporate Bond Yield less 10-Year Treasury.
 - `DFF`: Effective Federal Funds Rate.
 - `T10YIE`: 10-Year Breakeven Inflation Rate.
 

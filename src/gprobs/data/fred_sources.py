@@ -32,9 +32,9 @@ class FredSeries:
 
 DEFAULT_FRED_SERIES = (
     FredSeries(
-        series_id="BAMLH0A0HYM2",
-        column_name="credit_spread_high_yield_oas",
-        description="ICE BofA US High Yield Index Option-Adjusted Spread",
+        series_id="BAA10Y",
+        column_name="credit_spread_baa_10y",
+        description="Moody's Seasoned Baa Corporate Bond Yield less 10-Year Treasury",
     ),
     FredSeries(
         series_id="DFF",

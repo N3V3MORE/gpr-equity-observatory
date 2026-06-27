@@ -40,6 +40,9 @@ def test_fred_api_key_is_not_required_for_import_parsing_or_lagging(monkeypatch)
 def test_parse_fred_observations_converts_values_to_numeric():
     from gprobs.data.fred_sources import DEFAULT_FRED_SERIES, parse_fred_observations
 
+    assert DEFAULT_FRED_SERIES[0].series_id == "BAA10Y"
+    assert DEFAULT_FRED_SERIES[0].column_name == "credit_spread_baa_10y"
+
     parsed = parse_fred_observations(
         _fred_payload(
             [
@@ -56,9 +59,9 @@ def test_parse_fred_observations_converts_values_to_numeric():
         pd.Timestamp("2024-01-02"),
         pd.Timestamp("2024-01-03"),
     ]
-    assert parsed["credit_spread_high_yield_oas"].tolist()[:1] == [4.75]
-    assert pd.isna(parsed.loc[1, "credit_spread_high_yield_oas"])
-    assert parsed.loc[2, "credit_spread_high_yield_oas"] == -1.25
+    assert parsed["credit_spread_baa_10y"].tolist()[:1] == [4.75]
+    assert pd.isna(parsed.loc[1, "credit_spread_baa_10y"])
+    assert parsed.loc[2, "credit_spread_baa_10y"] == -1.25
 
 
 def test_lagged_fred_features_use_prior_observation_values():
@@ -67,7 +70,7 @@ def test_lagged_fred_features_use_prior_observation_values():
     controls = pd.DataFrame(
         {
             "date": pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"]),
-            "credit_spread_high_yield_oas": [4.0, 4.2, 4.4],
+            "credit_spread_baa_10y": [4.0, 4.2, 4.4],
             "policy_rate_effective_fed_funds": [5.25, 5.30, 5.35],
             "inflation_expectation_10y_breakeven": [2.1, 2.2, 2.3],
         }
@@ -76,14 +79,11 @@ def test_lagged_fred_features_use_prior_observation_values():
     lagged = add_lagged_fred_features(controls)
 
     assert lagged.columns.tolist() == FRED_OUTPUT_COLUMNS
-    assert pd.isna(lagged.loc[0, "credit_spread_high_yield_oas_lag1d"])
-    assert lagged.loc[1, "credit_spread_high_yield_oas_lag1d"] == 4.0
+    assert pd.isna(lagged.loc[0, "credit_spread_baa_10y_lag1d"])
+    assert lagged.loc[1, "credit_spread_baa_10y_lag1d"] == 4.0
     assert lagged.loc[2, "policy_rate_effective_fed_funds_lag1d"] == 5.30
     assert lagged.loc[2, "inflation_expectation_10y_breakeven_lag1d"] == 2.2
-    assert (
-        lagged.loc[1, "credit_spread_high_yield_oas_lag1d"]
-        != lagged.loc[1, "credit_spread_high_yield_oas"]
-    )
+    assert lagged.loc[1, "credit_spread_baa_10y_lag1d"] != lagged.loc[1, "credit_spread_baa_10y"]
 
 
 def test_build_fred_macro_controls_writes_outputs_and_manifest_without_secret(tmp_path):
@@ -93,9 +93,7 @@ def test_build_fred_macro_controls_writes_outputs_and_manifest_without_secret(tm
     )
 
     payloads = {
-        "BAMLH0A0HYM2": _fred_payload(
-            [("2024-01-01", "4.00"), ("2024-01-02", "4.25")]
-        ),
+        "BAA10Y": _fred_payload([("2024-01-01", "2.00"), ("2024-01-02", "2.25")]),
         "DFF": _fred_payload([("2024-01-01", "5.25"), ("2024-01-02", "5.30")]),
         "T10YIE": _fred_payload([("2024-01-01", "2.10"), ("2024-01-02", ".")]),
     }
@@ -129,7 +127,7 @@ def test_build_fred_macro_controls_writes_outputs_and_manifest_without_secret(tm
     manifest = json.loads(manifest_text)
     assert manifest["manifest_type"] == "source_collection"
     assert [source["source_name"] for source in manifest["sources"]] == [
-        "FRED BAMLH0A0HYM2",
+        "FRED BAA10Y",
         "FRED DFF",
         "FRED T10YIE",
     ]
