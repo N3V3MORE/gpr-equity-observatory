@@ -14,14 +14,78 @@ DASHBOARD_MAIN_TAKEAWAY = (
     "does not strongly prove that emerging markets always react more than developed markets."
 )
 DASHBOARD_USE_NOTE = "Use this dashboard as a research observatory, not as a trading system."
+CENTRAL_PROJECT_QUESTION = (
+    "When geopolitical risk jumps, does it help us understand or rank downside risk in international equity "
+    "markets, especially for emerging markets?"
+)
+OVERVIEW_JOB_STATEMENTS = [
+    (
+        "Explanation",
+        "Do markets look worse around geopolitical-risk shocks?",
+    ),
+    (
+        "Prediction",
+        "Does geopolitical risk help rank ETF-country observations by short-term drawdown risk?",
+    ),
+]
+METHOD_MAP_ROWS = [
+    {
+        "Question": "What happened around shocks?",
+        "Tool": "Event study",
+        "Output": "Market response chart",
+        "What to look for": "Whether ETF abnormal returns worsen around GPR shock dates.",
+    },
+    {
+        "Question": "Does it survive controls?",
+        "Tool": "Panel regression",
+        "Output": "Coefficient table",
+        "What to look for": "Whether GPR terms remain meaningful after market controls.",
+    },
+    {
+        "Question": "Does it matter more on bad days?",
+        "Tool": "Quantile regression",
+        "Output": "Downside-risk chart",
+        "What to look for": "Whether lower-return quantiles show stronger downside association.",
+    },
+    {
+        "Question": "Does the response persist?",
+        "Tool": "Local projection",
+        "Output": "20-day response path",
+        "What to look for": "Whether cumulative abnormal returns build or fade after shocks.",
+    },
+    {
+        "Question": "Can we rank drawdown risk?",
+        "Tool": "Prediction Lab",
+        "Output": "AUC, lift, and calibration",
+        "What to look for": "Whether GPR improves out-of-sample downside-risk ranking.",
+    },
+    {
+        "Question": "Does monthly evidence agree?",
+        "Tool": "Monthly benchmark",
+        "Output": "HAC and forecast table",
+        "What to look for": "Whether lower-frequency aggregate evidence aligns with the daily panel.",
+    },
+]
+OVERVIEW_CURRENT_ANSWER_POINTS = [
+    "GPR is associated with equity-market risk, but the current evidence is mixed rather than dramatic.",
+    "The emerging-market asymmetry is mixed and not statistically strong after controls.",
+    "Prediction Lab shows modest ranking signal for drawdown risk.",
+    "GPR alone is weak compared with volatility and broader market features.",
+]
+OVERVIEW_DOES_NOT_PROVE_POINTS = [
+    "causality",
+    "investment advice",
+    "a trading system",
+    "that emerging markets always react more",
+]
 HOW_TO_READ_NOTES = {
     "overview": (
-        "Start with the summary cards, then use the Evidence Map to compare what each method says. "
-        "Mixed or weak labels mean the result should stay cautious."
+        "Start with the project question and Method Map, then use the Evidence Map to compare what each method "
+        "says about explanation or drawdown-risk ranking. Mixed or weak labels mean the result should stay cautious."
     ),
     "shocks": (
-        "The line shows the GPR index over time. Markers highlight the largest daily GPR changes, "
-        "which are the shock episodes used elsewhere in the dashboard."
+        "The line shows the GPR index over time. Markers highlight the largest daily GPR changes, which anchor "
+        "the question of what happens when geopolitical risk jumps."
     ),
     "market_response": (
         "The line shows average cumulative abnormal returns around GPR shock dates. Day 0 is the "
@@ -42,8 +106,8 @@ HOW_TO_READ_NOTES = {
         "Confidence bands crossing zero indicate weak statistical evidence at that horizon."
     ),
     "prediction_lab": (
-        "This is an exploratory risk classifier. AUC above 0.5 means some ranking signal, but it is "
-        "not a trading strategy and should not be read as a price forecast."
+        "This is an exploratory risk classifier for the ranking question. AUC above 0.5 means some ranking "
+        "signal, but it is not a trading strategy and should not be read as a price forecast."
     ),
     "country_sensitivity": (
         "The rolling beta shows how one country's ETF return sensitivity to GPR changes over time. "
@@ -60,19 +124,19 @@ HOW_TO_READ_NOTES = {
 }
 BEGINNER_TAB_GUIDES = {
     "overview": {
-        "question": "What does the project find overall?",
+        "question": "What problem is this dashboard solving?",
         "takeaways": [
             (
-                "GPR and risk",
-                "The clearest pattern is that geopolitical risk is associated with equity-market risk.",
+                "One question",
+                "The dashboard asks whether GPR helps explain or rank downside risk in international ETFs.",
             ),
             (
-                "Market split",
-                "The emerging-versus-developed difference is mixed and not statistically strong.",
+                "Current answer",
+                "GPR is associated with risk, but the emerging-market asymmetry is mixed and not strong.",
             ),
             (
-                "Use the map",
-                "Read the methods together; no single table carries the whole conclusion.",
+                "Prediction signal",
+                "Prediction Lab has modest ranking signal, mostly beyond GPR alone.",
             ),
         ],
         "does_not_prove": (
@@ -339,7 +403,7 @@ def render_summary_cards() -> None:
     cards = [
         (
             "Question",
-            "Do emerging and developed ETF markets respond differently to GPR shocks?",
+            "Does GPR help explain or rank downside risk in international ETF exposure?",
         ),
         ("Data", "20 country ETF proxies, daily GPR data, and market controls."),
         (

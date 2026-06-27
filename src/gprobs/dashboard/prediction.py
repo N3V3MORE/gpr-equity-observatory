@@ -9,13 +9,17 @@ FEATURE_IMPORTANCE_CAPTION = (
     "Feature importance is a full-sample interpretive diagnostic for the fitted "
     "drawdown-risk classifier, not out-of-sample evidence by itself."
 )
-MODEL_INPUT_LABELS = {
-    "constant_baseline": "Constant event rate only",
-    "volatility_only": "Recent ETF volatility and drawdown pressure",
-    "gpr_only": "GPR shock/change measures only",
-    "market_controls_only": "Market control variables only",
-    "volatility_plus_gpr": "Recent volatility plus GPR measures",
-    "full_features": "GPR, volatility, ETF context, and market controls",
+PREDICTION_LAB_CONCLUSION = (
+    "Prediction Lab currently shows modest drawdown-risk ranking signal, mostly from volatility and broad market "
+    "features; GPR alone is weak and should not be read as a price forecast or trading signal."
+)
+MODEL_DESCRIPTIONS = {
+    "constant_baseline": "Average historical event rate only",
+    "volatility_only": "Recent ETF volatility",
+    "gpr_only": "GPR features only",
+    "market_controls_only": "Global market, VIX, oil, dollar, and rates",
+    "volatility_plus_gpr": "Volatility plus GPR",
+    "full_features": "All available features",
 }
 BEGINNER_MODEL_COMPARISON_COLUMNS = [
     "model_name",
@@ -23,8 +27,10 @@ BEGINNER_MODEL_COMPARISON_COLUMNS = [
     "mean_roc_auc",
     "delta_auc_vs_constant_baseline",
     "mean_average_precision",
+    "delta_ap_vs_constant_baseline",
     "top_decile_lift",
     "mean_brier_score",
+    "delta_brier_vs_constant_baseline",
     "model_verdict",
 ]
 
@@ -54,7 +60,7 @@ def build_model_summary(drawdown_metrics: pd.DataFrame, drawdown_lift: pd.DataFr
     baseline_ap = _constant_baseline_value(model_summary, "mean_average_precision")
     baseline_brier = _constant_baseline_value(model_summary, "mean_brier_score")
     model_summary["what_it_uses"] = model_summary["model_name"].map(
-        lambda model_name: MODEL_INPUT_LABELS.get(model_name, "Model-specific inputs")
+        lambda model_name: MODEL_DESCRIPTIONS.get(model_name, "Model-specific feature group")
     )
     model_summary["delta_auc_vs_constant_baseline"] = model_summary["mean_roc_auc"] - baseline_auc
     model_summary["delta_ap_vs_constant_baseline"] = (

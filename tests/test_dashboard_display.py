@@ -175,7 +175,7 @@ def test_build_model_summary_adds_baseline_deltas_and_verdicts():
         "model_verdict",
     ]
     by_model = summary.set_index("model_name")
-    assert by_model.loc["constant_baseline", "what_it_uses"] == "Constant event rate only"
+    assert by_model.loc["constant_baseline", "what_it_uses"] == "Average historical event rate only"
     assert by_model.loc["constant_baseline", "model_verdict"] == "No useful ranking signal"
     assert by_model.loc["weak_model", "model_verdict"] == "Weak ranking signal"
     assert by_model.loc["modest_model", "model_verdict"] == "Modest ranking signal"
@@ -183,6 +183,51 @@ def test_build_model_summary_adds_baseline_deltas_and_verdicts():
     assert by_model.loc["modest_model", "delta_auc_vs_constant_baseline"] == pytest.approx(0.12)
     assert by_model.loc["modest_model", "delta_ap_vs_constant_baseline"] == pytest.approx(0.12)
     assert by_model.loc["modest_model", "delta_brier_vs_constant_baseline"] == pytest.approx(0.02)
+
+
+def test_prediction_lab_model_descriptions_match_feature_groups():
+    metrics = pd.DataFrame(
+        {
+            "model_name": [
+                "constant_baseline",
+                "volatility_only",
+                "gpr_only",
+                "market_controls_only",
+                "volatility_plus_gpr",
+                "full_features",
+            ],
+            "roc_auc": [0.50, 0.60, 0.51, 0.58, 0.61, 0.63],
+            "average_precision": [0.25, 0.33, 0.26, 0.31, 0.34, 0.36],
+            "brier_score": [0.22, 0.20, 0.218, 0.205, 0.198, 0.19],
+            "base_rate": [0.25] * 6,
+            "observation_count": [100] * 6,
+        }
+    )
+    lift = pd.DataFrame(
+        {
+            "model_name": [
+                "constant_baseline",
+                "volatility_only",
+                "gpr_only",
+                "market_controls_only",
+                "volatility_plus_gpr",
+                "full_features",
+            ],
+            "bucket": ["top_10_percent"] * 6,
+            "lift": [1.0, 1.35, 1.05, 1.2, 1.4, 1.5],
+        }
+    )
+
+    descriptions = app.build_model_summary(metrics, lift).set_index("model_name")["what_it_uses"]
+
+    assert descriptions.to_dict() == {
+        "full_features": "All available features",
+        "volatility_plus_gpr": "Volatility plus GPR",
+        "volatility_only": "Recent ETF volatility",
+        "market_controls_only": "Global market, VIX, oil, dollar, and rates",
+        "gpr_only": "GPR features only",
+        "constant_baseline": "Average historical event rate only",
+    }
 
 
 def test_model_verdict_helper_uses_cautious_plain_english_labels():
@@ -199,8 +244,10 @@ def test_prediction_lab_beginner_model_comparison_columns_are_declared():
         "mean_roc_auc",
         "delta_auc_vs_constant_baseline",
         "mean_average_precision",
+        "delta_ap_vs_constant_baseline",
         "top_decile_lift",
         "mean_brier_score",
+        "delta_brier_vs_constant_baseline",
         "model_verdict",
     ]
 

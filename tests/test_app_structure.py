@@ -7,9 +7,14 @@ def test_dashboard_components_live_in_dashboard_components_module():
     components = import_module("gprobs.dashboard.components")
 
     assert components.BEGINNER_TAB_GUIDES is app.BEGINNER_TAB_GUIDES
+    assert components.CENTRAL_PROJECT_QUESTION is app.CENTRAL_PROJECT_QUESTION
     assert components.DASHBOARD_INTRO is app.DASHBOARD_INTRO
     assert components.DASHBOARD_MAIN_TAKEAWAY is app.DASHBOARD_MAIN_TAKEAWAY
     assert components.DASHBOARD_MODES is app.DASHBOARD_MODES
+    assert components.METHOD_MAP_ROWS is app.METHOD_MAP_ROWS
+    assert components.OVERVIEW_CURRENT_ANSWER_POINTS is app.OVERVIEW_CURRENT_ANSWER_POINTS
+    assert components.OVERVIEW_DOES_NOT_PROVE_POINTS is app.OVERVIEW_DOES_NOT_PROVE_POINTS
+    assert components.OVERVIEW_JOB_STATEMENTS is app.OVERVIEW_JOB_STATEMENTS
     assert components.DASHBOARD_USE_NOTE is app.DASHBOARD_USE_NOTE
     assert components.GLOSSARY_TERMS is app.GLOSSARY_TERMS
     assert components.HOW_TO_READ_NOTES is app.HOW_TO_READ_NOTES
@@ -43,6 +48,7 @@ def test_prediction_summary_helpers_live_in_dashboard_prediction_module():
     assert prediction.ML_VALIDATION_HEADING is app.ML_VALIDATION_HEADING
     assert prediction.ML_VALIDATION_CAPTION is app.ML_VALIDATION_CAPTION
     assert prediction.FEATURE_IMPORTANCE_CAPTION is app.FEATURE_IMPORTANCE_CAPTION
+    assert prediction.PREDICTION_LAB_CONCLUSION is app.PREDICTION_LAB_CONCLUSION
     assert prediction.build_model_summary is app.build_model_summary
     assert prediction.best_model_metric_labels is app.best_model_metric_labels
     assert prediction.model_verdict_label is app.model_verdict_label
@@ -100,12 +106,15 @@ def test_prediction_lab_beginner_copy_explains_risk_ranking_not_prices():
             guide["question"],
             guide["does_not_prove"],
             *[body for _, body in guide["takeaways"]],
+            app.PREDICTION_LAB_CONCLUSION,
         ]
     ).lower()
 
     assert "rank" in prediction_copy
     assert "drawdown risk" in prediction_copy
     assert "does not predict prices" in prediction_copy
+    assert "gpr alone" in prediction_copy
+    assert "modest" in prediction_copy
 
     for metric in ["AUC", "average precision", "Brier score", "lift", "calibration"]:
         assert metric in app.PREDICTION_METRIC_EXPLANATIONS
@@ -142,6 +151,46 @@ def test_dashboard_intro_keeps_cautious_project_framing():
     assert "20 country ETF proxies" in app.DASHBOARD_INTRO
     assert "does not strongly prove" in app.DASHBOARD_MAIN_TAKEAWAY
     assert "not as a trading system" in app.DASHBOARD_USE_NOTE
+
+
+def test_overview_framing_answers_main_project_question():
+    assert "geopolitical risk jumps" in app.CENTRAL_PROJECT_QUESTION
+    assert "rank downside risk" in app.CENTRAL_PROJECT_QUESTION
+    assert app.OVERVIEW_JOB_STATEMENTS == [
+        (
+            "Explanation",
+            "Do markets look worse around geopolitical-risk shocks?",
+        ),
+        (
+            "Prediction",
+            "Does geopolitical risk help rank ETF-country observations by short-term drawdown risk?",
+        ),
+    ]
+
+    assert list(app.METHOD_MAP_ROWS[0]) == ["Question", "Tool", "Output", "What to look for"]
+    assert [row["Tool"] for row in app.METHOD_MAP_ROWS] == [
+        "Event study",
+        "Panel regression",
+        "Quantile regression",
+        "Local projection",
+        "Prediction Lab",
+        "Monthly benchmark",
+    ]
+
+    answer_copy = " ".join(app.OVERVIEW_CURRENT_ANSWER_POINTS)
+    assert "associated with equity-market risk" in answer_copy
+    assert "emerging-market asymmetry is mixed" in answer_copy
+    assert "modest ranking signal" in answer_copy
+    assert "GPR alone is weak" in answer_copy
+
+    does_not_prove_copy = " ".join(app.OVERVIEW_DOES_NOT_PROVE_POINTS)
+    for claim_boundary in [
+        "causality",
+        "investment advice",
+        "trading system",
+        "emerging markets always react more",
+    ]:
+        assert claim_boundary in does_not_prove_copy
 
 
 def test_dashboard_story_tab_labels_are_declared():

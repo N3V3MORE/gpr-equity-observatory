@@ -11,12 +11,17 @@ from gprobs.dashboard.charts import (
 )
 from gprobs.dashboard.components import (
     BEGINNER_TAB_GUIDES,
+    CENTRAL_PROJECT_QUESTION,
     DASHBOARD_INTRO,
     DASHBOARD_MAIN_TAKEAWAY,
     DASHBOARD_MODES,
     DASHBOARD_USE_NOTE,
     GLOSSARY_TERMS,
     HOW_TO_READ_NOTES,
+    METHOD_MAP_ROWS,
+    OVERVIEW_CURRENT_ANSWER_POINTS,
+    OVERVIEW_DOES_NOT_PROVE_POINTS,
+    OVERVIEW_JOB_STATEMENTS,
     PREDICTION_METRIC_EXPLANATIONS,
     is_beginner_mode,
     render_beginner_intro,
@@ -61,6 +66,7 @@ from gprobs.dashboard.prediction import (
     FEATURE_IMPORTANCE_CAPTION,
     ML_VALIDATION_CAPTION,
     ML_VALIDATION_HEADING,
+    PREDICTION_LAB_CONCLUSION,
     best_model_metric_labels,
     build_model_summary,
     model_verdict_label,
@@ -69,6 +75,7 @@ from gprobs.dashboard.prediction import (
 __all__ = [
     "BEGINNER_TAB_GUIDES",
     "BEGINNER_MODEL_COMPARISON_COLUMNS",
+    "CENTRAL_PROJECT_QUESTION",
     "DASHBOARD_INTRO",
     "DASHBOARD_MAIN_TAKEAWAY",
     "DASHBOARD_MODES",
@@ -86,7 +93,12 @@ __all__ = [
     "MONTHLY_OUTPUT_SPECS",
     "MONTHLY_REAL_NOTICE",
     "MONTHLY_SAMPLE_NOTICE",
+    "METHOD_MAP_ROWS",
     "OUTPUT_SPECS",
+    "OVERVIEW_CURRENT_ANSWER_POINTS",
+    "OVERVIEW_DOES_NOT_PROVE_POINTS",
+    "OVERVIEW_JOB_STATEMENTS",
+    "PREDICTION_LAB_CONCLUSION",
     "PREDICTION_METRIC_EXPLANATIONS",
     "PROJECT_ROOT",
     "REQUIRED_FILES",
@@ -148,6 +160,22 @@ def render_overview_tab(
     mode: str = DASHBOARD_MODES[1],
 ) -> None:
     render_tab_intro("overview", mode)
+
+    st.subheader("What are we solving?")
+    st.write(CENTRAL_PROJECT_QUESTION)
+    job_columns = st.columns(len(OVERVIEW_JOB_STATEMENTS))
+    for column, (title, body) in zip(job_columns, OVERVIEW_JOB_STATEMENTS, strict=True):
+        with column:
+            st.markdown(f"**{title}:** {body}")
+
+    st.subheader("Method Map")
+    st.dataframe(pd.DataFrame(METHOD_MAP_ROWS), use_container_width=True, hide_index=True)
+    st.info("**What the answer is so far**\n\n" + "\n".join(f"- {point}" for point in OVERVIEW_CURRENT_ANSWER_POINTS))
+    st.warning(
+        "**What this does not prove**\n\n"
+        + "\n".join(f"- {point}" for point in OVERVIEW_DOES_NOT_PROVE_POINTS)
+    )
+
     if not is_beginner_mode(mode):
         render_summary_cards()
 
@@ -465,6 +493,7 @@ def render_ml_tab(
         render_prediction_metric_explanations()
     else:
         render_prediction_metric_explanations()
+    st.info(PREDICTION_LAB_CONCLUSION)
 
     with technical_details("model comparison", mode):
         st.subheader("Model Comparison")
