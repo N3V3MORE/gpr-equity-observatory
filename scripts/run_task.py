@@ -1,4 +1,5 @@
 import argparse
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -7,6 +8,7 @@ from gprobs.data.datasets import MONTHLY_BENCHMARK_REAL, MONTHLY_BENCHMARK_SAMPL
 
 DEFAULT_CONFIG = "config/sources.yml"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+NPM_EXECUTABLE = shutil.which("npm") or "npm"
 
 TASK_COMMANDS = {
     "setup": [[sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]],
@@ -51,7 +53,9 @@ TASK_COMMANDS = {
             "--check-results",
         ]
     ],
-    "dashboard": [[sys.executable, "-m", "streamlit", "run", "app.py"]],
+    "export-frontend": [[sys.executable, "scripts/export_frontend_data.py"]],
+    "frontend-lint": [[NPM_EXECUTABLE, "--prefix", "frontend", "run", "lint"]],
+    "frontend-build": [[NPM_EXECUTABLE, "--prefix", "frontend", "run", "build"]],
     "test": [[sys.executable, "-m", "pytest", "--cov=gprobs", "--cov=app", "--cov-report=term-missing", "-q"]],
     "lint": [[sys.executable, "-m", "ruff", "check", "."]],
 }
@@ -64,6 +68,9 @@ PIPELINES = {
         "run-monthly-regressions-sample",
         "run-monthly-forecasts-sample",
         "validate-monthly-sample-results",
+        "export-frontend",
+        "frontend-lint",
+        "frontend-build",
         "lint",
         "test",
     ],
@@ -90,6 +97,7 @@ ROOT_AWARE_SCRIPTS = {
     "scripts/validate_monthly_benchmark.py",
     "scripts/run_monthly_benchmark_regressions.py",
     "scripts/run_monthly_benchmark_forecasts.py",
+    "scripts/export_frontend_data.py",
 }
 
 

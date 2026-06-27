@@ -25,6 +25,8 @@ The completed merge scope remains the baseline:
 - Monthly Benchmark dashboard tab
 - source manifests and validation contracts
 - consolidated documentation and profile packaging
+- Next.js as the single user-facing app
+- Python as the research and export backend
 
 ## Standing Guardrails
 
@@ -54,15 +56,26 @@ uv run --all-extras ruff check .
 uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q
 uv run --all-extras python scripts/run_task.py monthly-sample --min-train-months 24
 uv run --all-extras python scripts/run_task.py build-daily
+uv run --all-extras python scripts/export_frontend_data.py
 ```
 
-If dashboard behavior changes, also run a Streamlit smoke test.
+If the Next.js frontend changes, also run:
+
+```powershell
+cd frontend
+npm run lint
+npm run build
+```
+
+If dashboard behavior changes, also run a rendered Next.js smoke test against
+the static export.
 
 ## Current Next Moves
 
 Feature work is unlocked. Completed post-unlock work now includes dashboard
 understandability improvements, dashboard helper refactors, and the Prediction
-Lab extension. Good next moves include:
+Lab extension, plus v5 consolidation around the Next.js frontend. Good next
+moves include:
 
 - decide public deployment policy
 - decide whether real monthly benchmark outputs can be published

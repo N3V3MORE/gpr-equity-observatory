@@ -24,6 +24,8 @@ What changed?
 
 - [ ] `ruff check .` passes
 - [ ] `pytest --cov=gprobs --cov=app --cov-report=term-missing -q` passes
+- [ ] `npm run lint` passes if `frontend/` changed
+- [ ] `npm run build` passes if `frontend/` changed
 - [ ] `python scripts/run_task.py monthly-sample --min-train-months 24` passes
       if monthly benchmark behavior, validation, or docs changed
 - [ ] `python scripts/run_task.py build-daily` passes if daily data, outputs,

@@ -19,7 +19,7 @@ from gprobs.dashboard.components import (
     render_how_to_read,
     technical_details,
 )
-from gprobs.dashboard.outputs import PROJECT_ROOT, OutputSpec, validate_output_schema
+from gprobs.dashboard.contracts import PROJECT_ROOT, OutputSpec, validate_output_schema
 
 MONTHLY_SAMPLE_NOTICE = "Sample mode is not empirical evidence. It only proves the monthly benchmark workflow runs."
 MONTHLY_REAL_NOTICE = "Real monthly aggregate mode is a benchmark, not a country-panel proof."

@@ -1,25 +1,19 @@
 # Reproducibility
 
-This project is designed as a local-first reproducible research workflow. It has
-two related but separate pipelines:
+Next.js is the single user-facing app. Python remains the research and export backend. The frontend reads generated JSON from `frontend/public/data`.
 
-- The daily ETF pipeline is the main GPR Equity Observatory product.
+The project has two related but separate pipelines:
+
+- The daily ETF pipeline is the main GPR Equity Observatory workflow.
 - The monthly benchmark pipeline is a lower-frequency developed/emerging
-  aggregate benchmark ported from GeoRiskLab.
+  aggregate benchmark.
 
-The two pipelines should stay separate in files, charts, and interpretation.
+The two pipelines stay separate in files, charts, and interpretation.
 
 ## Environment
 
-Install the editable development environment:
-
 ```powershell
 python -m pip install -r requirements.txt
-```
-
-For the resolver-locked environment:
-
-```powershell
 uv sync --all-extras
 ```
 
@@ -27,28 +21,15 @@ The project requires Python 3.11 or newer.
 
 ## Daily ETF Pipeline
 
-The daily ETF pipeline downloads public market data, builds country ETF returns,
-adds daily Caldara-Iacoviello GPR data, runs daily empirical models, and writes
-dashboard-ready outputs.
-
-Run the daily pipeline:
-
 ```powershell
+python scripts/build_all.py
 python scripts/run_task.py build-daily
 ```
 
-Equivalent legacy command:
-
-```powershell
-python scripts/build_all.py
-```
-
-Generated daily outputs are written under `data/raw/`, `data/processed/`, and
-`reports/figures/`. They are local only by default and are ignored by Git.
+Generated daily outputs are written under `data/raw`, `data/processed`, and
+`reports/figures`. They are local only by default and ignored by Git.
 
 ## Monthly Benchmark Pipeline
-
-The monthly benchmark pipeline has two modes.
 
 Sample mode:
 
@@ -56,56 +37,41 @@ Sample mode:
 python scripts/run_task.py monthly-sample --min-train-months 24
 ```
 
-Sample mode generates deterministic monthly data, validates the software path,
-runs benchmark regressions, and runs forecast comparisons. Sample mode is not
-empirical evidence.
+Sample mode validates the software path and is not empirical evidence.
 
 Real mode:
 
 ```powershell
 copy config\sources.sample.yml config\sources.yml
-python scripts/run_task.py build-monthly-real
-python scripts/run_task.py validate-monthly-real
+python scripts/run_task.py monthly-real
 ```
 
 Real mode uses user-supplied local GPR and Kenneth French factor files. The
 source config, raw files, real generated outputs, and real manifests are local
-only unless the user intentionally publishes them.
+only unless intentionally published.
+
+## Frontend Export And App
+
+```powershell
+python scripts/export_frontend_data.py
+cd frontend
+npm install
+npm run dev
+npm run build
+```
+
+The exporter writes `frontend/public/data/*.json`. The TypeScript app does not
+run model logic.
 
 ## Checks
 
-Run lint:
-
 ```powershell
-python scripts/run_task.py lint
+ruff check .
+pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+cd frontend
+npm run lint
+npm run build
 ```
-
-Run tests:
-
-```powershell
-python scripts/run_task.py test
-```
-
-Run the CI-style monthly sample path:
-
-```powershell
-python scripts/run_task.py monthly-sample --min-train-months 24
-```
-
-## Dashboard
-
-Run the dashboard:
-
-```powershell
-streamlit run app.py
-```
-
-The dashboard can run with daily ETF outputs only. If monthly benchmark outputs
-exist, it adds the Monthly Benchmark tab content. If monthly outputs are absent,
-the tab explains how to build them.
-
-For a concise clean-clone rebuild checklist, see
-[docs/REPRODUCIBILITY_CHECKLIST.md](REPRODUCIBILITY_CHECKLIST.md).
 
 ## What Is Committed
 
@@ -115,21 +81,21 @@ Committed:
 - tests
 - configuration samples
 - documentation
-- dashboard screenshots
-- profile artifacts
+- screenshots
+- generated results brief
 
 Local only by default:
 
 - `config/sources.yml`
-- `data/raw/`
-- `data/interim/`
-- `data/processed/`
-- monthly real source manifests
-- monthly benchmark result tables
-- generated figure outputs
+- `data/raw`
+- `data/interim`
+- `data/processed`
+- `data/metadata`
+- `frontend/public/data`
+- real monthly source manifests and generated result tables
 
 ## Claims Boundary
 
 This is not a trading system and not investment advice. The empirical results
-are not causal. Sample mode is not empirical evidence. Monthly real mode is an
-aggregate benchmark, not a country-panel proof.
+are not causal. Sample mode validates software behavior only. Monthly real mode
+is an aggregate benchmark, not a country-panel proof.

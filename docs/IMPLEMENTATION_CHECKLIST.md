@@ -1,22 +1,22 @@
 # Implementation Checklist
 
-This checklist compares the original project plan with the current repository.
-It is written as a plain-English audit, not as a marketing summary.
+This checklist compares the original project goals with the current v5
+repository. It is an audit note, not marketing copy.
 
 ## MVP Success
 
 | Requirement | Status | Evidence |
 | --- | --- | --- |
 | Clean GitHub repo exists | Done | README, source package, tests, scripts, CI workflow |
-| Base data pipeline works | Done | `python scripts/build_all.py` rebuilds all generated outputs |
+| Base data pipeline works | Done | `python scripts/build_all.py` rebuilds generated daily outputs |
 | 20-country return panel exists | Done | `data/country_universe.csv` and generated returns panel |
 | GPR shock series exists | Done | `scripts/build_gpr_dataset.py` and generated `gpr_daily.csv` |
 | Event-study results exist | Done | Raw, abnormal-return, and robustness event-study scripts |
 | Panel regression results exist | Done | Baseline, controlled, and sample-robustness panel scripts |
-| Dashboard runs locally | Done | `streamlit run app.py` |
+| Next.js app runs locally | Done | `python scripts/export_frontend_data.py`, then `npm run dev` in `frontend/` |
 | README explains the project clearly | Done | `README.md` |
 | Limitations are documented | Done | Research note, technical appendix, status note, results brief |
-| Monthly benchmark layer exists | Done | sample/real monthly data paths, regressions, forecasts, validation, dashboard tab |
+| Monthly benchmark layer exists | Done | sample/real monthly paths, regressions, forecasts, validation |
 | Unified command path exists | Done | `python scripts/run_task.py ...` |
 
 ## Strong Profile Success
@@ -24,34 +24,26 @@ It is written as a plain-English audit, not as a marketing summary.
 | Requirement | Status | Evidence |
 | --- | --- | --- |
 | Research note exists | Done | `docs/RESEARCH_NOTE.md` |
-| Dashboard has screenshots or public deployment | Done | `reports/screenshots/` |
+| Dashboard has screenshots or public deployment | Done | `reports/screenshots/` and static Next.js build path |
 | Robustness checks exist | Done | Event-window/threshold checks and panel sample checks |
 | Local projections or quantile analysis exists | Done | Both local projections and quantile regressions are implemented |
 | ML drawdown model exists with time-aware validation | Done | Drawdown classifier with purged chronological validation folds |
-| Project can be explained in interviews | Done | `docs/PROFILE_PACKAGING.md`, `docs/REVIEWER_GUIDE.md`, and `reports/RESULTS_BRIEF.md` |
-| CV bullet sounds credible and specific | Done | `docs/PROFILE_PACKAGING.md` |
-| Local-first launch path is documented | Done | `docs/LAUNCH_CHECKLIST.md` and `docs/DEPLOYMENT_GUIDE.md` |
+| Project can be explained in interviews | Done | `README.md`, `docs/REVIEWER_GUIDE.md`, and `reports/RESULTS_BRIEF.md` |
+| Local-first launch path is documented | Done | `docs/DEPLOYMENT_GUIDE.md` |
 | Reproducibility checklist exists | Done | `docs/REPRODUCIBILITY_CHECKLIST.md` |
 
 ## Excellent-Version Items
 
 | Requirement | Status | Next step |
 | --- | --- | --- |
+| Unified frontend system | Done | Next.js is the single user-facing app |
+| Python-to-frontend export contract | Done | `src/gprobs/dashboard/export.py` and `frontend/public/data` |
 | GDELT extension is integrated | Not started | Add only after choosing a narrow country/event scope |
-| Country-specific GPR is integrated | Needs decision | Official pages exist, but data access is not a simple workbook link |
-| Dashboard includes data quality, model diagnostics, and downloads | Done | Guided tabs, data quality, Prediction Lab diagnostics, and CSV download buttons |
-| Tests and linting are present | Done | Pytest and Ruff are configured |
+| Country-specific GPR is integrated | Needs decision | Scope source access and validation first |
+| Tests and linting are present | Done | Pytest, Ruff, Next lint, and frontend build |
 | GitHub Actions run tests | Done | `.github/workflows/tests.yml` |
-| Monthly sample pipeline runs in CI | Done | monthly sample job in `.github/workflows/tests.yml` |
-| Blog post is published | Drafted | `docs/BLOG_POST_DRAFT.md`; publishing is outside the repo |
-| Walkthrough video or demo script exists | Partial | Three-minute script and internal AI review context exist; video is not recorded |
-
-Deployment details are documented in `docs/DEPLOYMENT_GUIDE.md`. External-data
-choices are documented in `docs/DATA_SOURCE_DECISIONS.md`.
-Future-agent continuation context is documented in
-`docs/FUTURE_AGENT_HANDOFF.md`.
-Current future work is tracked in the GitHub issues linked from
-`docs/ROADMAP.md`.
+| Monthly sample pipeline runs in CI | Done | monthly sample job in GitHub Actions |
+| Walkthrough video exists | Not started | Record only after the v5 frontend screenshots are final |
 
 ## Current Evidence Summary
 
@@ -59,39 +51,23 @@ The current evidence should be described cautiously:
 
 - The controlled panel regression finds a small negative GPR-jump association.
 - The emerging-market interaction is not statistically strong after controls.
-- Event robustness is mixed: the 90th-percentile shock definition is more
-  supportive of emerging-market downside than the 95th-percentile definition.
-- Sample robustness keeps the controlled GPR-jump coefficient negative, but the
-  emerging-market interaction remains weak.
+- Event robustness is mixed.
 - Prediction Lab has modest ranking signal, not a trading-grade forecast.
-- The standalone `gpr_only` drawdown-risk model is weak; volatility and the
-  broader feature set carry more of the ranking signal.
-- Monthly sample mode is not empirical evidence.
+- The standalone `gpr_only` drawdown-risk model is weak.
+- Monthly sample mode validates software behavior only.
 - Monthly real mode is an aggregate benchmark, not a country-panel proof.
 
-## Roadblocks That Need User Input
+## Remaining Human Choices
 
-These are the main choices that require a human decision:
-
+- Whether to publish a static frontend snapshot.
 - Whether to use a FRED API key for richer macro controls.
-- Whether to scrape or manually structure country-specific GPR data from the
-  official country pages.
-- Whether to deploy the Streamlit app publicly, and where.
-- Whether to publish the blog post as-is or adapt it for a specific platform.
-- Whether to record a walkthrough video.
+- Whether to scrape or manually structure country-specific GPR data.
 - Whether to publish any real monthly benchmark outputs outside the local
   machine.
+- Whether to record a walkthrough video.
 
 ## Recommended Next Move
 
-The project is already strong as a reproducible local research product on
-`main`. The public-facing docs, screenshots, reviewer guide, reproducibility
-checklist, internal AI review context, launch checklist, guided dashboard, monthly
-benchmark, and Prediction Lab are in place.
-
-1. Decide whether the dashboard stays local-first or needs a documented public
-   deployment snapshot.
-2. Keep richer external data additions in the GitHub backlog until each scope is
-   explicitly chosen and source validation is planned.
-3. Refresh screenshots or the internal AI review context only when visible dashboard content
-   or major output contracts change.
+Keep the repo Next.js-first, refresh screenshots after visual changes, and keep
+external data additions in the backlog until each scope is explicitly chosen
+and source validation is planned.

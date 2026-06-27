@@ -1,63 +1,65 @@
 # Reviewer Guide
 
-This guide gives reviewers a short path through the project without requiring
-them to inspect every script first.
+Next.js is the single user-facing app. Python remains the research and export backend. The frontend reads generated JSON from `frontend/public/data`.
 
 ## 5-Minute Review
 
 - Read the main finding in [README.md](../README.md).
-- Open [reports/RESULTS_BRIEF.md](../reports/RESULTS_BRIEF.md) for the generated
-  result summary.
-- Skim [reports/screenshots](../reports/screenshots) to see the dashboard shape.
-- Check [docs/PROFILE_PACKAGING.md](PROFILE_PACKAGING.md) for the short project
-  explanation and interview framing.
+- Open [reports/RESULTS_BRIEF.md](../reports/RESULTS_BRIEF.md).
+- Skim [reports/screenshots](../reports/screenshots) for the app shape.
+- Check the Boundaries section in the README before repeating any result.
 
-Use this path to understand what the project is, what it claims, and what it
-does not claim.
+Use this path to understand what the project claims and what it avoids
+claiming.
 
 ## 15-Minute Review
 
-- Read [docs/RESEARCH_NOTE.md](RESEARCH_NOTE.md) for the research question,
-  methods, current results, and limitations.
-- Open [docs/PROJECT_STATUS.md](PROJECT_STATUS.md) to see what is implemented
-  and which future work has been scoped.
-- Review [docs/REPRODUCIBILITY_CHECKLIST.md](REPRODUCIBILITY_CHECKLIST.md) for
-  the commands needed to rebuild and check the project.
-- Look at the dashboard screenshots, especially the overview, robustness, and
-  panel-regression images.
+- Read [docs/RESEARCH_NOTE.md](RESEARCH_NOTE.md).
+- Read [docs/PROJECT_STATUS.md](PROJECT_STATUS.md).
+- Review [docs/REPRODUCIBILITY_CHECKLIST.md](REPRODUCIBILITY_CHECKLIST.md).
+- Inspect the Next.js sections under `frontend/src/sections`.
 
 Use this path to judge whether the empirical story is coherent and cautious.
 
 ## 30-Minute Technical Review
 
-- Read [docs/TECHNICAL_APPENDIX.md](TECHNICAL_APPENDIX.md) for data definitions,
-  generated outputs, model notes, and known caveats.
-- Inspect `scripts/run_task.py` for the unified task runner and `scripts/build_all.py`
-  for the daily rebuild path.
-- Inspect `src/gprobs/analysis/` for the empirical model implementations.
-- Inspect `tests/` for data-contract, dashboard-output, model-behavior, and
-  documentation checks.
-- Run the checks from
-  [docs/REPRODUCIBILITY_CHECKLIST.md](REPRODUCIBILITY_CHECKLIST.md) if you want
-  local verification.
+- Read [docs/TECHNICAL_APPENDIX.md](TECHNICAL_APPENDIX.md).
+- Inspect `scripts/build_all.py` and `scripts/run_task.py`.
+- Inspect `src/gprobs/dashboard/export.py`, the backend UI contract.
+- Inspect `frontend/src/lib` for labels, formatting, and runtime data loading.
+- Inspect `tests/` for data, model, exporter, frontend, and docs checks.
 
 Use this path to assess maintainability, test coverage, and reproducibility.
 
-## Dashboard Path
+## App Path
 
-When running the Streamlit app locally, start with these tabs:
+When running the app locally:
 
-- Overview: data scope, GPR series, and top-level context.
-- Panel Regression: controlled and date fixed-effects results.
-- Robustness: event-study and sample-robustness checks.
-- Tail Risk and Local Projections: downside and response-path diagnostics.
+```powershell
+python -m pip install -r requirements.txt
+uv sync --all-extras
+python scripts/build_all.py
+python scripts/export_frontend_data.py
+ruff check .
+pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+cd frontend
+npm install
+npm run dev
+npm run build
+```
+
+Start with these app sections:
+
+- Overview: project question, method map, and evidence map.
+- Market Response: event-study, robustness, regression, tail, and dynamic
+  response evidence.
 - Prediction Lab: out-of-sample drawdown-risk classification diagnostics.
-- Monthly Benchmark: separate lower-frequency benchmark status and tables.
-- Data Coverage: coverage gaps and large-return flags.
+- Country Sensitivity: lazy-loaded rolling GPR sensitivity.
+- Data & Methods: country coverage, monthly benchmark status, and provenance.
 
-The daily ETF dashboard is the primary workflow. The monthly benchmark tab is a
-separate aggregate layer and should not be mixed with the daily country ETF
-panel as one empirical sample.
+The daily ETF workflow is primary. The monthly benchmark is a separate
+aggregate layer and should not be mixed with the daily country ETF panel as one
+empirical sample.
 
 ## What Not To Overclaim
 
@@ -67,40 +69,3 @@ panel as one empirical sample.
 - Do not treat monthly sample mode as empirical evidence.
 - Do not treat the two-market monthly benchmark as country-clustered panel
   proof.
-
-The current project finds cautious evidence that geopolitical risk is associated
-with equity-market risk, while the emerging-market asymmetry result remains
-mixed and not statistically strong in the current specification.
-
-## Local Run
-
-Install dependencies:
-
-```powershell
-python -m pip install -r requirements.txt
-```
-
-For the exact locked environment:
-
-```powershell
-uv sync --all-extras
-```
-
-Build the daily workflow:
-
-```powershell
-python scripts/build_all.py
-```
-
-Run the dashboard:
-
-```powershell
-streamlit run app.py
-```
-
-Run checks:
-
-```powershell
-ruff check .
-pytest --cov=gprobs --cov=app --cov-report=term-missing -q
-```

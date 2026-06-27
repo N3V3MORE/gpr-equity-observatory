@@ -1,181 +1,82 @@
-# Review Context For AI Tools
+# Internal AI Review Context
 
-Use this internal file when asking an AI tool or general-purpose reviewer to
-analyze the project. It gives a compact reading path and warns against common
-misreadings.
+Use this file when preparing a compact context bundle for an AI-assisted
+internal review. Do not upload private local data or credentials.
 
-## Fast Context
-
-GPR Equity Observatory is a reproducible economics research project about how
-equity-market risk is associated with geopolitical risk shocks.
-
-The public product is a Streamlit dashboard and research note built around a
-daily 20-country ETF panel. A separate monthly developed/emerging benchmark
-layer exists for reproducibility and aggregate comparison.
-
-The current `main` branch includes the GeoRiskLab merge, dashboard
-understandability/refactor work, monthly benchmark layer, and Prediction Lab
-extension. As of 2026-06-26, `main` is pushed to `origin/main` at merge commit
-`599e56b`.
+Next.js is the single user-facing app. Python remains the research and export
+backend. The frontend reads generated JSON from `frontend/public/data`.
 
 ## Best Files To Upload Or Paste
 
-If the review tool has a file limit, use this order:
+For a compact project review:
 
 1. `README.md`
-2. `docs/internal/REVIEW_CONTEXT_FOR_AI_TOOLS.md`
-3. `reports/RESULTS_BRIEF.md`
-4. `docs/PROJECT_STATUS.md`
-5. `docs/RESEARCH_NOTE.md`
+2. `docs/PROJECT_STATUS.md`
+3. `docs/V5_NEXT_FRONTEND_PLAN.md`
+4. `docs/REVIEWER_GUIDE.md`
+5. `docs/REPRODUCIBILITY_CHECKLIST.md`
 6. `docs/TECHNICAL_APPENDIX.md`
-7. `docs/REPRODUCIBILITY_CHECKLIST.md`
-8. `docs/REVIEWER_GUIDE.md`
-9. `pyproject.toml`
-10. `app.py`
-11. `src/gprobs/analysis/drawdown_model.py`
-12. `src/gprobs/dashboard/outputs.py`
-13. `scripts/run_task.py`
-14. `tests/test_drawdown_model.py`
-15. `tests/test_output_schemas.py`
+7. `reports/RESULTS_BRIEF.md`
+8. `scripts/run_task.py`
+9. `scripts/export_frontend_data.py`
+10. `src/gprobs/dashboard/export.py`
+11. `frontend/src/app/page.tsx`
+12. `frontend/src/sections/Overview.tsx`
+13. `frontend/src/sections/PredictionLab.tsx`
+14. `frontend/src/lib/data.ts`
+15. `tests/test_frontend_export.py`
+16. `tests/test_frontend_project_contracts.py`
+17. `tests/test_documentation_contracts.py`
 
-For a code-focused review, add `src/gprobs/analysis/`, `src/gprobs/data/`,
-`src/gprobs/features/`, `scripts/`, and `tests/`.
-
-For a public/profile review, add `docs/PROFILE_PACKAGING.md`,
-`docs/BLOG_POST_DRAFT.md`, `docs/LAUNCH_CHECKLIST.md`, and
-`reports/screenshots/`.
+For deeper method review, add the relevant files under `src/gprobs/analysis/`
+and `src/gprobs/data/`.
 
 ## What Not To Upload
-
-Do not upload or paste:
 
 - `config/sources.yml`
 - raw third-party market data
 - local monthly source files
-- credentials or `.env` files
-- unredacted local manifests
-- generated real monthly outputs unless a publication policy is chosen
-
-Generated daily outputs under `data/processed/` can be rebuilt locally and are
-not committed by default. If you need a reviewer to inspect output schemas, use
-`src/gprobs/dashboard/outputs.py` and `docs/TECHNICAL_APPENDIX.md` first.
+- credentials, API keys, `.env` files
+- real local generated monthly outputs unless a publication policy exists
+- local filesystem paths from the user's machine
 
 ## Architecture At A Glance
 
-- `app.py`: Streamlit dashboard orchestration and tab rendering.
-- `src/gprobs/dashboard/outputs.py`: dashboard CSV contracts and loaders.
-- `src/gprobs/dashboard/components.py`: reusable Streamlit display helpers.
-- `src/gprobs/dashboard/charts.py`: reusable Plotly chart helpers.
-- `scripts/build_all.py`: full daily workflow rebuild.
-- `scripts/run_task.py`: unified daily/monthly task runner.
-- `src/gprobs/data/`: data ingestion, source metadata, diagnostics, and
-  monthly real/sample source handling.
-- `src/gprobs/features/`: daily and monthly feature construction.
-- `src/gprobs/analysis/`: event studies, regressions, local projections,
-  forecasting, rolling sensitivity, and drawdown Prediction Lab logic.
-- `src/gprobs/reporting/results_brief.py`: generated Markdown results brief.
-- `tests/`: data-contract, model-behavior, dashboard, docs, and task-runner
-  tests.
-
-## Data And Output Boundaries
-
-The daily ETF workflow is the main empirical workflow:
-
-- 20 country ETF proxies.
-- Daily Caldara-Iacoviello GPR data.
-- Public market controls.
-- Event studies, panel regressions, quantile regressions, local projections,
-  rolling sensitivity, and Prediction Lab outputs.
-
-The monthly benchmark workflow is separate:
-
-- deterministic sample mode for software validation
-- real mode for user-supplied monthly GPR and Kenneth French factor files
-- source manifests and redaction checks
-- aggregate developed/emerging HAC regressions and expanding-window forecasts
-
-Do not mix daily ETF outputs and monthly aggregate benchmark outputs as one
-panel. Do not treat monthly sample mode as empirical evidence.
-
-## Current Result Snapshot
-
-The current empirical story is mixed and should stay cautious:
-
-- Controlled daily panel estimates are small and statistically weak.
-- The date fixed-effects emerging-market interaction is not strong evidence of
-  a different emerging-market average response.
-- Quantile and local-projection results are useful diagnostics, not proof.
-- Event-study robustness depends on shock and window definitions.
-- The Prediction Lab has modest ranking signal, not trading-grade forecast
-  power.
-- `gpr_only` is weak as a standalone drawdown-risk model.
-- Volatility/full-feature models rank drawdown risk better than the standalone
-  GPR model.
-
-Current Prediction Lab summary after the latest rebuild:
-
-- full-features mean ROC AUC: about `0.617`
-- full-features average precision: about `0.373`
-- mean out-of-sample base event rate: about `28.6%`
-- full-features top-decile lift: about `1.47x`
-- out-of-sample prediction rows: `454,860`
+- Daily ETF workflow: public daily ETF data, daily GPR, market controls, daily
+  panel, event studies, regressions, quantile regressions, local projections,
+  rolling sensitivity, and Prediction Lab.
+- Monthly benchmark workflow: deterministic sample mode and local real mode for
+  developed/emerging aggregate benchmark checks.
+- Prediction Lab: out-of-sample prediction rows from purged chronological folds,
+  plus metrics, lift, calibration, threshold, country-risk, and feature
+  importance outputs.
+- Frontend handoff: Python exports JSON; Next.js renders it without
+  recomputing analysis.
 
 ## Claim Rules
 
-Use this wording:
-
-- "associated with"
-- "conditional response"
-- "risk-classification experiment"
-- "benchmark estimate"
-- "mixed evidence"
-- "not statistically strong"
-
-Do not claim:
-
-- causality
-- investment advice
-- a trading system. The project is not a trading system.
-- strong emerging-market asymmetry
-- country-clustered inference from the two-market monthly benchmark
-- empirical findings from monthly sample mode
+- Not a trading system.
+- Not investment advice.
+- Not causal evidence.
+- Do not claim emerging markets always react more strongly.
+- Monthly sample mode validates software behavior only.
+- Monthly real mode is aggregate benchmark evidence, not country-clustered
+  panel inference.
 
 ## Verification Commands
 
-Use the locked environment when possible:
-
 ```powershell
-uv sync --all-extras
 uv run --all-extras ruff check .
 uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q
 uv run --all-extras python scripts/run_task.py monthly-sample --min-train-months 24
 uv run --all-extras python scripts/run_task.py build-daily
-uv run --all-extras streamlit run app.py
+uv run --all-extras python scripts/export_frontend_data.py
+cd frontend
+npm run lint
+npm run build
 ```
 
-The most recent post-push validation on `main` passed:
-
-- daily rebuild
-- monthly sample task
-- Ruff
-- full pytest suite
-- named `build-daily` task
-- Streamlit HTTP smoke check
-- output sanity checks for Prediction Lab probabilities, folds, and metric
-  bounds
-
-## Good Review Prompts
-
-Use prompts like these:
-
-- "Review this project for statistical overclaims and unclear evidence
-  framing."
-- "Review whether the README, status note, research note, and technical
-  appendix agree with each other."
-- "Review the Prediction Lab design for leakage, out-of-sample discipline, and
-  interpretability."
-- "Review the dashboard output contracts and tests for missing schema coverage."
-- "Suggest documentation improvements without changing research conclusions."
-
-Avoid asking review tools to invent new findings from sample monthly data or ignored
-generated files.
+Rendered frontend review should also check that the first page loads, there are
+no console warnings or errors, the mobile viewport has no page-level horizontal
+overflow, and `rolling_beta.json` loads only after Country Sensitivity is
+revealed.

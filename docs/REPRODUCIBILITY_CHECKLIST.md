@@ -1,70 +1,44 @@
 # Reproducibility Checklist
 
-Use this checklist when rebuilding the project from a clean clone. The goal is
-to verify the software workflow, not to publish raw third-party data.
+Use this checklist when rebuilding the project from a clean clone. Next.js is the single user-facing app. Python remains the research and export backend.
+The app reads generated JSON from `frontend/public/data`.
 
 ## Environment
 
-- Use Python 3.11 or newer.
-- Install regular development dependencies:
-
 ```powershell
 python -m pip install -r requirements.txt
-```
-
-- For the exact resolver-locked environment, use:
-
-```powershell
 uv sync --all-extras
 ```
 
-## Checks
-
-- Run lint:
+## Python Checks
 
 ```powershell
 ruff check .
-```
-
-- Run tests with the same coverage target used by the repo:
-
-```powershell
 pytest --cov=gprobs --cov=app --cov-report=term-missing -q
 ```
 
-If the local Python environment does not already have the project dependencies,
-run the same commands through `uv run --all-extras`.
-
 ## Rebuild
-
-- Rebuild the daily ETF workflow:
 
 ```powershell
 python scripts/build_all.py
-```
-
-- Or use the unified task runner:
-
-```powershell
 python scripts/run_task.py build-daily
 python scripts/run_task.py monthly-sample --min-train-months 24
+python scripts/export_frontend_data.py
 ```
 
 The monthly sample pipeline is deterministic software validation. It is not
 empirical evidence.
 
-- To rebuild the real monthly benchmark locally, copy
-  `config/sources.sample.yml` to `config/sources.yml`, point it at local GPR and
-  Kenneth French factor files, then run:
+## Monthly Real Mode
+
+Copy `config/sources.sample.yml` to `config/sources.yml`, point it at local GPR
+and Kenneth French factor files, then run:
 
 ```powershell
 python scripts/run_task.py monthly-real
 ```
 
-The local-only `monthly-real` pipeline builds the real monthly panel, validates
-source overlap, runs the HAC spread regressions, runs expanding-window forecast
-comparisons, and validates the result tables used by the dashboard. To run the
-steps individually:
+To run the steps individually:
 
 ```powershell
 python scripts/run_task.py build-monthly-real
@@ -74,41 +48,36 @@ python scripts/run_task.py run-monthly-forecasts-real
 python scripts/run_task.py validate-monthly-real-results
 ```
 
-## Dashboard
+Monthly real mode is local-only unless a publication policy is chosen.
 
-- Run the Streamlit dashboard:
+## Next.js App
 
 ```powershell
-streamlit run app.py
+cd frontend
+npm install
+npm run lint
+npm run dev
+npm run build
 ```
 
-The app expects daily processed outputs under `data/processed/`. If monthly
-benchmark outputs are absent, the Monthly Benchmark tab should show setup
-guidance instead of breaking the daily dashboard.
+The static build writes `frontend/out`. If the app is hosted below a path
+prefix, set `NEXT_PUBLIC_BASE_PATH` before `npm run build`.
 
 ## Expected Local Outputs
 
 Generated files are local by default and ignored by Git:
 
-- `data/raw/`
-- `data/interim/`
-- `data/processed/`
-- `data/metadata/`
-- `reports/tables/`
-- `reports/figures/`
+- `data/raw`
+- `data/interim`
+- `data/processed`
+- `data/metadata`
+- `reports/tables`
+- `reports/figures`
+- `frontend/public/data`
+- `frontend/out`
 
 Committed profile artifacts include `reports/RESULTS_BRIEF.md` and
-`reports/screenshots/`.
-
-## External Data Caveats
-
-- Free public market data can revise, fail temporarily, or hit provider limits.
-- ETF inception dates differ, so country coverage can differ by ticker.
-- ETF returns are USD returns and include currency exposure.
-- Monthly real mode requires local user-supplied GPR and Kenneth French files.
-
-If public data downloads fail, retry later, check provider availability, and
-avoid rewriting model conclusions from a partial rebuild.
+`reports/screenshots`.
 
 ## Do Not Commit
 
@@ -118,6 +87,5 @@ avoid rewriting model conclusions from a partial rebuild.
 - Local monthly source files.
 - Real generated monthly outputs unless a data-publication decision is made.
 
-Before showing the project widely, confirm that lint and tests pass, the daily
-pipeline rebuilds, the dashboard runs locally, and the public wording remains
-cautious.
+Before showing the project widely, confirm that lint, tests, the Python export,
+and the Next.js build pass, and that public wording remains cautious.

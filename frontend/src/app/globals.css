@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-surface-alt text-ink antialiased;
+}
+
+/* Recharts focus outlines are noisy on static charts */
+.recharts-surface:focus {
+  outline: none;
+}

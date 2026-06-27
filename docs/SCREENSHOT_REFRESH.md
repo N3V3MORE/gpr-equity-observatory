@@ -1,6 +1,6 @@
 # Screenshot Refresh
 
-Use this guide when dashboard visuals change enough that the public screenshots
+Use this guide when Next.js app visuals change enough that public screenshots
 are no longer representative.
 
 ## Current Public Screenshots
@@ -16,12 +16,11 @@ processed outputs remain local by default.
 
 Refresh screenshots when:
 
-- dashboard layout or tab content has visibly changed
-- a screenshot no longer matches the current dashboard narrative
-- profile or blog material needs an updated visual
+- app layout or section content has visibly changed
+- a screenshot no longer matches the current project narrative
+- profile material needs an updated visual
 
-Do not refresh screenshots just because the files are old. If the visible UI is
-still representative, leave them unchanged.
+Do not refresh screenshots only because the files are old.
 
 ## Manual Refresh Process
 
@@ -31,28 +30,31 @@ still representative, leave them unchanged.
 python scripts/build_all.py
 ```
 
-2. Optional, build monthly sample outputs if the Monthly Benchmark tab is part
-   of the screenshot pass:
+2. Optional, build monthly sample outputs if Data & Methods needs monthly
+   benchmark content:
 
 ```powershell
 python scripts/run_task.py monthly-sample --min-train-months 24
 ```
 
-3. Run the dashboard:
+3. Export frontend data and run the app:
 
 ```powershell
-streamlit run app.py
+python scripts/export_frontend_data.py
+cd frontend
+npm run dev
 ```
 
-4. Capture the same public views:
+4. Capture representative public views:
 
-- Overview tab as `reports/screenshots/dashboard_overview.png`
-- Robustness tab as `reports/screenshots/dashboard_robustness.png`
-- Panel Regression tab as `reports/screenshots/dashboard_panel_regression.png`
+- Overview as `reports/screenshots/dashboard_overview.png`
+- Market Response as `reports/screenshots/dashboard_robustness.png`
+- Regression Evidence or Data & Methods as
+  `reports/screenshots/dashboard_panel_regression.png`
 
 5. Check each image before committing:
 
-- the tab title and main content are visible
+- the section heading and main content are visible
 - text is readable
 - no local paths, credentials, or raw source details are shown
 - sample-mode monthly outputs are not presented as empirical evidence
@@ -62,12 +64,12 @@ streamlit run app.py
 ```powershell
 ruff check .
 pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+cd frontend
+npm run lint
+npm run build
 ```
 
 ## Interpretation Guardrails
 
 Screenshots are presentation artifacts. They should not change the analysis,
-the generated outputs, or the cautious public claim. The current public claim is
-that geopolitical risk is associated with equity-market risk, while the
-emerging-market asymmetry result remains mixed and not statistically strong in
-the current specification.
+the generated outputs, or the cautious public claim.

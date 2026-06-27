@@ -14,7 +14,9 @@ guardrails are preserved.
 
 ## Project Direction
 
-- Keep GPR Equity Observatory as the public Streamlit app and research product.
+- Keep GPR Equity Observatory as the public Next.js app and research product.
+- Treat `frontend/` as the single user-facing app. Python remains the research
+  and export backend.
 - Keep the daily 20-country ETF panel as the primary dashboard workflow.
 - Port GeoRiskLab code selectively into `src/gprobs`; do not copy the whole
   GeoRiskLab repository into this repo.
@@ -22,6 +24,8 @@ guardrails are preserved.
   names, output paths, docs, and dashboard text.
 - Preserve sample/real data boundaries. Sample mode proves software behavior; it
   is not empirical evidence.
+- Treat `src/gprobs/dashboard/export.py` and `frontend/public/data/*.json` as
+  the UI contract. Do not add analysis logic to TypeScript.
 
 ## Data Policy
 
@@ -49,6 +53,15 @@ Run these before calling code work complete:
 ```powershell
 uv run --all-extras ruff check .
 uv run --all-extras pytest --cov=gprobs --cov=app --cov-report=term-missing -q
+```
+
+For dashboard or public app changes, also run:
+
+```powershell
+uv run --all-extras python scripts/export_frontend_data.py
+cd frontend
+npm run lint
+npm run build
 ```
 
 For broad dashboard, data, model, or documentation-contract changes, also run

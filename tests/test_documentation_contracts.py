@@ -12,9 +12,7 @@ PUBLIC_REVIEWER_DOCS = [
 PHASE6_PUBLIC_DOCS = [
     Path("README.md"),
     DOCS / "RESEARCH_NOTE.md",
-    DOCS / "PROFILE_PACKAGING.md",
     DOCS / "PROJECT_STATUS.md",
-    DOCS / "BLOG_POST_DRAFT.md",
 ]
 
 
@@ -60,7 +58,7 @@ def test_core_docs_explain_daily_monthly_modes_and_claim_limits():
 
 
 def test_profile_packaging_mentions_monthly_layer_without_overclaiming():
-    profile = (DOCS / "PROFILE_PACKAGING.md").read_text(encoding="utf-8").lower()
+    profile = Path("README.md").read_text(encoding="utf-8").lower()
 
     assert "monthly benchmark" in profile
     assert "not empirical evidence" in profile
@@ -76,11 +74,13 @@ def test_future_agent_handoff_records_branch_checks_and_boundaries():
         "codex/pre-merge-gpr-cleanup",
         "phases 0 through 9",
         "gpr equity observatory remains the destination",
+        "next.js is the single user-facing app",
+        "python remains the research and export backend",
         "monthly benchmark sample mode",
         "monthly benchmark real mode",
         "uv run --all-extras ruff check .",
         "uv run --all-extras pytest",
-        "headless streamlit smoke test returned http 200",
+        "npm run build",
         "do not commit `config/sources.yml`",
         "no custom project mcp server",
     ]
@@ -203,7 +203,9 @@ def test_public_setup_docs_share_core_commands():
         "python -m pip install -r requirements.txt",
         "uv sync --all-extras",
         "python scripts/build_all.py",
-        "streamlit run app.py",
+        "python scripts/export_frontend_data.py",
+        "npm run dev",
+        "npm run build",
         "ruff check .",
         "pytest --cov=gprobs --cov=app --cov-report=term-missing -q",
     ]
@@ -302,6 +304,56 @@ def test_internal_ai_review_context_routes_safe_context():
 
     for phrase in required_phrases:
         assert phrase in guide
+
+
+def test_v5_public_docs_are_nextjs_first_and_not_archive_dependent():
+    public_docs = [
+        Path("README.md"),
+        DOCS / "PROJECT_STATUS.md",
+        DOCS / "REVIEWER_GUIDE.md",
+        DOCS / "DEPLOYMENT_GUIDE.md",
+        DOCS / "REPRODUCIBILITY.md",
+        DOCS / "REPRODUCIBILITY_CHECKLIST.md",
+        DOCS / "TECHNICAL_APPENDIX.md",
+    ]
+    required_phrases = [
+        "next.js is the single user-facing app",
+        "python remains the research and export backend",
+        "frontend/public/data",
+    ]
+    forbidden_phrases = [
+        "streamlit run app.py",
+        "docs/archive/profile_packaging.md",
+        "docs/archive/launch_checklist.md",
+        "docs/archive/blog_post_draft.md",
+        "streamlit community cloud",
+    ]
+
+    for doc_path in public_docs:
+        contents = doc_path.read_text(encoding="utf-8").lower()
+        for phrase in required_phrases:
+            assert phrase in contents, f"{phrase} missing from {doc_path}"
+        for phrase in forbidden_phrases:
+            assert phrase not in contents, f"{phrase} still present in {doc_path}"
+
+
+def test_obsolete_archive_docs_were_removed_after_v5_merge():
+    obsolete_paths = [
+        DOCS / "archive" / "PROFILE_PACKAGING.md",
+        DOCS / "archive" / "LAUNCH_CHECKLIST.md",
+        DOCS / "archive" / "PULL_REQUEST_DRAFT.md",
+        DOCS / "archive" / "BLOG_POST_DRAFT.md",
+        DOCS / "archive" / "GEORISKLAB_GPR_MERGE_PLAN.txt",
+        DOCS / "archive" / "superpowers" / "plans" / "2026-06-26-dashboard-helper-refactor.md",
+        DOCS / "archive" / "superpowers" / "plans" / "2026-06-26-dashboard-output-refactor.md",
+        DOCS / "archive" / "superpowers" / "plans" / "2026-06-26-dashboard-understandability.md",
+        DOCS / "archive" / "superpowers" / "plans" / "2026-06-27-clarify-project-question.md",
+        DOCS / "archive" / "superpowers" / "plans" / "2026-06-27-prediction-lab-clarity.md",
+        DOCS / "archive" / "superpowers" / "specs" / "2026-06-26-dashboard-understandability-design.md",
+    ]
+
+    for path in obsolete_paths:
+        assert not path.exists(), f"{path} should have been removed in v5"
 
 
 def test_committed_docs_do_not_leak_local_paths():

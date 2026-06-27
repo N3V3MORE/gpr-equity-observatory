@@ -1,9 +1,13 @@
+# Python caches, tooling, and coverage
 __pycache__/
 .pytest_cache/
+.ruff_cache/
 .claude/
 .serena/
 .venv/
 *.pyc
+.coverage
+.coverage.*
 
 .env
 config/sources.yml
@@ -17,3 +21,11 @@ data/metadata/monthly_benchmark/*.json
 reports/figures/
 reports/tables/monthly_benchmark/*.csv
 reports/monthly_benchmark/*
+
+# Next.js frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/public/data/
+frontend/.eslintcache
+frontend/.coverage
