@@ -105,19 +105,19 @@ def test_build_evidence_map_adds_strength_and_reader_columns():
 def test_prediction_lab_best_metric_labels_include_model_names():
     metrics = pd.DataFrame(
         {
-            "model_name": ["gpr_only", "full_features"],
-            "roc_auc": [0.51, 0.63],
-            "average_precision": [0.22, 0.38],
-            "brier_score": [0.20, 0.18],
-            "base_rate": [0.25, 0.25],
-            "observation_count": [10, 10],
+            "model_name": ["constant_baseline", "gpr_only", "full_features"],
+            "roc_auc": [0.50, 0.51, 0.63],
+            "average_precision": [0.25, 0.22, 0.38],
+            "brier_score": [0.22, 0.20, 0.18],
+            "base_rate": [0.25, 0.25, 0.25],
+            "observation_count": [10, 10, 10],
         }
     )
     lift = pd.DataFrame(
         {
-            "model_name": ["gpr_only", "full_features"],
-            "bucket": ["top_10_percent", "top_10_percent"],
-            "lift": [1.1, 1.5],
+            "model_name": ["constant_baseline", "gpr_only", "full_features"],
+            "bucket": ["top_10_percent", "top_10_percent", "top_10_percent"],
+            "lift": [1.0, 1.1, 1.5],
         }
     )
 
@@ -127,6 +127,82 @@ def test_prediction_lab_best_metric_labels_include_model_names():
     assert labels["auc"] == ("Best model AUC (full_features)", "0.630")
     assert labels["ap"] == ("Best model AP (full_features)", "0.380")
     assert labels["lift"] == ("Top-decile lift (full_features)", "1.50x")
+
+
+def test_build_model_summary_adds_baseline_deltas_and_verdicts():
+    metrics = pd.DataFrame(
+        {
+            "model_name": [
+                "constant_baseline",
+                "weak_model",
+                "modest_model",
+                "useful_model",
+            ],
+            "roc_auc": [0.50, 0.55, 0.62, 0.68],
+            "average_precision": [0.25, 0.29, 0.37, 0.44],
+            "brier_score": [0.21, 0.205, 0.19, 0.17],
+            "base_rate": [0.25, 0.25, 0.25, 0.25],
+            "observation_count": [100, 100, 100, 100],
+        }
+    )
+    lift = pd.DataFrame(
+        {
+            "model_name": [
+                "constant_baseline",
+                "weak_model",
+                "modest_model",
+                "useful_model",
+            ],
+            "bucket": ["top_10_percent"] * 4,
+            "lift": [1.0, 1.15, 1.45, 1.85],
+        }
+    )
+
+    summary = app.build_model_summary(metrics, lift)
+
+    assert list(summary.columns) == [
+        "model_name",
+        "what_it_uses",
+        "mean_roc_auc",
+        "delta_auc_vs_constant_baseline",
+        "mean_average_precision",
+        "delta_ap_vs_constant_baseline",
+        "mean_brier_score",
+        "delta_brier_vs_constant_baseline",
+        "mean_base_rate",
+        "observation_count",
+        "top_decile_lift",
+        "model_verdict",
+    ]
+    by_model = summary.set_index("model_name")
+    assert by_model.loc["constant_baseline", "what_it_uses"] == "Constant event rate only"
+    assert by_model.loc["constant_baseline", "model_verdict"] == "No useful ranking signal"
+    assert by_model.loc["weak_model", "model_verdict"] == "Weak ranking signal"
+    assert by_model.loc["modest_model", "model_verdict"] == "Modest ranking signal"
+    assert by_model.loc["useful_model", "model_verdict"] == "Useful signal, not trading-grade"
+    assert by_model.loc["modest_model", "delta_auc_vs_constant_baseline"] == pytest.approx(0.12)
+    assert by_model.loc["modest_model", "delta_ap_vs_constant_baseline"] == pytest.approx(0.12)
+    assert by_model.loc["modest_model", "delta_brier_vs_constant_baseline"] == pytest.approx(0.02)
+
+
+def test_model_verdict_helper_uses_cautious_plain_english_labels():
+    assert app.model_verdict_label(0.50, 0.00, 1.00) == "No useful ranking signal"
+    assert app.model_verdict_label(0.55, 0.05, 1.15) == "Weak ranking signal"
+    assert app.model_verdict_label(0.62, 0.12, 1.45) == "Modest ranking signal"
+    assert app.model_verdict_label(0.68, 0.18, 1.85) == "Useful signal, not trading-grade"
+
+
+def test_prediction_lab_beginner_model_comparison_columns_are_declared():
+    assert app.BEGINNER_MODEL_COMPARISON_COLUMNS == [
+        "model_name",
+        "what_it_uses",
+        "mean_roc_auc",
+        "delta_auc_vs_constant_baseline",
+        "mean_average_precision",
+        "top_decile_lift",
+        "mean_brier_score",
+        "model_verdict",
+    ]
 
 
 def test_build_gpr_shock_timeline_marks_top_shocks():

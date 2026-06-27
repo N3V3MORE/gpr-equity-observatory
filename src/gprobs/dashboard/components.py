@@ -1,8 +1,10 @@
+from contextlib import nullcontext
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
+DASHBOARD_MODES = ("Beginner", "Technical")
 DASHBOARD_INTRO = (
     "This dashboard studies whether equity markets respond to geopolitical risk shocks, "
     "using 20 country ETF proxies."
@@ -56,12 +58,281 @@ HOW_TO_READ_NOTES = {
         "They are checks on the research inputs, not standalone findings."
     ),
 }
+BEGINNER_TAB_GUIDES = {
+    "overview": {
+        "question": "What does the project find overall?",
+        "takeaways": [
+            (
+                "GPR and risk",
+                "The clearest pattern is that geopolitical risk is associated with equity-market risk.",
+            ),
+            (
+                "Market split",
+                "The emerging-versus-developed difference is mixed and not statistically strong.",
+            ),
+            (
+                "Use the map",
+                "Read the methods together; no single table carries the whole conclusion.",
+            ),
+        ],
+        "does_not_prove": (
+            "It does not prove causality, a trading rule, or that emerging markets always react more."
+        ),
+    },
+    "shocks": {
+        "question": "When did geopolitical risk jump the most?",
+        "takeaways": [
+            (
+                "Shock days",
+                "Marked dates are the largest daily increases in the GPR index.",
+            ),
+            (
+                "Starting points",
+                "These dates anchor the event studies and follow-up risk checks.",
+            ),
+        ],
+        "does_not_prove": (
+            "It does not prove that GPR caused any specific market move on those dates."
+        ),
+    },
+    "market_response": {
+        "question": "What happened around GPR shock days?",
+        "takeaways": [
+            (
+                "Average response",
+                "The chart compares average ETF behavior before and after shock dates.",
+            ),
+            (
+                "Group comparison",
+                "Developed and emerging averages can move differently, but the evidence varies by window.",
+            ),
+            (
+                "Robustness matters",
+                "Changing the shock cutoff or window can change the apparent response.",
+            ),
+        ],
+        "does_not_prove": (
+            "It does not prove every country moved this way or that GPR was the only driver."
+        ),
+    },
+    "regression": {
+        "question": "Does the controlled panel show a stronger emerging-market response?",
+        "takeaways": [
+            (
+                "Controls included",
+                "The controlled models compare GPR with market conditions held in the model.",
+            ),
+            (
+                "Cautious result",
+                "Current emerging-market asymmetry is mixed and not statistically strong.",
+            ),
+            (
+                "Association only",
+                "The estimates describe conditional association, not cause and effect.",
+            ),
+        ],
+        "does_not_prove": (
+            "It does not prove a causal GPR effect or a reliable emerging-market penalty."
+        ),
+    },
+    "downside_risk": {
+        "question": "Is the GPR relationship stronger on bad market days?",
+        "takeaways": [
+            (
+                "Tail focus",
+                "Lower quantiles describe worse return days rather than average days.",
+            ),
+            (
+                "Pattern check",
+                "More negative lower-tail estimates would point to downside-risk association.",
+            ),
+        ],
+        "does_not_prove": (
+            "It does not prove that the lower-tail pattern is stable across samples or tradeable."
+        ),
+    },
+    "dynamic_response": {
+        "question": "How long did average responses persist after a shock?",
+        "takeaways": [
+            (
+                "Time path",
+                "Each point estimates the response at a later post-shock horizon.",
+            ),
+            (
+                "Uncertainty",
+                "Wide bands or bands crossing zero mean the timing evidence is weak.",
+            ),
+        ],
+        "does_not_prove": (
+            "It does not prove a permanent market effect or a precisely timed reaction."
+        ),
+    },
+    "prediction_lab": {
+        "question": "Can recent conditions rank short-horizon drawdown risk?",
+        "takeaways": [
+            (
+                "Risk ranking",
+                "Prediction Lab ranks drawdown risk for ETF-date observations; it does not predict prices.",
+            ),
+            (
+                "Modest signal",
+                "The full-feature model has some ranking signal, while GPR alone is weak.",
+            ),
+            (
+                "Probability check",
+                "Calibration and Brier score show whether risk scores match realized drawdown rates.",
+            ),
+        ],
+        "does_not_prove": (
+            "It does not predict prices, choose ETFs, or turn GPR into investment advice."
+        ),
+    },
+    "country_sensitivity": {
+        "question": "Which country ETF looked more sensitive to GPR over time?",
+        "takeaways": [
+            (
+                "Rolling view",
+                "The line changes as the estimation window moves through time.",
+            ),
+            (
+                "Diagnostic only",
+                "Use it to inspect instability, not to rank countries permanently.",
+            ),
+        ],
+        "does_not_prove": (
+            "It does not prove that one country is always more exposed than another."
+        ),
+    },
+    "monthly_benchmark": {
+        "question": "What does the separate monthly benchmark add?",
+        "takeaways": [
+            (
+                "Separate layer",
+                "Monthly benchmark data is kept separate from the daily 20-country ETF panel.",
+            ),
+            (
+                "Sample boundary",
+                "Sample monthly mode checks software behavior; it is not empirical evidence.",
+            ),
+            (
+                "Limited inference",
+                "Real monthly mode is aggregate benchmark evidence, not country-clustered panel proof.",
+            ),
+        ],
+        "does_not_prove": (
+            "It does not prove country-level emerging-market asymmetry."
+        ),
+    },
+    "data_quality": {
+        "question": "Are the input files broad enough to interpret the results?",
+        "takeaways": [
+            (
+                "Coverage",
+                "Country coverage shows which ETF histories support the panel.",
+            ),
+            (
+                "Flags",
+                "Large daily-return flags point to rows worth checking before over-interpreting results.",
+            ),
+        ],
+        "does_not_prove": (
+            "It does not prove the results are free of data limitations or source risk."
+        ),
+    },
+}
+GLOSSARY_TERMS = {
+    "GPR": "Geopolitical Risk index: a news-based measure of geopolitical tension and threat.",
+    "ETF": "Exchange-traded fund: this project uses country ETFs as public market proxies.",
+    "shock": "A large jump in GPR, used as an event date or high-risk signal.",
+    "control": "Another market variable included so the GPR estimate is not standing alone.",
+    "p-value": (
+        "A statistical check for how surprising an estimate would be if the true effect "
+        "were zero; smaller is stronger, but not proof."
+    ),
+    "AUC": (
+        "A ranking score for the classifier; 0.5 is random-like, and higher means "
+        "better separation of drawdown and non-drawdown cases."
+    ),
+    "average precision": (
+        "A score focused on the highest-risk rows; higher means actual drawdowns are "
+        "more concentrated near the top of the ranking."
+    ),
+    "Brier score": "A probability-accuracy score; lower is better because predicted risks are closer to what happened.",
+    "lift": "How much more common drawdowns are inside a high-risk bucket than in the full sample.",
+    "calibration": "A check of whether predicted risk levels match realized drawdown rates.",
+}
+PREDICTION_METRIC_EXPLANATIONS = {
+    "AUC": (
+        "A ranking score: 0.5 is no better than random, while higher values mean drawdown "
+        "events tend to receive higher risk scores than non-events."
+    ),
+    "average precision": (
+        "A high-risk ranking score: higher values mean the top-ranked rows contain more "
+        "of the actual drawdown events."
+    ),
+    "Brier score": (
+        "A probability-accuracy score: lower is better because predicted risks are closer "
+        "to what actually happened."
+    ),
+    "lift": (
+        "A concentration score: 1.5x means drawdowns were 50% more common in a selected "
+        "high-risk bucket than in the full sample."
+    ),
+    "calibration": (
+        "A probability check: if a bucket has 20% predicted risk, calibration asks whether "
+        "about 20% of rows in that bucket actually had drawdowns."
+    ),
+}
+
+
+def is_beginner_mode(mode: str) -> bool:
+    return mode == DASHBOARD_MODES[0]
 
 
 def render_intro() -> None:
     st.markdown(DASHBOARD_INTRO)
     st.markdown(f"**Main takeaway:** {DASHBOARD_MAIN_TAKEAWAY}")
     st.caption(DASHBOARD_USE_NOTE)
+
+
+def render_mode_selector() -> str:
+    return st.radio(
+        "Dashboard mode",
+        DASHBOARD_MODES,
+        index=0,
+        horizontal=True,
+        help=(
+            "Beginner starts each tab with plain-English takeaways. "
+            "Technical keeps detailed tables, downloads, and diagnostics in view."
+        ),
+    )
+
+
+def render_glossary() -> None:
+    with st.sidebar.expander("Glossary", expanded=False):
+        for term, explanation in GLOSSARY_TERMS.items():
+            st.markdown(f"**{term}:** {explanation}")
+
+
+def render_beginner_intro(tab_key: str) -> None:
+    guide = BEGINNER_TAB_GUIDES[tab_key]
+    st.markdown(f"**Question:** {guide['question']}")
+
+
+def render_beginner_takeaways(tab_key: str) -> None:
+    guide = BEGINNER_TAB_GUIDES[tab_key]
+    columns = st.columns(len(guide["takeaways"]))
+    for column, (title, body) in zip(columns, guide["takeaways"], strict=True):
+        with column:
+            st.subheader(title)
+            st.write(body)
+    st.warning(f"What this does not prove: {guide['does_not_prove']}")
+
+
+def render_prediction_metric_explanations() -> None:
+    with st.expander("How to read Prediction Lab scores", expanded=True):
+        for metric, explanation in PREDICTION_METRIC_EXPLANATIONS.items():
+            st.markdown(f"**{metric}:** {explanation}")
 
 
 def render_summary_cards() -> None:
@@ -91,6 +362,12 @@ def render_summary_cards() -> None:
 
 def render_how_to_read(tab_key: str) -> None:
     st.info(f"How to read this: {HOW_TO_READ_NOTES[tab_key]}")
+
+
+def technical_details(label: str, mode: str):
+    if is_beginner_mode(mode):
+        return st.expander(f"Technical details: {label}", expanded=False)
+    return nullcontext()
 
 
 def render_csv_download(df: pd.DataFrame, label: str, filename: str) -> None:

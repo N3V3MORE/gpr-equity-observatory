@@ -6,12 +6,21 @@ def test_dashboard_components_live_in_dashboard_components_module():
 
     components = import_module("gprobs.dashboard.components")
 
+    assert components.BEGINNER_TAB_GUIDES is app.BEGINNER_TAB_GUIDES
     assert components.DASHBOARD_INTRO is app.DASHBOARD_INTRO
     assert components.DASHBOARD_MAIN_TAKEAWAY is app.DASHBOARD_MAIN_TAKEAWAY
+    assert components.DASHBOARD_MODES is app.DASHBOARD_MODES
     assert components.DASHBOARD_USE_NOTE is app.DASHBOARD_USE_NOTE
+    assert components.GLOSSARY_TERMS is app.GLOSSARY_TERMS
     assert components.HOW_TO_READ_NOTES is app.HOW_TO_READ_NOTES
+    assert components.PREDICTION_METRIC_EXPLANATIONS is app.PREDICTION_METRIC_EXPLANATIONS
+    assert components.render_beginner_intro is app.render_beginner_intro
+    assert components.render_beginner_takeaways is app.render_beginner_takeaways
+    assert components.render_glossary is app.render_glossary
     assert components.render_intro is app.render_intro
+    assert components.render_mode_selector is app.render_mode_selector
     assert components.render_summary_cards is app.render_summary_cards
+    assert components.technical_details is app.technical_details
     assert components.render_how_to_read is app.render_how_to_read
     assert components.render_csv_download is app.render_csv_download
     assert components.render_missing_data_message is app.render_missing_data_message
@@ -30,11 +39,13 @@ def test_prediction_summary_helpers_live_in_dashboard_prediction_module():
 
     prediction = import_module("gprobs.dashboard.prediction")
 
+    assert prediction.BEGINNER_MODEL_COMPARISON_COLUMNS is app.BEGINNER_MODEL_COMPARISON_COLUMNS
     assert prediction.ML_VALIDATION_HEADING is app.ML_VALIDATION_HEADING
     assert prediction.ML_VALIDATION_CAPTION is app.ML_VALIDATION_CAPTION
     assert prediction.FEATURE_IMPORTANCE_CAPTION is app.FEATURE_IMPORTANCE_CAPTION
     assert prediction.build_model_summary is app.build_model_summary
     assert prediction.best_model_metric_labels is app.best_model_metric_labels
+    assert prediction.model_verdict_label is app.model_verdict_label
 
 
 def test_dashboard_tab_render_helpers_are_defined():
@@ -54,6 +65,51 @@ def test_dashboard_tab_render_helpers_are_defined():
 
     for helper_name in expected_helpers:
         assert callable(getattr(app, helper_name))
+
+
+def test_dashboard_modes_and_glossary_terms_are_declared():
+    assert app.DASHBOARD_MODES == ("Beginner", "Technical")
+    for term in [
+        "GPR",
+        "ETF",
+        "shock",
+        "control",
+        "p-value",
+        "AUC",
+        "average precision",
+        "Brier score",
+        "lift",
+        "calibration",
+    ]:
+        assert term in app.GLOSSARY_TERMS
+        assert app.GLOSSARY_TERMS[term]
+
+
+def test_beginner_guides_cover_each_dashboard_tab():
+    assert set(app.BEGINNER_TAB_GUIDES) == set(app.HOW_TO_READ_NOTES)
+    for guide in app.BEGINNER_TAB_GUIDES.values():
+        assert guide["question"].endswith("?")
+        assert 2 <= len(guide["takeaways"]) <= 3
+        assert guide["does_not_prove"]
+
+
+def test_prediction_lab_beginner_copy_explains_risk_ranking_not_prices():
+    guide = app.BEGINNER_TAB_GUIDES["prediction_lab"]
+    prediction_copy = " ".join(
+        [
+            guide["question"],
+            guide["does_not_prove"],
+            *[body for _, body in guide["takeaways"]],
+        ]
+    ).lower()
+
+    assert "rank" in prediction_copy
+    assert "drawdown risk" in prediction_copy
+    assert "does not predict prices" in prediction_copy
+
+    for metric in ["AUC", "average precision", "Brier score", "lift", "calibration"]:
+        assert metric in app.PREDICTION_METRIC_EXPLANATIONS
+        assert app.PREDICTION_METRIC_EXPLANATIONS[metric]
 
 
 def test_ml_tab_uses_purged_validation_wording():

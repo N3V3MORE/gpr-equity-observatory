@@ -10,7 +10,15 @@ from gprobs.dashboard.charts import (
     build_monthly_gpr_shock_chart,
     build_monthly_spread_chart,
 )
-from gprobs.dashboard.components import render_csv_download, render_how_to_read
+from gprobs.dashboard.components import (
+    DASHBOARD_MODES,
+    is_beginner_mode,
+    render_beginner_intro,
+    render_beginner_takeaways,
+    render_csv_download,
+    render_how_to_read,
+    technical_details,
+)
 from gprobs.dashboard.outputs import PROJECT_ROOT, OutputSpec, validate_output_schema
 
 MONTHLY_SAMPLE_NOTICE = "Sample mode is not empirical evidence. It only proves the monthly benchmark workflow runs."
@@ -188,11 +196,19 @@ def monthly_provenance_rows(bundle: MonthlyOutputBundle) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["field", "value"])
 
 
-def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
-    render_how_to_read("monthly_benchmark")
+def render_monthly_benchmark_tab(
+    bundle: MonthlyOutputBundle | None,
+    mode: str = DASHBOARD_MODES[1],
+) -> None:
+    if is_beginner_mode(mode):
+        render_beginner_intro("monthly_benchmark")
+    else:
+        render_how_to_read("monthly_benchmark")
     if bundle is None:
         st.info("Monthly benchmark outputs are not available yet.")
         st.code("\n".join(MONTHLY_EMPTY_STATE_COMMANDS))
+        if is_beginner_mode(mode):
+            render_beginner_takeaways("monthly_benchmark")
         st.caption(MONTHLY_EMPTY_STATE_NOTE)
         st.caption(f"{MONTHLY_SAMPLE_NOTICE} {MONTHLY_REAL_NOTICE} {MONTHLY_CLUSTER_NOTICE}")
         return
@@ -216,37 +232,77 @@ def render_monthly_benchmark_tab(bundle: MonthlyOutputBundle | None) -> None:
     st.caption(MONTHLY_CLUSTER_NOTICE)
     st.caption(MONTHLY_MODE_PRIORITY_NOTICE)
 
-    st.subheader("Source and Provenance Status")
-    provenance = monthly_provenance_rows(bundle)
-    st.dataframe(provenance, use_container_width=True, hide_index=True)
-    render_csv_download(provenance, "Download Monthly Provenance CSV", "monthly_provenance.csv")
-    if bundle.source_names:
-        sources = pd.DataFrame({"source_name": bundle.source_names})
-        st.dataframe(sources, use_container_width=True, hide_index=True)
-        render_csv_download(sources, "Download Monthly Sources CSV", "monthly_sources.csv")
+    if not is_beginner_mode(mode):
+        st.subheader("Source and Provenance Status")
+        provenance = monthly_provenance_rows(bundle)
+        st.dataframe(provenance, use_container_width=True, hide_index=True)
+        render_csv_download(provenance, "Download Monthly Provenance CSV", "monthly_provenance.csv")
+        if bundle.source_names:
+            sources = pd.DataFrame({"source_name": bundle.source_names})
+            st.dataframe(sources, use_container_width=True, hide_index=True)
+            render_csv_download(sources, "Download Monthly Sources CSV", "monthly_sources.csv")
+
+        st.plotly_chart(build_monthly_gpr_shock_chart(month_level), use_container_width=True)
+        st.plotly_chart(build_monthly_spread_chart(month_level), use_container_width=True)
+
+        st.subheader("Benchmark Regression Table")
+        if bundle.regressions is None:
+            st.info("Monthly benchmark regression output is not available yet.")
+        else:
+            st.dataframe(bundle.regressions, use_container_width=True, hide_index=True)
+            render_csv_download(
+                bundle.regressions,
+                "Download Monthly Regressions CSV",
+                "monthly_benchmark_regressions.csv",
+            )
+
+        st.subheader("Forecast Comparison")
+        if bundle.forecasts is None:
+            st.info("Monthly benchmark forecast output is not available yet.")
+        else:
+            st.plotly_chart(build_monthly_forecast_chart(bundle.forecasts), use_container_width=True)
+            st.dataframe(bundle.forecasts, use_container_width=True, hide_index=True)
+            render_csv_download(
+                bundle.forecasts,
+                "Download Monthly Forecasts CSV",
+                "monthly_benchmark_forecasts.csv",
+            )
+        return
 
     st.plotly_chart(build_monthly_gpr_shock_chart(month_level), use_container_width=True)
-    st.plotly_chart(build_monthly_spread_chart(month_level), use_container_width=True)
+    render_beginner_takeaways("monthly_benchmark")
 
-    st.subheader("Benchmark Regression Table")
-    if bundle.regressions is None:
-        st.info("Monthly benchmark regression output is not available yet.")
-    else:
-        st.dataframe(bundle.regressions, use_container_width=True, hide_index=True)
-        render_csv_download(
-            bundle.regressions,
-            "Download Monthly Regressions CSV",
-            "monthly_benchmark_regressions.csv",
-        )
+    with technical_details("monthly provenance and benchmark outputs", mode):
+        st.subheader("Source and Provenance Status")
+        provenance = monthly_provenance_rows(bundle)
+        st.dataframe(provenance, use_container_width=True, hide_index=True)
+        render_csv_download(provenance, "Download Monthly Provenance CSV", "monthly_provenance.csv")
+        if bundle.source_names:
+            sources = pd.DataFrame({"source_name": bundle.source_names})
+            st.dataframe(sources, use_container_width=True, hide_index=True)
+            render_csv_download(sources, "Download Monthly Sources CSV", "monthly_sources.csv")
 
-    st.subheader("Forecast Comparison")
-    if bundle.forecasts is None:
-        st.info("Monthly benchmark forecast output is not available yet.")
-    else:
-        st.plotly_chart(build_monthly_forecast_chart(bundle.forecasts), use_container_width=True)
-        st.dataframe(bundle.forecasts, use_container_width=True, hide_index=True)
-        render_csv_download(
-            bundle.forecasts,
-            "Download Monthly Forecasts CSV",
-            "monthly_benchmark_forecasts.csv",
-        )
+        st.plotly_chart(build_monthly_spread_chart(month_level), use_container_width=True)
+
+        st.subheader("Benchmark Regression Table")
+        if bundle.regressions is None:
+            st.info("Monthly benchmark regression output is not available yet.")
+        else:
+            st.dataframe(bundle.regressions, use_container_width=True, hide_index=True)
+            render_csv_download(
+                bundle.regressions,
+                "Download Monthly Regressions CSV",
+                "monthly_benchmark_regressions.csv",
+            )
+
+        st.subheader("Forecast Comparison")
+        if bundle.forecasts is None:
+            st.info("Monthly benchmark forecast output is not available yet.")
+        else:
+            st.plotly_chart(build_monthly_forecast_chart(bundle.forecasts), use_container_width=True)
+            st.dataframe(bundle.forecasts, use_container_width=True, hide_index=True)
+            render_csv_download(
+                bundle.forecasts,
+                "Download Monthly Forecasts CSV",
+                "monthly_benchmark_forecasts.csv",
+            )
