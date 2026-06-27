@@ -13,20 +13,25 @@ Official source:
 Current status:
 
 - The project already has no-key market controls from Yahoo Finance proxies.
-- Adding FRED would improve macro interpretation, especially for rates, spreads,
-  inflation, and other economic controls.
-- FRED API access requires an API key.
+- A narrow standalone FRED macro-control layer is scoped for robustness work,
+  not for changing current daily conclusions.
+- FRED API access requires a local `FRED_API_KEY` environment variable.
+- Raw FRED responses and processed outputs are generated locally under ignored
+  data paths.
 
-Decision needed:
+Chosen first controls:
 
-- Whether to use a FRED API key.
-- Which macro controls to add first.
+- `BAMLH0A0HYM2`: ICE BofA US High Yield Index Option-Adjusted Spread.
+- `DFF`: Effective Federal Funds Rate.
+- `T10YIE`: 10-Year Breakeven Inflation Rate.
 
-Recommended first FRED controls:
+Interpretation boundary:
 
-- High-yield credit spread or financial stress proxy.
-- Federal funds rate or policy-rate proxy.
-- Inflation expectation or inflation series, if used at monthly frequency.
+- FRED controls are a macro robustness extension, not a new headline result.
+- Current daily regressions, Prediction Lab outputs, evidence summary, and
+  dashboard conclusions remain unchanged until a later explicit integration
+  step.
+- Only lagged FRED columns should be used in later predictive models.
 
 Economics warning:
 

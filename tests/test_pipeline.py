@@ -22,6 +22,7 @@ def test_pipeline_steps_are_in_dependency_order():
         "write_results_brief.py",
         "plot_initial_trends.py",
     ]
+    assert "build_fred_macro_controls.py" not in script_names
 
 
 def test_run_pipeline_passes_refresh_to_network_download_steps(monkeypatch, tmp_path):

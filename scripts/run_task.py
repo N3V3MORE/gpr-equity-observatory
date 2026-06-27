@@ -11,6 +11,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TASK_COMMANDS = {
     "setup": [[sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]],
     "build-daily": [[sys.executable, "scripts/build_all.py"]],
+    "build-fred": [[sys.executable, "scripts/build_fred_macro_controls.py"]],
     "build-monthly-sample": [[sys.executable, "scripts/build_monthly_benchmark_sample.py"]],
     "build-monthly-real": [[sys.executable, "scripts/build_monthly_benchmark_real.py", "--config", DEFAULT_CONFIG]],
     "validate-daily": [[sys.executable, "scripts/run_data_diagnostics.py"]],
@@ -83,6 +84,7 @@ PIPELINES = {
 }
 
 ROOT_AWARE_SCRIPTS = {
+    "scripts/build_fred_macro_controls.py",
     "scripts/build_monthly_benchmark_sample.py",
     "scripts/build_monthly_benchmark_real.py",
     "scripts/validate_monthly_benchmark.py",

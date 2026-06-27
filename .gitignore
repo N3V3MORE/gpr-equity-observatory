@@ -11,6 +11,7 @@ config/sources.yml
 data/raw/
 data/processed/
 data/interim/
+data/metadata/fred_source_manifest.json
 data/metadata/monthly_benchmark/*.json
 
 reports/figures/

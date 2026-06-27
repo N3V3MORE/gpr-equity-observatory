@@ -28,6 +28,25 @@ The current controls are:
 
 WTI is a level change because WTI traded below zero in April 2020.
 
+## FRED Macro Controls
+
+The optional FRED macro-control extension uses `FRED_API_KEY` from the local
+environment and writes standalone artifacts:
+
+- raw API responses under `data/raw/fred/`
+- processed controls at `data/processed/fred_macro_controls.csv`
+- a local source manifest at `data/metadata/fred_source_manifest.json`
+
+The first selected controls are high-yield option-adjusted spread
+(`BAMLH0A0HYM2`), effective federal funds rate (`DFF`), and 10-year breakeven
+inflation expectations (`T10YIE`). These controls are a macro robustness
+extension, not a new headline result. Current daily conclusions remain based on
+the existing no-key market controls.
+
+Only lagged FRED columns should be used in later predictive models. The raw
+same-date FRED columns are kept for provenance and inspection, not for immediate
+model integration.
+
 ## Monthly Benchmark Sources
 
 The monthly benchmark pipeline uses two modes.
@@ -58,11 +77,11 @@ intended to be committed.
 HTTPS sources require an expected SHA-256 hash. Non-HTTPS URL schemes are
 rejected.
 
-## GDELT And Macro Controls
+## GDELT And Other Macro Controls
 
-GDELT and macro controls are staged extensions. Current monthly real mode uses
-explicit placeholder GDELT and macro columns until validated real inputs are
-added.
+GDELT and broader macro controls are staged extensions. Current monthly real
+mode uses explicit placeholder GDELT and macro columns until validated real
+inputs are added.
 
 Do not describe placeholder GDELT or placeholder macro columns as real data.
 

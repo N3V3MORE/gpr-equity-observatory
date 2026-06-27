@@ -39,6 +39,31 @@ def test_run_task_propagates_failed_command(monkeypatch, tmp_path):
     assert run_task.run_task("lint", root=tmp_path) == 9
 
 
+def test_run_task_build_fred_dispatches_standalone_fred_builder(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_run(command, cwd, check=False):
+        calls.append((command, cwd, check))
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(run_task.subprocess, "run", fake_run)
+
+    assert run_task.run_task("build-fred", root=tmp_path) == 0
+
+    assert calls == [
+        (
+            [
+                run_task.sys.executable,
+                "scripts/build_fred_macro_controls.py",
+                "--root",
+                str(tmp_path),
+            ],
+            run_task.PROJECT_ROOT,
+            False,
+        )
+    ]
+
+
 def test_run_task_rejects_unknown_task():
     with pytest.raises(ValueError, match="unknown task"):
         run_task.run_task("not-a-task")
