@@ -7,7 +7,6 @@ from gprobs.dashboard.contracts import (
     PROJECT_ROOT,
     REQUIRED_FILES,
     OutputSpec,
-    missing_output_files,
     validate_output_schema,
 )
 
@@ -39,4 +38,4 @@ def load_outputs():
 
 
 def missing_files():
-    return missing_output_files()
+    return [path for path in REQUIRED_FILES.values() if not path.exists()]
