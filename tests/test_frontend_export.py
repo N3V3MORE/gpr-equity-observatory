@@ -97,6 +97,8 @@ def test_build_frontend_payloads_returns_available_manifest(tmp_path):
         },
     ]
     assert payloads["copy"]["glossary"]
+    assert "validates the monthly benchmark workflow" in payloads["copy"]["monthly_notices"]["sample"]
+    assert "proves" not in payloads["copy"]["monthly_notices"]["sample"].lower()
     assert isinstance(payloads["overview"]["headline"]["country_count"], int)
     assert isinstance(payloads["gpr_timeline"]["series"], list)
     assert isinstance(payloads["evidence_map"], list)

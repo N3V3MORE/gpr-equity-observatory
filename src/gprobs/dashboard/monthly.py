@@ -21,7 +21,7 @@ from gprobs.dashboard.components import (
 )
 from gprobs.dashboard.contracts import PROJECT_ROOT, OutputSpec, validate_output_schema
 
-MONTHLY_SAMPLE_NOTICE = "Sample mode is not empirical evidence. It only proves the monthly benchmark workflow runs."
+MONTHLY_SAMPLE_NOTICE = "Sample mode is not empirical evidence. It only validates the monthly benchmark workflow."
 MONTHLY_REAL_NOTICE = "Real monthly aggregate mode is a benchmark, not a country-panel proof."
 MONTHLY_CLUSTER_NOTICE = "The two-market aggregate design cannot support country-clustered inference."
 MONTHLY_MODE_PRIORITY_NOTICE = (
