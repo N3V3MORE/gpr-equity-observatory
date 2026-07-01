@@ -16,6 +16,7 @@ import {
   MONTHLY_FORECAST_COLUMNS,
   MONTHLY_PROVENANCE_COLUMNS,
   MONTHLY_REGRESSION_COLUMNS,
+  OUTPUT_FILE_READER_COLUMNS,
 } from "@/lib/labels";
 import { num } from "@/lib/format";
 import type { FrontendBundle } from "@/lib/types";
@@ -36,6 +37,18 @@ export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
           <MetricCard label="Countries checked" value={num(country_coverage.length, "n/a")} />
           <MetricCard label="Large-return flags" value={num(large_returns.length, "n/a")} hint="Unusually large daily returns worth manual review" />
         </div>
+        <Details summary="Details: generated files used by the app" defaultOpen>
+          <p className="text-xs text-ink-muted">
+            These are processed outputs, not raw source files. The public app reads the exported JSON copy of these
+            results.
+          </p>
+          <DataTable
+            rows={bundle.reader_summaries.output_files}
+            columns={OUTPUT_FILE_READER_COLUMNS}
+            downloadFilename="frontend_output_files.csv"
+            downloadLabel="Download output file map (CSV)"
+          />
+        </Details>
         <Details summary="Details: country coverage" defaultOpen>
           <DataTable
             rows={country_coverage}

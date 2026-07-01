@@ -91,3 +91,17 @@ def test_page_shell_clips_mobile_table_overflow():
     page = _read("frontend/src/app/page.tsx")
 
     assert '<main className="overflow-x-hidden">' in page
+
+
+def test_reader_summaries_are_loaded_and_rendered():
+    data_module = _read("frontend/src/lib/data.ts")
+    how_markets = _read("frontend/src/sections/HowMarketsReact.tsx")
+    data_methods = _read("frontend/src/sections/DataAndMethods.tsx")
+
+    assert "reader_summaries.json" in data_module
+    assert "bundle.reader_summaries.market_reaction" in how_markets
+    assert "MARKET_REACTION_READER_COLUMNS" in how_markets
+    assert "bundle.reader_summaries.regression_translation" in how_markets
+    assert "REGRESSION_TRANSLATION_COLUMNS" in how_markets
+    assert "bundle.reader_summaries.output_files" in data_methods
+    assert "OUTPUT_FILE_READER_COLUMNS" in data_methods

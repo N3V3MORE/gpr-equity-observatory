@@ -86,6 +86,12 @@ export interface PredictionSummaryPayload {
   mean_event_rate: number;
 }
 
+export interface ReaderSummariesPayload {
+  output_files: Row[];
+  market_reaction: Row[];
+  regression_translation: Row[];
+}
+
 export interface FrontendBundle {
   manifest: Manifest;
   copy: Copy;
@@ -107,6 +113,7 @@ export interface FrontendBundle {
   drawdown_country_risk_summary: Row[];
   drawdown_feature_importance: Row[];
   drawdown_metrics: Row[];
+  reader_summaries: ReaderSummariesPayload;
   country_coverage: Row[];
   large_returns: Row[];
   monthly: MonthlyPayload;

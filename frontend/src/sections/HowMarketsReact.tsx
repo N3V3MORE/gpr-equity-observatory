@@ -10,7 +10,12 @@ import {
   QuantileChart,
 } from "@/components/charts";
 import { LazyRollingBeta } from "@/components/LazyRollingBeta";
-import { PANEL_ROBUSTNESS_COLUMNS, REGRESSION_TERM_COLUMNS } from "@/lib/labels";
+import {
+  MARKET_REACTION_READER_COLUMNS,
+  PANEL_ROBUSTNESS_COLUMNS,
+  REGRESSION_TERM_COLUMNS,
+  REGRESSION_TRANSLATION_COLUMNS,
+} from "@/lib/labels";
 import type { FrontendBundle, Row } from "@/lib/types";
 
 export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
@@ -30,6 +35,20 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
         >
           <EventStudyChart rows={bundle.event_study} />
         </ChartCard>
+        <div>
+          <h4 className="text-sm font-semibold text-ink">Readable event-study summary</h4>
+          <p className="mt-1 text-xs text-ink-muted">
+            This table pulls out the main shock-day checkpoints before the technical robustness checks.
+          </p>
+          <div className="mt-3">
+            <DataTable
+              rows={bundle.reader_summaries.market_reaction}
+              columns={MARKET_REACTION_READER_COLUMNS}
+              downloadFilename="market_reaction_summary.csv"
+              compact
+            />
+          </div>
+        </div>
         <Details summary="Details: event-study robustness (different shock cutoffs and windows)">
           <p className="text-xs text-ink-muted">
             This checks whether the conclusion holds when the shock threshold or the post-shock window is changed.
@@ -49,6 +68,21 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
           returns for emerging-market ETFs relative to developed-market ETFs. Negative and statistically strong
           would support the idea that emerging markets react more. In the current data, this is not strong.
         </p>
+        <div>
+          <h4 className="text-sm font-semibold text-ink">Regression translation table</h4>
+          <p className="mt-1 text-xs text-ink-muted">
+            Start here before reading coefficient rows. The labels are cautious because these models show
+            association, not cause and effect.
+          </p>
+          <div className="mt-3">
+            <DataTable
+              rows={bundle.reader_summaries.regression_translation}
+              columns={REGRESSION_TRANSLATION_COLUMNS}
+              downloadFilename="regression_translation.csv"
+              compact
+            />
+          </div>
+        </div>
         <div className="grid gap-4 md:grid-cols-2">
           <RegressionBlock title="Baseline model" rows={bundle.regression.baseline} filename="panel_regression_baseline_terms.csv" />
           <RegressionBlock title="With market controls" rows={bundle.regression.controlled} filename="panel_regression_controlled_terms.csv" />

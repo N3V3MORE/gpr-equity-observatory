@@ -106,6 +106,50 @@ export const EVIDENCE_MAP_COLUMNS: ColumnSpec[] = [
   { key: "Plain-English takeaway", label: "Plain-English takeaway" },
 ];
 
+export const OUTPUT_FILE_READER_COLUMNS: ColumnSpec[] = [
+  { key: "file", label: "Generated file" },
+  { key: "reader_page", label: "Where to read it" },
+  { key: "rows", label: "Rows", align: "right", format: (v) => num(v) },
+  { key: "plain_meaning", label: "Plain meaning" },
+];
+
+export const MARKET_REACTION_READER_COLUMNS: ColumnSpec[] = [
+  { key: "market_group", label: "Market group" },
+  { key: "relative_day", label: "Days after shock", align: "right", format: (v) => num(v) },
+  {
+    key: "cumulative_average_abnormal_return",
+    label: "Cumulative abnormal return",
+    tooltip: "Average return around shock days after removing the normal market-model expectation.",
+    align: "right",
+    format: (v) => percent(v),
+  },
+  { key: "direction", label: "Direction" },
+  { key: "evidence_strength", label: "Evidence label" },
+  { key: "plain_note", label: "Plain-English note" },
+];
+
+export const REGRESSION_TRANSLATION_COLUMNS: ColumnSpec[] = [
+  { key: "test", label: "Test" },
+  { key: "what_it_checks", label: "What it checks" },
+  { key: "direction", label: "Direction" },
+  {
+    key: "estimate",
+    label: "Estimate",
+    tooltip: "Regression estimate, shown in basis points for return outcomes.",
+    align: "right",
+    format: (v) => bps(v),
+  },
+  {
+    key: "p_value",
+    label: "p-value",
+    tooltip: "Smaller values are stronger statistical evidence, but not proof.",
+    align: "right",
+    format: (v) => fixed(v, 3),
+  },
+  { key: "evidence_strength", label: "Evidence label" },
+  { key: "plain_note", label: "Plain-English note" },
+];
+
 export const REGRESSION_TERM_COLUMNS: ColumnSpec[] = [
   {
     key: "term",
