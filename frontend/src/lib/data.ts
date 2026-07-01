@@ -12,6 +12,11 @@ const BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/$/, "");
 const DATA_DIR = "data";
 const DATA_BASE = `${BASE_PATH}/${DATA_DIR}`;
 
+type PartialCopy = Partial<Omit<Copy, "monthly_notices" | "prediction_lab">> & {
+  monthly_notices?: Partial<Copy["monthly_notices"]>;
+  prediction_lab?: Partial<Copy["prediction_lab"]>;
+};
+
 async function fetchJson<T>(path: string): Promise<T> {
   const res = await fetch(`${DATA_BASE}/${path}`);
   if (!res.ok) {
@@ -79,11 +84,34 @@ function emptyBundle(): FrontendBundle {
   };
 }
 
+function mergeCopyDefaults(copy: PartialCopy | null): Copy {
+  const defaults = emptyBundle().copy;
+  if (!copy) return defaults;
+  return {
+    central_question: copy.central_question ?? defaults.central_question,
+    intro: copy.intro ?? defaults.intro,
+    main_takeaway: copy.main_takeaway ?? defaults.main_takeaway,
+    use_note: copy.use_note ?? defaults.use_note,
+    job_statements: copy.job_statements ?? defaults.job_statements,
+    reader_path: copy.reader_path ?? defaults.reader_path,
+    current_answer_points: copy.current_answer_points ?? defaults.current_answer_points,
+    does_not_prove_points: copy.does_not_prove_points ?? defaults.does_not_prove_points,
+    method_map: copy.method_map ?? defaults.method_map,
+    glossary: copy.glossary ?? defaults.glossary,
+    prediction_metric_explanations:
+      copy.prediction_metric_explanations ?? defaults.prediction_metric_explanations,
+    how_to_read: copy.how_to_read ?? defaults.how_to_read,
+    beginner_guides: copy.beginner_guides ?? defaults.beginner_guides,
+    monthly_notices: { ...defaults.monthly_notices, ...(copy.monthly_notices ?? {}) },
+    prediction_lab: { ...defaults.prediction_lab, ...(copy.prediction_lab ?? {}) },
+  };
+}
+
 export async function loadBundle(): Promise<FrontendBundle> {
   const manifest = await fetchJson<FrontendBundle["manifest"]>("manifest.json");
   if (!manifest.available) {
-    const copy = await safeFetch<Copy>("copy.json");
-    return { ...emptyBundle(), manifest, copy: copy ?? emptyBundle().copy };
+    const copy = await safeFetch<PartialCopy>("copy.json");
+    return { ...emptyBundle(), manifest, copy: mergeCopyDefaults(copy) };
   }
   const [
     copy,
@@ -109,7 +137,7 @@ export async function loadBundle(): Promise<FrontendBundle> {
     large_returns,
     monthly,
   ] = await Promise.all([
-    safeFetch<Copy>("copy.json"),
+    safeFetch<PartialCopy>("copy.json"),
     safeFetch<OverviewPayload>("overview.json"),
     safeFetch<GprTimelinePayload>("gpr_timeline.json"),
     safeFetch<Row[]>("group_returns.json"),
@@ -135,7 +163,7 @@ export async function loadBundle(): Promise<FrontendBundle> {
 
   return {
     manifest,
-    copy: copy ?? emptyBundle().copy,
+    copy: mergeCopyDefaults(copy),
     overview: overview ?? emptyBundle().overview,
     gpr_timeline: gpr_timeline ?? emptyBundle().gpr_timeline,
     group_returns: group_returns ?? [],
