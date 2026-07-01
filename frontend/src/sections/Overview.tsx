@@ -12,6 +12,7 @@ import type { FrontendBundle } from "@/lib/types";
 export function Overview({ bundle }: { bundle: FrontendBundle }) {
   const { copy, overview, gpr_timeline, evidence_map, group_returns } = bundle;
   const headline = overview.headline;
+  const readerPath = copy.reader_path ?? [];
 
   return (
     <Section
@@ -48,7 +49,7 @@ export function Overview({ bundle }: { bundle: FrontendBundle }) {
       <div>
         <h3 className="text-sm font-semibold text-ink">Read this first</h3>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
-          {copy.reader_path.map((item) => (
+          {readerPath.map((item) => (
             <div key={item.step} className="rounded-lg border border-surface-border bg-surface p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-white">

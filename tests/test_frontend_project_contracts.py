@@ -48,6 +48,15 @@ def test_frontend_static_data_urls_support_base_path():
     assert '"/data"' not in data_module
 
 
+def test_frontend_loader_merges_copy_defaults_for_stale_exports():
+    data_module = _read("frontend/src/lib/data.ts")
+
+    assert "type PartialCopy" in data_module
+    assert "mergeCopyDefaults" in data_module
+    assert 'safeFetch<PartialCopy>("copy.json")' in data_module
+    assert "copy: mergeCopyDefaults(copy)" in data_module
+
+
 def test_rolling_sensitivity_loads_only_when_revealed():
     lazy_component = _read("frontend/src/components/LazyRollingBeta.tsx")
     charts = _read("frontend/src/components/charts.tsx")
@@ -69,6 +78,7 @@ def test_overview_renders_beginner_reader_path_before_method_map():
     overview = _read("frontend/src/sections/Overview.tsx")
 
     assert "copy.reader_path" in overview
+    assert "copy.reader_path ?? []" in overview
     assert "Read this first" in overview
     assert overview.index("Read this first") < overview.index("Method map")
 
