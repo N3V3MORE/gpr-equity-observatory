@@ -105,3 +105,10 @@ def test_reader_summaries_are_loaded_and_rendered():
     assert "REGRESSION_TRANSLATION_COLUMNS" in how_markets
     assert "bundle.reader_summaries.output_files" in data_methods
     assert "OUTPUT_FILE_READER_COLUMNS" in data_methods
+
+
+def test_prediction_lab_leads_with_lift_graph_before_model_table():
+    prediction_lab = _read("frontend/src/sections/PredictionLab.tsx")
+
+    assert prediction_lab.index("Bad-outcome lift by risk bucket") < prediction_lab.index("Model comparison")
+    assert prediction_lab.index("Bottom line") < prediction_lab.index("Model comparison")

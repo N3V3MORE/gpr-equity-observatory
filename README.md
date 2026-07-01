@@ -40,6 +40,26 @@ real monthly benchmark is not a country-panel proof.
 See [reports/RESULTS_BRIEF.md](reports/RESULTS_BRIEF.md) for the generated
 short summary.
 
+## How To Read The App
+
+The Next.js app now starts with a three-step reader path:
+
+1. Start with the question.
+2. Look at the GPR and market-reaction graphs.
+3. Check the evidence labels before reading technical tables.
+
+Use the first page in this order:
+
+- read the "Read this first" cards
+- inspect the GPR timeline and largest shock markers
+- use the Evidence Map for the current answer
+- open details sections only when you want the generated file map or raw tables
+
+The Market Response section now shows a readable event-study summary and a
+regression translation table before the coefficient details. The Data & Methods
+section lists the generated Python outputs behind the app. The frontend still
+reads exported JSON only; it does not parse raw CSVs or rerun models.
+
 ## Quick Start
 
 Install the regular development environment:
@@ -163,7 +183,7 @@ Useful interview framing:
   currency exposure.
 - Daily ETF findings and monthly benchmark findings answer related but
   different questions.
-- Monthly sample mode proves the workflow runs; it is not empirical evidence.
+- Monthly sample mode validates the workflow; it is not empirical evidence.
 - The two-market monthly benchmark is useful as an aggregate comparison, not as
   a country-panel proof.
 - Results are associations, not clean causal estimates.

@@ -1,6 +1,6 @@
 # GPR Equity Observatory Status
 
-Last updated: 2026-06-27
+Last updated: 2026-07-01
 
 Next.js is the single user-facing app. Python remains the research and export backend. The frontend reads generated JSON from `frontend/public/data`.
 
@@ -30,6 +30,8 @@ says.
 - Monthly developed/emerging HAC spread regressions.
 - Monthly expanding-window forecast comparisons.
 - Next.js app under `frontend/`.
+- Beginner reader path, graph-first overview, readable event-study summary,
+  regression translation table, and generated-file map in the Next.js app.
 - Python exporter at `scripts/export_frontend_data.py` and
   `src/gprobs/dashboard/export.py`.
 - Automated Python and frontend checks in the task runner and CI.

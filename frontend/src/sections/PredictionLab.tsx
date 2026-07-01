@@ -54,6 +54,14 @@ export function PredictionLab({ bundle }: { bundle: FrontendBundle }) {
         <MetricCard label="Average bad-outcome rate" value={percent(prediction_summary.mean_event_rate, 1)} hint="Share of rows that actually had a drawdown" />
       </div>
 
+      <Callout variant="info" title="Bottom line">
+        {copy.prediction_lab.conclusion}
+      </Callout>
+
+      <ChartCard title="Bad-outcome lift by risk bucket" caption="The dashed line at 1x means no better than average. Higher bars mean bad outcomes are more concentrated in that bucket.">
+        <LiftChart rows={drawdown_lift} />
+      </ChartCard>
+
       <div>
         <h3 className="text-sm font-semibold text-ink">Model comparison</h3>
         <p className="mt-1 text-xs text-ink-muted">
@@ -81,10 +89,6 @@ export function PredictionLab({ bundle }: { bundle: FrontendBundle }) {
         </dl>
       </Callout>
 
-      <Callout variant="info" title="Bottom line">
-        {copy.prediction_lab.conclusion}
-      </Callout>
-
       <Details summary="Details: calibration - do predicted risk levels match reality?" defaultOpen>
         <ChartCard
           title="Realized bad-outcome rate by predicted-risk decile"
@@ -101,9 +105,6 @@ export function PredictionLab({ bundle }: { bundle: FrontendBundle }) {
       </Details>
 
       <Details summary="Details: lift - how concentrated are bad outcomes in the riskiest rows?">
-        <ChartCard title="Bad-outcome lift by risk bucket" caption="The dashed line at 1x means 'no better than average'. Higher bars mean bad outcomes are concentrated in that bucket.">
-          <LiftChart rows={drawdown_lift} />
-        </ChartCard>
         <DataTable rows={drawdown_lift} columns={LIFT_COLUMNS_LOCAL} downloadFilename="drawdown_model_lift.csv" compact />
       </Details>
 

@@ -3,7 +3,7 @@
 Internal maintainer note. This file is for local agents and maintainers, not
 the public reviewer path.
 
-Last updated: 2026-06-27
+Last updated: 2026-07-01
 
 Read this before changing code, docs, data, or Git state.
 
@@ -33,6 +33,7 @@ raw/processed data unless the user explicitly asks.
 
 - Project status note: `docs/PROJECT_STATUS.md`
 - v5 scope note: `docs/V5_NEXT_FRONTEND_PLAN.md`
+- Beginner restart scope note: `docs/BEGINNER_RESTART_SCOPE.md`
 - Reviewer guide: `docs/REVIEWER_GUIDE.md`
 - Reproducibility checklist: `docs/REPRODUCIBILITY_CHECKLIST.md`
 - Technical appendix: `docs/TECHNICAL_APPENDIX.md`
@@ -54,6 +55,10 @@ raw/processed data unless the user explicitly asks.
 - Prediction Lab extends the drawdown classifier with six model variants,
   out-of-sample prediction rows, Brier score, threshold metrics, calibration,
   lift, and country risk summaries.
+- The Next.js app now has a beginner reader path, graph-first overview,
+  readable event-study summary table, regression translation table, and
+  generated-file map. These are presentation helpers; they do not change model
+  calculations or empirical claims.
 - Monthly benchmark sample mode exists as deterministic software validation.
 - Monthly benchmark real mode exists for user-supplied local GPR and Kenneth
   French factor files.

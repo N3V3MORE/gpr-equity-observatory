@@ -50,12 +50,14 @@ npm run build
 
 Start with these app sections:
 
-- Overview: project question, method map, and evidence map.
+- Overview: reader path, GPR timeline, method map, and evidence map.
 - Market Response: event-study, robustness, regression, tail, and dynamic
-  response evidence.
+  response evidence. Start with the readable event-study and regression
+  translation tables before coefficient details.
 - Prediction Lab: out-of-sample drawdown-risk classification diagnostics.
 - Country Sensitivity: lazy-loaded rolling GPR sensitivity.
-- Data & Methods: country coverage, monthly benchmark status, and provenance.
+- Data & Methods: generated-file map, country coverage, monthly benchmark
+  status, and provenance.
 
 The daily ETF workflow is primary. The monthly benchmark is a separate
 aggregate layer and should not be mixed with the daily country ETF panel as one
