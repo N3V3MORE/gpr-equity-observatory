@@ -34,6 +34,9 @@ def test_beginner_apps_use_cautious_reader_labels():
     assert '"Confidence"' not in app
     assert "Conventional p < 0.05" in app
     assert "Risk-ranking experiment only" in app
+    assert "What not to claim" in app
+    assert "drawdown_model_lift.csv" in app
+    assert "Lift table" in app
 
 
 def test_dev_cockpit_uses_project_task_runner_for_broad_tasks():
@@ -42,6 +45,7 @@ def test_dev_cockpit_uses_project_task_runner_for_broad_tasks():
     assert "scripts/run_task.py" in cockpit
     assert "build-daily" in cockpit
     assert "export-frontend" in cockpit
+    assert "st.progress" in cockpit
     assert "PIPELINE_STEPS" not in cockpit
 
 

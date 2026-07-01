@@ -27,6 +27,7 @@ IMPORTANT_OUTPUTS = [
     "quantile_regression_results.csv",
     "local_projection_results.csv",
     "drawdown_model_metrics.csv",
+    "drawdown_model_lift.csv",
     "drawdown_feature_importance.csv",
     "rolling_gpr_beta.csv",
     "large_return_flags.csv",
@@ -98,6 +99,7 @@ def file_meaning(filename: str) -> str:
         "quantile_regression_results.csv": "Checks whether bad return days behave differently.",
         "local_projection_results.csv": "Response path after GPR shock days.",
         "drawdown_model_metrics.csv": "Prediction Lab model scores.",
+        "drawdown_model_lift.csv": "Prediction Lab high-risk bucket check.",
         "drawdown_feature_importance.csv": "Variables that mattered most in the model.",
         "rolling_gpr_beta.csv": "Country sensitivity to GPR over time.",
         "large_return_flags.csv": "Potentially unusual ETF return days.",
@@ -141,6 +143,7 @@ def show_project_summary() -> None:
                 ),
                 "How to read it": "Project setup is clear",
                 "What this means": "The project is a research dashboard, not a trading tool.",
+                "What not to claim": "Do not treat it as investment advice.",
             },
             {
                 "Question": "What is GPR?",
@@ -148,6 +151,7 @@ def show_project_summary() -> None:
                 "Evidence used": "Daily Caldara-Iacoviello GPR file.",
                 "How to read it": "Input source is documented",
                 "What this means": "Higher GPR means more geopolitical risk in the news.",
+                "What not to claim": "Do not claim the index explains market moves by itself.",
             },
             {
                 "Question": "Do markets react after GPR shocks?",
@@ -155,6 +159,7 @@ def show_project_summary() -> None:
                 "Evidence used": "Event studies and regressions.",
                 "How to read it": "Compare methods before concluding",
                 "What this means": "Some results point negative, but the project should not overclaim.",
+                "What not to claim": "Do not say markets always fall after GPR shocks.",
             },
             {
                 "Question": "Do emerging markets react more?",
@@ -162,6 +167,7 @@ def show_project_summary() -> None:
                 "Evidence used": "Date fixed-effects regression.",
                 "How to read it": "Treat as limited evidence",
                 "What this means": "This is a careful finding, not a dramatic headline.",
+                "What not to claim": "Do not claim emerging-market asymmetry is settled.",
             },
             {
                 "Question": "Is Prediction Lab a trading model?",
@@ -169,6 +175,7 @@ def show_project_summary() -> None:
                 "Evidence used": "Drawdown-risk classification diagnostics.",
                 "How to read it": "Risk-ranking experiment only",
                 "What this means": "It is exploratory risk ranking, not investment advice.",
+                "What not to claim": "Do not call it a price forecast or trading signal.",
             },
         ]
     )
@@ -412,6 +419,7 @@ def show_regression_page() -> None:
 def show_prediction_page() -> None:
     """Show readable Prediction Lab summary."""
     metrics = load_csv("drawdown_model_metrics.csv")
+    lift = load_csv("drawdown_model_lift.csv")
     importance = load_csv("drawdown_feature_importance.csv")
 
     st.header("Prediction Lab")
@@ -468,6 +476,60 @@ def show_prediction_page() -> None:
 
         with st.expander("Show raw model metrics"):
             st.dataframe(metrics, use_container_width=True, hide_index=True)
+
+    if lift is None:
+        st.warning("Missing `drawdown_model_lift.csv`.")
+    else:
+        lift_table = lift.copy()
+        lift_table["Plain-English note"] = lift_table["lift"].apply(
+            lambda value: (
+                "Bad outcomes were more concentrated in this high-risk bucket."
+                if pd.notna(value) and value > 1
+                else "This bucket was not above the normal bad-outcome rate."
+            )
+        )
+        lift_table = lift_table.rename(
+            columns={
+                "model_name": "Model",
+                "bucket": "Risk bucket",
+                "event_rate": "Bad-outcome rate in bucket",
+                "base_event_rate": "Normal bad-outcome rate",
+                "lift": "Lift",
+                "observation_count": "Rows tested",
+            }
+        )
+
+        readable_lift = lift_table[
+            [
+                "Model",
+                "Risk bucket",
+                "Bad-outcome rate in bucket",
+                "Normal bad-outcome rate",
+                "Lift",
+                "Rows tested",
+                "Plain-English note",
+            ]
+        ]
+
+        st.subheader("Lift table")
+        st.write(
+            "Lift compares bad-outcome rates inside high-risk buckets with the normal bad-outcome rate."
+        )
+        st.dataframe(readable_lift, use_container_width=True, hide_index=True)
+
+        fig = px.bar(
+            readable_lift,
+            x="Lift",
+            y="Model",
+            color="Risk bucket",
+            barmode="group",
+            title="Bad-outcome lift by model",
+        )
+        fig.add_vline(x=1, line_dash="dash")
+        st.plotly_chart(fig, use_container_width=True)
+
+        with st.expander("Show raw lift table"):
+            st.dataframe(lift, use_container_width=True, hide_index=True)
 
     if importance is not None and not importance.empty:
         top = importance.sort_values("abs_coefficient", ascending=False).head(20)

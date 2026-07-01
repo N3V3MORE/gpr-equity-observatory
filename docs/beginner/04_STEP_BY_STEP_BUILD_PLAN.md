@@ -100,6 +100,9 @@ You can explain that this is not a trading signal.
 
 Goal: understand what might be wrong or incomplete in the data.
 
+Status: planned follow-up for `app_restart.py` after the daily reader path is
+stable.
+
 Visible things:
 
 ```text
@@ -137,6 +140,9 @@ You can press a button and see what changed.
 ## Step 8: Monthly benchmark page
 
 Only add this after the daily project is understandable.
+
+Status: planned follow-up for `app_restart.py`. Keep monthly sample and real
+benchmark outputs separate from the daily ETF panel.
 
 Visible things:
 

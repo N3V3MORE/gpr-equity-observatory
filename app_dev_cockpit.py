@@ -45,6 +45,7 @@ IMPORTANT_OUTPUTS = [
     "quantile_regression_results.csv",
     "local_projection_results.csv",
     "drawdown_model_metrics.csv",
+    "drawdown_model_lift.csv",
     "drawdown_feature_importance.csv",
     "rolling_gpr_beta.csv",
     "large_return_flags.csv",
@@ -177,12 +178,15 @@ def main() -> None:
         preview_outputs()
 
     if run_all:
+        progress = st.progress(5, text="Starting full daily pipeline...")
         with st.status("Running full daily pipeline...", expanded=True) as status:
             try:
                 run_command(*RUN_CONTROLS["daily"])
+                progress.progress(100, text="Full daily pipeline complete.")
                 status.update(label="Full pipeline complete", state="complete")
             except Exception as error:
                 st.error(str(error))
+                progress.progress(100, text="Full daily pipeline failed.")
                 status.update(label="Pipeline failed", state="error")
 
         show_output_status()
