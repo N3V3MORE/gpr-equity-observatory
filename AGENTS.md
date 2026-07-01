@@ -22,10 +22,24 @@ guardrails are preserved.
   GeoRiskLab repository into this repo.
 - Keep daily ETF datasets and monthly aggregate benchmark datasets separate in
   names, output paths, docs, and dashboard text.
-- Preserve sample/real data boundaries. Sample mode proves software behavior; it
+- Preserve sample/real data boundaries. Sample mode validates software behavior; it
   is not empirical evidence.
 - Treat `src/gprobs/dashboard/export.py` and `frontend/public/data/*.json` as
   the UI contract. Do not add analysis logic to TypeScript.
+
+## Beginner Restart Layer
+
+- `app_restart.py`, `app_dev_cockpit.py`, and `docs/beginner/` are the local
+  beginner layer from `gpr_beginner_restart_pack.zip`.
+- They reduce the starting surface for readers and agents; they do not replace
+  `frontend/` as the public app or justify deleting reproducibility folders.
+- For beginner UI work, prefer: load generated CSV, rename columns clearly,
+  explain the row in plain English, show a chart or table, and put raw technical
+  output in an expander.
+- Keep changes small enough to review and roll back. Do not rewrite `app.py`,
+  `scripts/build_all.py`, `src/gprobs/pipeline.py`, or model/data logic for a
+  beginner wording pass unless the user explicitly asks.
+- Avoid clever abstractions when simple Streamlit and pandas code is enough.
 
 ## Data Policy
 
