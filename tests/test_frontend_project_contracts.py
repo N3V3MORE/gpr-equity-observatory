@@ -65,6 +65,20 @@ def test_wide_evidence_table_cannot_force_mobile_page_overflow():
     assert "min-w-0" in overview
 
 
+def test_overview_renders_beginner_reader_path_before_method_map():
+    overview = _read("frontend/src/sections/Overview.tsx")
+
+    assert "copy.reader_path" in overview
+    assert "Read this first" in overview
+    assert overview.index("Read this first") < overview.index("Method map")
+
+
+def test_overview_leads_with_gpr_graph_before_method_map():
+    overview = _read("frontend/src/sections/Overview.tsx")
+
+    assert overview.index("Daily geopolitical risk over time") < overview.index("Method map")
+
+
 def test_section_nav_scroll_is_contained_on_mobile():
     section_nav = _read("frontend/src/components/SectionNav.tsx")
 

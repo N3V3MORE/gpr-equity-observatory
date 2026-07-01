@@ -30,6 +30,7 @@ from gprobs.dashboard.components import (
     OVERVIEW_CURRENT_ANSWER_POINTS,
     OVERVIEW_DOES_NOT_PROVE_POINTS,
     OVERVIEW_JOB_STATEMENTS,
+    OVERVIEW_READER_PATH,
     PREDICTION_METRIC_EXPLANATIONS,
 )
 from gprobs.dashboard.contracts import (
@@ -63,6 +64,23 @@ from gprobs.dashboard.prediction import (
 __all__ = ["build_frontend_payloads", "write_frontend_payloads", "export_frontend_data"]
 
 DEFAULT_TARGET_DIR = PROJECT_ROOT / "frontend" / "public" / "data"
+
+OUTPUT_FILE_MEANINGS = {
+    "gpr": ("GPR Data", "Daily geopolitical risk values and shock flags."),
+    "analysis_panel": ("Start Here", "The main daily dataset: country ETF returns merged with GPR and controls."),
+    "group_returns": ("Market Reaction", "Average daily ETF returns by developed and emerging market group."),
+    "abnormal_event_study": ("Market Reaction", "Average abnormal returns around GPR shock days."),
+    "controlled_regression": ("Regression Results", "The panel regression after market controls are included."),
+    "date_fe_regression": ("Regression Results", "The developed-versus-emerging comparison with date fixed effects."),
+    "quantile_regression": ("Regression Results", "The downside-risk check across return percentiles."),
+    "local_projections": ("Market Reaction", "The estimated response path after GPR shock days."),
+    "drawdown_metrics": ("Prediction Lab", "Out-of-sample drawdown-risk classifier scores."),
+    "drawdown_lift": ("Prediction Lab", "How concentrated bad outcomes are in high-risk buckets."),
+    "drawdown_country_risk_summary": ("Prediction Lab", "Average predicted and realized drawdown risk by country."),
+    "rolling_beta": ("Country Sensitivity", "Rolling country ETF sensitivity to GPR."),
+    "large_returns": ("Data Quality", "Large daily ETF returns worth checking before over-interpreting results."),
+    "evidence_summary": ("Start Here", "A compact cross-method evidence table."),
+}
 
 
 def _spec_path(spec: OutputSpec, root: Path) -> Path:
@@ -115,12 +133,152 @@ def _df_records(df: pd.DataFrame) -> list[dict[str, Any]]:
     return [{key: _scalar(value) for key, value in record.items()} for record in records]
 
 
+def _direction_label(value: Any) -> str:
+    if value is None or pd.isna(value):
+        return "Unknown"
+    numeric = float(value)
+    if abs(numeric) < 1e-12:
+        return "Near zero"
+    return "Positive" if numeric > 0 else "Negative"
+
+
+def _p_value_reader_label(value: Any) -> str:
+    if value is None or pd.isna(value):
+        return "Descriptive only"
+    numeric = float(value)
+    if numeric < 0.05:
+        return "Conventional p < 0.05"
+    if numeric < 0.10:
+        return "Suggestive p < 0.10"
+    return "Weak in this run"
+
+
+def _market_group_label(value: Any) -> str:
+    raw = str(value)
+    if raw == "developed":
+        return "Developed markets"
+    if raw == "emerging":
+        return "Emerging markets"
+    return raw
+
+
 def _load_monthly_bundle(root: Path):
     for mode, config in MONTHLY_MODES.items():
         bundle = _load_monthly_output_mode(mode, dataclasses.replace(config, root=root))
         if bundle is not None:
             return bundle
     return None
+
+
+def _output_file_rows(outputs: dict[str, pd.DataFrame]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for key, (reader_page, meaning) in OUTPUT_FILE_MEANINGS.items():
+        spec = OUTPUT_SPECS[key]
+        rows.append(
+            {
+                "file": str(spec.path.relative_to(PROJECT_ROOT)).replace("\\", "/"),
+                "reader_page": reader_page,
+                "rows": int(len(outputs[key])),
+                "plain_meaning": meaning,
+            }
+        )
+    return rows
+
+
+def _event_study_reader_rows(abnormal: pd.DataFrame) -> list[dict[str, Any]]:
+    wanted_days = [0, 1, 5, 10]
+    key_days = abnormal.loc[abnormal["relative_day"].isin(wanted_days)].copy()
+    if key_days.empty:
+        key_days = abnormal.copy()
+    key_days = key_days.sort_values(["market_group", "relative_day"])
+
+    rows: list[dict[str, Any]] = []
+    for row in key_days.to_dict(orient="records"):
+        group = _market_group_label(row["market_group"])
+        day = int(row["relative_day"])
+        estimate = row["cumulative_average_abnormal_return"]
+        direction = _direction_label(estimate)
+        strength = _p_value_reader_label(row.get("p_value"))
+        rows.append(
+            {
+                "market_group": group,
+                "relative_day": day,
+                "cumulative_average_abnormal_return": estimate,
+                "direction": direction,
+                "evidence_strength": strength,
+                "plain_note": (
+                    f"{group} average abnormal return was {direction.lower()} by day {day}. "
+                    f"Treat this as {strength.lower()}, not as a one-day rule."
+                ),
+            }
+        )
+    return rows
+
+
+def _first_term_row(df: pd.DataFrame, term: str) -> pd.Series | None:
+    matches = df.loc[df["term"] == term]
+    if matches.empty:
+        return None
+    return matches.iloc[0]
+
+
+def _reader_regression_row(
+    *,
+    test: str,
+    check: str,
+    row: pd.Series | None,
+    note: str,
+) -> dict[str, Any]:
+    if row is None:
+        return {
+            "test": test,
+            "what_it_checks": check,
+            "direction": "Missing",
+            "estimate": None,
+            "p_value": None,
+            "evidence_strength": "Missing output",
+            "plain_note": note,
+        }
+    return {
+        "test": test,
+        "what_it_checks": check,
+        "direction": _direction_label(row.get("estimate")),
+        "estimate": row.get("estimate"),
+        "p_value": row.get("p_value"),
+        "evidence_strength": _p_value_reader_label(row.get("p_value")),
+        "plain_note": note,
+    }
+
+
+def _regression_translation_rows(outputs: dict[str, pd.DataFrame]) -> list[dict[str, Any]]:
+    controlled_gpr = _first_term_row(outputs["controlled_regression"], "gpr_change_z")
+    emerging_extra = _first_term_row(outputs["date_fe_regression"], "gpr_change_z:emerging_market")
+
+    quantile = outputs["quantile_regression"].sort_values("quantile")
+    quantile_gpr = _first_term_row(quantile, "gpr_change_z")
+    if quantile_gpr is None and not quantile.empty:
+        quantile_gpr = quantile.iloc[0]
+
+    return [
+        _reader_regression_row(
+            test="Controlled GPR association",
+            check="Whether GPR jumps are associated with ETF returns after market controls.",
+            row=controlled_gpr,
+            note="Read this as conditional association, not cause and effect.",
+        ),
+        _reader_regression_row(
+            test="Emerging-market extra response",
+            check="Whether emerging-market ETFs have an extra GPR response versus developed-market ETFs.",
+            row=emerging_extra,
+            note="This is the cleanest daily-panel check for the emerging-market question.",
+        ),
+        _reader_regression_row(
+            test="Downside-risk check",
+            check="Whether lower-return days show a different GPR relationship.",
+            row=quantile_gpr,
+            note="This is a tail-risk diagnostic; it is not proof that the pattern is stable.",
+        ),
+    ]
 
 
 def _static_copy() -> dict[str, Any]:
@@ -132,6 +290,7 @@ def _static_copy() -> dict[str, Any]:
         "job_statements": [
             {"title": title, "body": body} for title, body in OVERVIEW_JOB_STATEMENTS
         ],
+        "reader_path": [dict(row) for row in OVERVIEW_READER_PATH],
         "current_answer_points": list(OVERVIEW_CURRENT_ANSWER_POINTS),
         "does_not_prove_points": list(OVERVIEW_DOES_NOT_PROVE_POINTS),
         "method_map": [dict(row) for row in METHOD_MAP_ROWS],
@@ -296,6 +455,16 @@ def _data_methods_payloads(outputs: dict[str, pd.DataFrame], panel: pd.DataFrame
     }
 
 
+def _reader_summary_payloads(outputs: dict[str, pd.DataFrame]) -> dict[str, Any]:
+    return {
+        "reader_summaries": {
+            "output_files": _output_file_rows(outputs),
+            "market_reaction": _event_study_reader_rows(outputs["abnormal_event_study"]),
+            "regression_translation": _regression_translation_rows(outputs),
+        }
+    }
+
+
 def build_frontend_payloads(root: Path | None = None) -> dict[str, Any]:
     """Build every JSON payload the frontend needs, rooted at ``root``.
 
@@ -323,6 +492,7 @@ def build_frontend_payloads(root: Path | None = None) -> dict[str, Any]:
     payloads.update(_explanation_payloads(outputs))
     payloads.update(_prediction_payloads(outputs))
     payloads.update(_data_methods_payloads(outputs, panel, root))
+    payloads.update(_reader_summary_payloads(outputs))
 
     payloads["manifest"] = {
         "available": True,

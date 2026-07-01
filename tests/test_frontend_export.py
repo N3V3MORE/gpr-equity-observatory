@@ -79,10 +79,30 @@ def test_build_frontend_payloads_returns_available_manifest(tmp_path):
     assert payloads["manifest"]["available"] is True
     assert payloads["manifest"]["country_count"] == 1
     assert payloads["copy"]["central_question"]
+    assert payloads["copy"]["reader_path"] == [
+        {
+            "step": "1",
+            "title": "Start with the question",
+            "body": "The dashboard asks whether geopolitical risk jumps are associated with country ETF returns.",
+        },
+        {
+            "step": "2",
+            "title": "Look at the graphs",
+            "body": "Use the GPR timeline and market-reaction charts before reading statistical tables.",
+        },
+        {
+            "step": "3",
+            "title": "Check the evidence labels",
+            "body": "Weak or mixed evidence is a result; it is not a failed dashboard.",
+        },
+    ]
     assert payloads["copy"]["glossary"]
     assert isinstance(payloads["overview"]["headline"]["country_count"], int)
     assert isinstance(payloads["gpr_timeline"]["series"], list)
     assert isinstance(payloads["evidence_map"], list)
+    assert payloads["reader_summaries"]["output_files"]
+    assert payloads["reader_summaries"]["market_reaction"][0]["plain_note"]
+    assert payloads["reader_summaries"]["regression_translation"][0]["test"]
     assert isinstance(payloads["prediction_summary"]["model_comparison"], list)
     assert payloads["monthly"]["available"] is False
 
@@ -99,6 +119,7 @@ def test_write_frontend_payloads_writes_json_files(tmp_path):
         "overview.json",
         "gpr_timeline.json",
         "evidence_map.json",
+        "reader_summaries.json",
         "prediction_summary.json",
         "monthly.json",
         "country_coverage.json",

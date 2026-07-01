@@ -17,6 +17,7 @@ export interface Copy {
   main_takeaway: string;
   use_note: string;
   job_statements: { title: string; body: string }[];
+  reader_path: { step: string; title: string; body: string }[];
   current_answer_points: string[];
   does_not_prove_points: string[];
   method_map: { Question: string; Tool: string; Output: string; "What to look for": string }[];

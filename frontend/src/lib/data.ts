@@ -29,6 +29,7 @@ function emptyBundle(): FrontendBundle {
       main_takeaway: "",
       use_note: "",
       job_statements: [],
+      reader_path: [],
       current_answer_points: [],
       does_not_prove_points: [],
       method_map: [],

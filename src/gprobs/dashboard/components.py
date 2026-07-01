@@ -28,6 +28,23 @@ OVERVIEW_JOB_STATEMENTS = [
         "Does geopolitical risk help rank ETF-country observations by short-term drawdown risk?",
     ),
 ]
+OVERVIEW_READER_PATH = [
+    {
+        "step": "1",
+        "title": "Start with the question",
+        "body": "The dashboard asks whether geopolitical risk jumps are associated with country ETF returns.",
+    },
+    {
+        "step": "2",
+        "title": "Look at the graphs",
+        "body": "Use the GPR timeline and market-reaction charts before reading statistical tables.",
+    },
+    {
+        "step": "3",
+        "title": "Check the evidence labels",
+        "body": "Weak or mixed evidence is a result; it is not a failed dashboard.",
+    },
+]
 METHOD_MAP_ROWS = [
     {
         "Question": "What happened around shocks?",

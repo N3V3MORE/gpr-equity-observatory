@@ -46,6 +46,32 @@ export function Overview({ bundle }: { bundle: FrontendBundle }) {
       </div>
 
       <div>
+        <h3 className="text-sm font-semibold text-ink">Read this first</h3>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          {copy.reader_path.map((item) => (
+            <div key={item.step} className="rounded-lg border border-surface-border bg-surface p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-white">
+                  {item.step}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-ink">{item.title}</div>
+                  <p className="mt-1 text-sm leading-relaxed text-ink-soft">{item.body}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <ChartCard
+        title="Daily geopolitical risk over time"
+        caption="The line shows the Geopolitical Risk index. Red dots mark the largest daily jumps, which anchor the rest of the analysis."
+      >
+        <GprTimelineChart series={gpr_timeline.series} topShocks={gpr_timeline.top_shocks} />
+      </ChartCard>
+
+      <div>
         <h3 className="text-sm font-semibold text-ink">Method map - how each part answers the question</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {copy.method_map.map((row) => (
@@ -58,13 +84,6 @@ export function Overview({ bundle }: { bundle: FrontendBundle }) {
           ))}
         </div>
       </div>
-
-      <ChartCard
-        title="Daily geopolitical risk over time"
-        caption="The line shows the Geopolitical Risk index. Red dots mark the largest daily jumps, which anchor the rest of the analysis."
-      >
-        <GprTimelineChart series={gpr_timeline.series} topShocks={gpr_timeline.top_shocks} />
-      </ChartCard>
 
       <Details summary="Details: cumulative average returns by market group">
         <ChartCard
