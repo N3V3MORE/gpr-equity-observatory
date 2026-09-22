@@ -216,7 +216,7 @@ export function QuantileChart({ rows }: { rows: Row[] }) {
           tickFormatter={(v) => percent(v, 0)}
           label={{ value: "Return percentile (lower = worse days)", position: "insideBottom", offset: -2, fontSize: 11 }}
         />
-        <YAxis tick={AXIS} tickFormatter={(v) => bps(v, 0)} />
+        <YAxis tick={AXIS} tickFormatter={(v) => bps(v, 1)} />
         <Tooltip itemSorter={() => 0}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }}
           formatter={(value) => bps(value, 1)}

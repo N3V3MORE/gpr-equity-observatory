@@ -219,11 +219,11 @@ Official references checked for this migration:
 [Node 24.21.0 LTS](https://nodejs.org/en/blog/release/v24.21.0), and
 [ESLint support policy](https://eslint.org/version-support/).
 
-#### Remaining Dependency Audit Findings
+#### Dependency Audit Findings At The Toolchain Baseline
 
-The locked full dependency audit reports **4 vulnerable packages** (3 high,
-1 moderate), covering **10 distinct advisories** (7 high, 3 moderate).
-The production-only dependency audit reports one moderate package,
+Before the follow-up fixes below, the locked full dependency audit reported
+**4 vulnerable packages** (3 high, 1 moderate), covering **10 distinct
+advisories** (7 high, 3 moderate). The production-only audit reported one moderate package,
 `baseline-browser-mapping`; npm's production classification includes build
 tools shipped with Next and does not establish browser exposure.
 
@@ -242,7 +242,7 @@ generated-output risks. These are source-based exposure assessments, not
 exploit tests or a complete deployed-bundle audit. Unrelated dependency fixes
 are deferred; no forced audit fix or peer-dependency bypass was used.
 
-#### Toolchain Verification
+#### Toolchain Baseline Verification
 
 On Node 24.21.0/npm 11.19.0, the final `npm ci --strict-peer-deps` succeeded
 without peer-resolution warnings, and `npm ls --all --omit=optional` reported
@@ -272,5 +272,35 @@ The fallback without IntersectionObserver also passed. Prefixed checks verified
 JavaScript, CSS, and JSON paths, but found the preexisting absolute `/icon.svg`
 metadata URL returns 404 under a prefix; that unrelated fix is deferred.
 These checks establish software compatibility, not empirical correctness;
-actual research outputs remain unavailable. Browser checks and fixtures live
+actual research outputs were unavailable at that baseline. Browser checks and fixtures live
 outside the repository.
+
+#### Follow-up Dependency And Icon Fixes: 2026-09-22
+
+The direct PostCSS pin is now 8.5.23, matching Next's copy. The lockfile also
+updates `baseline-browser-mapping` to 2.11.25, `brace-expansion` 1.x to 1.1.21,
+and `browserslist` to 4.29.0 with its browser data dependencies. Full and
+production-only `npm audit` checks report zero vulnerabilities. Strict peer
+installation and the installed dependency-tree check pass without overrides.
+The ESLint 9 exception remains: the published React, accessibility, and import
+plugins still exclude ESLint 10 from their supported peers.
+
+The layout now uses Next's existing `app/icon.svg` metadata convention, which
+includes the configured base path, instead of overriding it with `/icon.svg`.
+Recharts layout calculations are unchanged. The earlier pixel differences are
+library layout changes: Recharts 3 rounds bar widths and preserves fractional
+legend measurements. They do not justify hard-coded responsive offsets.
+
+Compatible existing local daily outputs were recovered for UI validation:
+20 countries, 2005-01-04 through 2026-06-30. The local export includes these
+daily results and explicitly labeled monthly sample data. This exposed a
+quantile-chart bug: unrelated regression coefficients were plotted with the
+emerging-market GPR label. The exporter now reuses the legacy dashboard's
+two-term GPR selection; a regression test verifies both terms across multiple
+percentiles while preserving their estimates and inference fields. The quantile
+axis displays one decimal place so half-basis-point ticks have distinct labels.
+No models were rerun, and no numerical estimates or source CSVs were changed.
+
+Recovered outputs are not an approved public snapshot. Daily provenance
+manifests and snapshot review are still missing; local browser validation
+does not establish empirical replication or authorize publication.

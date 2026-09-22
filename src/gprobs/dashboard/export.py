@@ -391,7 +391,7 @@ def _explanation_payloads(outputs: dict[str, pd.DataFrame]) -> dict[str, Any]:
             "date_fe": _df_records(select_key_regression_terms(outputs["date_fe_regression"])),
         },
         "panel_sample_robustness": _df_records(outputs["panel_sample_robustness"]),
-        "quantile_regression": _df_records(outputs["quantile_regression"]),
+        "quantile_regression": _df_records(select_key_regression_terms(outputs["quantile_regression"])),
         "local_projections": _df_records(outputs["local_projections"]),
         "rolling_beta": _df_records(outputs["rolling_beta"][["date", "country", "market_group", "rolling_gpr_beta"]]),
     }

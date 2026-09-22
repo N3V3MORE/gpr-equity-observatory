@@ -109,6 +109,39 @@ def test_build_frontend_payloads_returns_available_manifest(tmp_path):
     assert payloads["monthly"]["available"] is False
 
 
+def test_quantile_export_keeps_both_gpr_terms_at_every_percentile(tmp_path):
+    _write_minimal_processed(tmp_path)
+    expected_rows = []
+    nuisance_rows = []
+    for quantile in [0.1, 0.5, 0.9]:
+        for term, estimate in [
+            ("gpr_change_z", -0.001),
+            ("gpr_change_z:emerging_market", 0.002),
+            ("Intercept", 0.1),
+            ("C(ticker)[T.EWZ]", 0.2),
+            ("global_market_return", 0.3),
+        ]:
+            row = {
+                "quantile": quantile,
+                "term": term,
+                "estimate": estimate,
+                "std_error": 0.003,
+                "t_stat": 0.4,
+                "p_value": 0.6,
+                "inference": "weak evidence",
+            }
+            if term.startswith("gpr_change_z"):
+                expected_rows.append(row)
+            else:
+                nuisance_rows.append(row)
+    source_path = tmp_path / OUTPUT_SPECS["quantile_regression"].path.relative_to(export.PROJECT_ROOT)
+    pd.DataFrame(nuisance_rows + expected_rows).to_csv(source_path, index=False)
+
+    payloads = export.build_frontend_payloads(root=tmp_path)
+
+    assert payloads["quantile_regression"] == expected_rows
+
+
 def test_write_frontend_payloads_writes_json_files(tmp_path):
     _write_minimal_processed(tmp_path)
     target = tmp_path / "frontend" / "public" / "data"
