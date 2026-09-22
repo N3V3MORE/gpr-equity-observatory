@@ -87,3 +87,24 @@ the relevant task-runner checks from `docs/FUTURE_AGENT_HANDOFF.md`.
 - Do not commit `.serena/cache/`.
 - Do not copy GeoRiskLab's machine-specific local root name into committed docs
   or config.
+
+## Public-v1 Release Scope
+
+The release scope and local baseline are recorded in `docs/DEPLOYMENT_GUIDE.md`.
+Preserve Python analysis -> exported JSON -> static Next.js. Core public content
+is daily ETF research: event-study evidence, controlled and date-fixed-effects
+results, sources, coverage, and limitations. Prediction Lab and monthly
+workflows remain implemented but are optional for this release.
+
+- No new models, data providers, backend, authentication, or design system.
+- Never publish raw third-party data, secrets, or local monthly outputs
+  automatically. Public snapshots require explicit selection and review.
+- Never delete raw or processed research files during release preparation.
+- Keep empirical claims tied to the reviewed snapshot and its limitations.
+- For the baseline stage, inspect existing outputs and run focused checks only;
+  do not rerun empirical pipelines, download market data, implement release
+  fixes, or deploy. Broader verification commands above do not override this
+  stage's scope.
+- Each release task must report changed files, checks actually run, remaining
+  blockers, and any numerical or methodological changes. Review and commit each
+  completed stage before starting the next.
