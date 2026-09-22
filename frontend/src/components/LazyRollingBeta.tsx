@@ -16,6 +16,8 @@ export function LazyRollingBeta() {
     if (!node || shouldLoad) return;
 
     if (!("IntersectionObserver" in window)) {
+      // Preserve immediate loading in browsers without IntersectionObserver.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShouldLoad(true);
       return;
     }

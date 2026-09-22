@@ -41,10 +41,11 @@ function groupRowsBy(rows: Row[], key: string): Map<string, Row[]> {
   return map;
 }
 
-function renderTooltipPercent(value: number) {
+function renderTooltipPercent(value: unknown) {
   return percent(value, 1);
 }
 
+// Explicit sorter and accessibilityLayer props preserve Recharts 2 chart behavior.
 export function GprTimelineChart({ series, topShocks }: { series: Row[]; topShocks: Row[] }) {
   const shockDates = new Map(topShocks.map((row) => [String(row.date), toNum(row.gpr)]));
   const data = series.map((row) => ({
@@ -54,12 +55,14 @@ export function GprTimelineChart({ series, topShocks }: { series: Row[]; topShoc
   }));
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <ComposedChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="date" tick={AXIS} minTickGap={48} />
         <YAxis tick={AXIS} />
-        <Tooltip
+        {/* Recharts 3 adds Scatter's date field; retain the original value rows. */}
+        <Tooltip itemSorter={() => 0}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }}
+          formatter={(value, name) => name === "date" ? null : value}
         />
         <Line type="monotone" dataKey="gpr" stroke="#4f46e5" strokeWidth={2} dot={false} name="GPR index" />
         <Scatter dataKey="shock" fill="#ef4444" name="Top shock days" />
@@ -81,15 +84,15 @@ export function CumulativeReturnsChart({ rows }: { rows: Row[] }) {
   });
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <LineChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <LineChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="date" tick={AXIS} minTickGap={48} />
         <YAxis tick={AXIS} tickFormatter={(v) => percent(v, 0)} />
-        <Tooltip
+        <Tooltip itemSorter={() => 0}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }}
-          formatter={(value: number) => percent(value, 2)}
+          formatter={(value) => percent(value, 2)}
         />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Legend itemSorter={null} wrapperStyle={{ fontSize: 12 }} />
         {[...groups.keys()].map((group, index) => (
           <Line
             key={group}
@@ -119,7 +122,7 @@ export function EventStudyChart({ rows }: { rows: Row[] }) {
   });
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <LineChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <LineChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis
           dataKey="relative_day"
@@ -128,13 +131,13 @@ export function EventStudyChart({ rows }: { rows: Row[] }) {
           label={{ value: "Days from shock (0 = shock day)", position: "insideBottom", offset: -2, fontSize: 11 }}
         />
         <YAxis tick={AXIS} tickFormatter={(v) => bps(v, 0)} />
-        <Tooltip
+        <Tooltip itemSorter={() => 0}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }}
-          formatter={(value: number) => bps(value, 1)}
+          formatter={(value) => bps(value, 1)}
         />
         <ReferenceLine x={0} stroke="#64748b" strokeDasharray="4 4" />
         <ReferenceLine y={0} stroke="#94a3b8" />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Legend itemSorter={null} wrapperStyle={{ fontSize: 12 }} />
         {[...groups.keys()].map((group, index) => (
           <Line
             key={group}
@@ -169,16 +172,16 @@ export function EventRobustnessChart({ rows }: { rows: Row[] }) {
   });
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <BarChart data={merged} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <BarChart accessibilityLayer={false} data={merged} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="label" tick={AXIS} />
         <YAxis tick={AXIS} tickFormatter={(v) => bps(v, 0)} />
-        <Tooltip
+        <Tooltip itemSorter={() => 0}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }}
-          formatter={(value: number) => bps(value, 1)}
+          formatter={(value) => bps(value, 1)}
         />
-        <ReferenceLine y={0} stroke="#94a3b8" />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <ReferenceLine zIndex={299} y={0} stroke="#94a3b8" />
+        <Legend itemSorter={null} wrapperStyle={{ fontSize: 12 }} />
         {groups.map((group, index) => (
           <Bar
             key={group}
@@ -205,7 +208,7 @@ export function QuantileChart({ rows }: { rows: Row[] }) {
   });
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <LineChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <LineChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis
           dataKey="quantile"
@@ -214,12 +217,12 @@ export function QuantileChart({ rows }: { rows: Row[] }) {
           label={{ value: "Return percentile (lower = worse days)", position: "insideBottom", offset: -2, fontSize: 11 }}
         />
         <YAxis tick={AXIS} tickFormatter={(v) => bps(v, 0)} />
-        <Tooltip
+        <Tooltip itemSorter={() => 0}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }}
-          formatter={(value: number) => bps(value, 1)}
+          formatter={(value) => bps(value, 1)}
         />
         <ReferenceLine y={0} stroke="#94a3b8" />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Legend itemSorter={null} wrapperStyle={{ fontSize: 12 }} />
         {terms.map((term, index) => (
           <Line
             key={term}
@@ -253,7 +256,7 @@ export function LocalProjectionChart({ rows }: { rows: Row[] }) {
   });
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <LineChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <LineChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis
           dataKey="horizon"
@@ -261,12 +264,12 @@ export function LocalProjectionChart({ rows }: { rows: Row[] }) {
           label={{ value: "Days after shock", position: "insideBottom", offset: -2, fontSize: 11 }}
         />
         <YAxis tick={AXIS} tickFormatter={(v) => bps(v, 0)} />
-        <Tooltip
+        <Tooltip itemSorter={() => 0}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }}
-          formatter={(value: number) => bps(value, 1)}
+          formatter={(value) => bps(value, 1)}
         />
         <ReferenceLine y={0} stroke="#94a3b8" />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Legend itemSorter={null} wrapperStyle={{ fontSize: 12 }} />
         {[...groups.keys()].map((group, index) => (
           <Line
             key={`${group}-est`}
@@ -335,13 +338,13 @@ export function RollingBetaChart({ rows }: { rows: Row[] }) {
 
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <LineChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <LineChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="date" tick={AXIS} minTickGap={48} />
         <YAxis tick={AXIS} />
-        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} />
+        <Tooltip itemSorter={() => 0} contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} />
         <ReferenceLine y={0} stroke="#94a3b8" />
-        <Legend wrapperStyle={{ fontSize: 11 }} />
+        <Legend itemSorter={null} wrapperStyle={{ fontSize: 11 }} />
         {countries.map((country, index) => (
           <Line
             key={country}
@@ -370,15 +373,15 @@ export function CalibrationChart({ rows }: { rows: Row[] }) {
   });
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <LineChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <LineChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="decile" tick={AXIS} label={{ value: "Predicted-risk decile (low to high)", position: "insideBottom", offset: -2, fontSize: 11 }} />
         <YAxis tick={AXIS} tickFormatter={(v) => percent(v, 0)} />
-        <Tooltip
+        <Tooltip itemSorter={() => 0}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }}
-          formatter={(value: number) => renderTooltipPercent(value)}
+          formatter={(value) => renderTooltipPercent(value)}
         />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Legend itemSorter={null} wrapperStyle={{ fontSize: 12 }} />
         {models.map((model, index) => (
           <Line
             key={model}
@@ -408,13 +411,13 @@ export function LiftChart({ rows }: { rows: Row[] }) {
   });
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <BarChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <BarChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="bucket" tick={AXIS} />
         <YAxis tick={AXIS} />
-        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} />
-        <ReferenceLine y={1} stroke="#94a3b8" strokeDasharray="4 4" />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Tooltip itemSorter={() => 0} contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} />
+        <ReferenceLine zIndex={299} y={1} stroke="#94a3b8" strokeDasharray="4 4" />
+        <Legend itemSorter={null} wrapperStyle={{ fontSize: 12 }} />
         {models.map((model, index) => (
           <Bar key={model} dataKey={model} fill={PALETTE[index % PALETTE.length]} name={model === "full_features" ? "All features" : model} />
         ))}
@@ -431,11 +434,11 @@ export function FeatureImportanceChart({ rows }: { rows: Row[] }) {
   }));
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <BarChart data={data} layout="vertical" margin={{ top: 8, right: 16, bottom: 8, left: 24 }}>
+      <BarChart accessibilityLayer={false} data={data} layout="vertical" margin={{ top: 8, right: 16, bottom: 8, left: 24 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis type="number" tick={AXIS} />
         <YAxis type="category" dataKey="feature" tick={AXIS} width={120} />
-        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} />
+        <Tooltip itemSorter={() => 0} contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} />
         <Bar dataKey="importance" fill="#4f46e5" />
       </BarChart>
     </ResponsiveContainer>
@@ -446,11 +449,11 @@ export function MonthlyGprChart({ rows }: { rows: Row[] }) {
   const data = rows.map((row) => ({ date: String(row.date_month ?? ""), value: toNum(row.gpr_change_z) }));
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <LineChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <LineChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="date" tick={AXIS} minTickGap={48} />
         <YAxis tick={AXIS} />
-        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} />
+        <Tooltip itemSorter={() => 0} contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} />
         <ReferenceLine y={0} stroke="#94a3b8" />
         <Line type="monotone" dataKey="value" stroke="#4f46e5" strokeWidth={2} dot={false} name="GPR shock (z-score)" />
       </LineChart>
@@ -462,11 +465,11 @@ export function MonthlySpreadChart({ rows }: { rows: Row[] }) {
   const data = rows.map((row) => ({ date: String(row.date_month ?? ""), value: toNum(row.spread_em_dev) }));
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <LineChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <LineChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="date" tick={AXIS} minTickGap={48} />
         <YAxis tick={AXIS} tickFormatter={(v) => percent(v, 0)} />
-        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} formatter={(value: number) => percent(value, 2)} />
+        <Tooltip itemSorter={() => 0} contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} formatter={(value) => percent(value, 2)} />
         <ReferenceLine y={0} stroke="#94a3b8" />
         <Line type="monotone" dataKey="value" stroke="#0ea5e9" strokeWidth={2} dot={false} name="Emerging minus developed" />
       </LineChart>
@@ -478,12 +481,12 @@ export function MonthlyForecastChart({ rows }: { rows: Row[] }) {
   const data = rows.map((row) => ({ model: String(row.model ?? ""), oos_r2: toNum(row.oos_r2) }));
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-      <BarChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+      <BarChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis dataKey="model" tick={AXIS} />
         <YAxis tick={AXIS} />
-        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} />
-        <ReferenceLine y={0} stroke="#94a3b8" />
+        <Tooltip itemSorter={() => 0} contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${GRID}` }} />
+        <ReferenceLine zIndex={299} y={0} stroke="#94a3b8" />
         <Bar dataKey="oos_r2" fill="#4f46e5" name="Out-of-sample R-squared" />
       </BarChart>
     </ResponsiveContainer>
