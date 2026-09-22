@@ -4,6 +4,7 @@ import { DataTable } from "@/components/DataTable";
 import { Details } from "@/components/Details";
 import { Glossary } from "@/components/Glossary";
 import { MetricCard } from "@/components/MetricCard";
+import { OptionalDataset } from "@/components/OptionalDataset";
 import { Section } from "@/components/Section";
 import {
   MonthlyForecastChart,
@@ -30,12 +31,18 @@ export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
       id="data-and-methods"
       eyebrow="Data & methods"
       title="What's underneath, and what to watch out for"
-      intro="These are checks on the research inputs and the separate monthly benchmark - not standalone findings."
+      intro="These are checks on the research inputs and coverage, not standalone findings."
     >
       <SubSection title="Data quality and coverage">
         <div className="grid gap-4 sm:grid-cols-2">
           <MetricCard label="Countries checked" value={num(country_coverage.length, "n/a")} />
-          <MetricCard label="Large-return flags" value={num(large_returns.length, "n/a")} hint="Unusually large daily returns worth manual review" />
+          {bundle.dataset_status.large_returns !== "excluded" ? (
+            <MetricCard
+              label="Large-return flags"
+              value={bundle.dataset_status.large_returns === "available" ? num(large_returns.length) : "unavailable"}
+              hint="Unusually large daily returns worth manual review"
+            />
+          ) : null}
         </div>
         <Details summary="Details: generated files used by the app" defaultOpen>
           <p className="text-xs text-ink-muted">
@@ -57,7 +64,8 @@ export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
             downloadLabel="Download country coverage (CSV)"
           />
         </Details>
-        <Details summary="Details: large daily return flags">
+        <OptionalDataset status={bundle.dataset_status.large_returns} label="Large-return flags">
+          <Details summary="Details: large daily return flags">
           <DataTable
             rows={large_returns}
             columns={LARGE_RETURNS_COLUMNS}
@@ -65,10 +73,12 @@ export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
             downloadLabel="Download large return flags (CSV)"
             emptyMessage="No large daily returns flagged."
           />
-        </Details>
+          </Details>
+        </OptionalDataset>
       </SubSection>
 
-      <SubSection title="Monthly benchmark (separate from the daily panel)">
+      <OptionalDataset status={bundle.dataset_status.monthly} label="Monthly benchmark">
+        <SubSection title="Monthly benchmark (separate from the daily panel)">
         <Callout variant="warning" title="Keep the daily and monthly evidence separate">
           {notices.cluster} {notices.mode_priority}
         </Callout>
@@ -78,7 +88,7 @@ export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
               <MetricCard label="Mode" value={monthly.mode_label ?? "n/a"} />
               <MetricCard label="Start month" value={monthly.start_month ?? "n/a"} />
               <MetricCard label="End month" value={monthly.end_month ?? "n/a"} />
-              <MetricCard label="Sources" value={num(monthly.source_count ?? 0, "n/a")} />
+              <MetricCard label="Sources" value={num(monthly.source_count, "n/a")} />
             </div>
             <Callout variant={monthly.mode === "sample" ? "warning" : "info"} title={monthly.mode === "sample" ? "Sample mode" : "Real mode"}>
               {monthly.mode === "sample" ? notices.sample : notices.real}
@@ -119,13 +129,12 @@ export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
             </Details>
           </>
         ) : (
-          <Callout variant="info" title="Monthly benchmark outputs are not available yet">
-            <p>Build them with:</p>
-            <pre className="mt-2 overflow-x-auto rounded bg-surface-alt p-2 text-xs">{notices.empty_state_commands.join("\n")}</pre>
-            <p className="mt-2 text-xs text-ink-muted">{notices.empty_state_note}</p>
+          <Callout variant="info" title="Monthly benchmark is unavailable">
+            This optional section is not available in this snapshot. The daily ETF evidence remains available above.
           </Callout>
         )}
-      </SubSection>
+        </SubSection>
+      </OptionalDataset>
 
       <SubSection title="Glossary">
         <Glossary terms={copy.glossary} />

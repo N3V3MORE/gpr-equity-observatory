@@ -38,7 +38,8 @@ export function signedFixed(value: unknown, digits = 3, fallback = "n/a"): strin
 }
 
 export function toNumber(value: unknown): number | null {
-  if (value === null || value === undefined || value === "") return null;
+  if (typeof value !== "number" && typeof value !== "string") return null;
+  if (typeof value === "string" && !/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(value.trim())) return null;
   const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : null;
 }

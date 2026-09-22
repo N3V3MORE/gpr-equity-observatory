@@ -64,6 +64,7 @@ from gprobs.dashboard.prediction import (
 __all__ = ["build_frontend_payloads", "write_frontend_payloads", "export_frontend_data"]
 
 DEFAULT_TARGET_DIR = PROJECT_ROOT / "frontend" / "public" / "data"
+SNAPSHOT_SCHEMA_VERSION = 1
 
 OUTPUT_FILE_MEANINGS = {
     "gpr": ("GPR Data", "Daily geopolitical risk values and shock flags."),
@@ -478,6 +479,9 @@ def build_frontend_payloads(root: Path | None = None) -> dict[str, Any]:
     missing = _missing_spec_paths(root)
     if missing:
         payloads["manifest"] = {
+            "schema_version": SNAPSHOT_SCHEMA_VERSION,
+            "profile": "local",
+            "datasets": sorted(payloads),
             "available": False,
             "missing_files": missing,
             "build_date": pd.Timestamp.now("UTC").date().isoformat(),
@@ -495,6 +499,9 @@ def build_frontend_payloads(root: Path | None = None) -> dict[str, Any]:
     payloads.update(_reader_summary_payloads(outputs))
 
     payloads["manifest"] = {
+        "schema_version": SNAPSHOT_SCHEMA_VERSION,
+        "profile": "local",
+        "datasets": sorted(payloads),
         "available": True,
         "build_date": pd.Timestamp.now("UTC").date().isoformat(),
         "start_date": panel["date"].min().date().isoformat(),

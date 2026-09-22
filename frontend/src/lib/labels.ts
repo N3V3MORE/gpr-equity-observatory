@@ -295,10 +295,10 @@ export const MONTHLY_FORECAST_COLUMNS: ColumnSpec[] = [
 
 export const TOP_SHOCKS_COLUMNS: ColumnSpec[] = [
   { key: "date", label: "Date" },
-  { key: "gpr", label: "GPR level", align: "right", format: (v) => num(v, "0") },
+  { key: "gpr", label: "GPR level", align: "right", format: (v) => num(v) },
   { key: "gpr_change", label: "Daily change", align: "right", format: (v) => signedFixed(v, 1) },
-  { key: "gpr_act", label: "Actions", align: "right", format: (v) => num(v, "0") },
-  { key: "gpr_threat", label: "Threats", align: "right", format: (v) => num(v, "0") },
+  { key: "gpr_act", label: "Actions", align: "right", format: (v) => num(v) },
+  { key: "gpr_threat", label: "Threats", align: "right", format: (v) => num(v) },
   { key: "event", label: "Event" },
 ];
 

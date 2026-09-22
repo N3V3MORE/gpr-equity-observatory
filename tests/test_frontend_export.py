@@ -77,6 +77,9 @@ def test_build_frontend_payloads_returns_available_manifest(tmp_path):
     payloads = export.build_frontend_payloads(root=tmp_path)
 
     assert payloads["manifest"]["available"] is True
+    assert payloads["manifest"]["schema_version"] == 1
+    assert payloads["manifest"]["profile"] == "local"
+    assert payloads["manifest"]["datasets"] == sorted(set(payloads) - {"manifest"})
     assert payloads["manifest"]["country_count"] == 1
     assert payloads["copy"]["central_question"]
     assert payloads["copy"]["reader_path"] == [
@@ -169,5 +172,8 @@ def test_build_frontend_payloads_handles_missing_data(tmp_path):
     payloads = export.build_frontend_payloads(root=tmp_path)
 
     assert payloads["manifest"]["available"] is False
+    assert payloads["manifest"]["schema_version"] == 1
+    assert payloads["manifest"]["profile"] == "local"
+    assert payloads["manifest"]["datasets"] == ["copy"]
     assert payloads["manifest"]["missing_files"]
     assert payloads["copy"]["central_question"]

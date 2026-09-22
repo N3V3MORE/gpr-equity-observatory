@@ -9,6 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "lint": "eslint .",
+    "test:runtime": "node --test tests/*.test.cjs",
     "typecheck": "next typegen && tsc --noEmit --incremental false"
   },
   "dependencies": {

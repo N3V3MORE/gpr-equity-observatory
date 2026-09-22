@@ -3,6 +3,7 @@ import { ChartCard } from "@/components/ChartCard";
 import { DataTable } from "@/components/DataTable";
 import { Details } from "@/components/Details";
 import { MetricCard } from "@/components/MetricCard";
+import { OptionalDataset } from "@/components/OptionalDataset";
 import { Section } from "@/components/Section";
 import {
   CalibrationChart,
@@ -42,6 +43,7 @@ export function PredictionLab({ bundle }: { bundle: FrontendBundle }) {
       title="Can recent conditions rank short-term drawdown risk?"
       intro="Prediction Lab ranks drawdown risk for recent ETF conditions. It does not predict prices or recommend trades."
     >
+      <OptionalDataset status={bundle.dataset_status.prediction_summary} label="Prediction Lab">
       <Callout variant="warning" title="What this is - read carefully">
         This is an out-of-sample risk-classification experiment. It asks whether current GPR and market conditions
         help rank short-horizon drawdown risk. It is not a trading signal or a price forecast.
@@ -128,6 +130,7 @@ export function PredictionLab({ bundle }: { bundle: FrontendBundle }) {
         </p>
         <DataTable rows={drawdown_metrics} columns={DRAWDOWN_METRICS_COLUMNS} downloadFilename="drawdown_model_metrics.csv" compact />
       </Details>
+      </OptionalDataset>
     </Section>
   );
 }

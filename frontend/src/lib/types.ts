@@ -1,7 +1,23 @@
 // Types mirror the JSON payloads written by scripts/export_frontend_data.py.
 
+export const DATASET_NAMES = [
+  "copy", "overview", "gpr_timeline", "group_returns", "evidence_map", "event_study",
+  "event_robustness", "regression", "panel_sample_robustness", "quantile_regression",
+  "local_projections", "rolling_beta", "prediction_summary", "drawdown_calibration",
+  "drawdown_lift", "drawdown_threshold_metrics", "drawdown_country_risk_summary",
+  "drawdown_feature_importance", "drawdown_metrics", "reader_summaries",
+  "country_coverage", "large_returns", "monthly",
+] as const;
+
+export type DatasetName = (typeof DATASET_NAMES)[number];
+export type DatasetStatus = "available" | "unavailable" | "excluded" | "deferred";
+
 export interface Manifest {
   available: boolean;
+  // Absent together only for legacy local exports. A profile is not publication approval.
+  schema_version?: 1;
+  profile?: "local" | "public";
+  datasets?: DatasetName[];
   build_date?: string;
   start_date?: string;
   end_date?: string;
@@ -94,6 +110,7 @@ export interface ReaderSummariesPayload {
 
 export interface FrontendBundle {
   manifest: Manifest;
+  dataset_status: Record<DatasetName, DatasetStatus>;
   copy: Copy;
   overview: OverviewPayload;
   gpr_timeline: GprTimelinePayload;

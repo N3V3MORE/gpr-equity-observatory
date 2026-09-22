@@ -48,7 +48,7 @@ export default function Page() {
         <h1 className="text-xl font-semibold text-ink">Could not load the dashboard</h1>
         <p className="mt-2 text-sm text-ink-muted">{state.message}</p>
         <p className="mt-4 text-sm text-ink-soft">
-          Run the exporter first: <code className="rounded bg-surface-alt px-1.5 py-0.5">python scripts/export_frontend_data.py</code>
+          Required published data could not be loaded or validated. Please try again later.
         </p>
       </div>
     );
@@ -63,13 +63,20 @@ export default function Page() {
   return (
     <main className="overflow-x-hidden">
       <Hero bundle={bundle} />
-      <SectionNav />
+      <SectionNav
+        prediction={bundle.dataset_status.prediction_summary !== "excluded"}
+        rolling={bundle.dataset_status.rolling_beta !== "excluded"}
+      />
       <Overview bundle={bundle} />
       <div className="border-t border-surface-border" />
       <HowMarketsReact bundle={bundle} />
       <div className="border-t border-surface-border" />
-      <PredictionLab bundle={bundle} />
-      <div className="border-t border-surface-border" />
+      {bundle.dataset_status.prediction_summary !== "excluded" ? (
+        <>
+          <PredictionLab bundle={bundle} />
+          <div className="border-t border-surface-border" />
+        </>
+      ) : null}
       <DataAndMethods bundle={bundle} />
       <footer className="border-t border-surface-border py-8 text-center text-xs text-ink-muted">
         GPR Equity Observatory - a research observatory. Not investment advice or a trading system.
@@ -99,7 +106,12 @@ function Hero({ bundle }: { bundle: FrontendBundle }) {
         <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-1">
           <HeroStat label="Countries" value={num(headline.country_count, "n/a")} />
           <HeroStat label="GPR shock days" value={num(headline.shock_count, "n/a")} />
-          <HeroStat label="Monthly benchmark" value={manifest.monthly_mode ?? "not exported"} />
+          {bundle.dataset_status.monthly !== "excluded" ? (
+            <HeroStat
+              label="Monthly benchmark"
+              value={bundle.dataset_status.monthly === "available" ? bundle.monthly.mode_label ?? bundle.monthly.mode ?? "unavailable" : "unavailable"}
+            />
+          ) : null}
         </div>
       </div>
     </header>

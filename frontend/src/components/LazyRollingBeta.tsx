@@ -4,16 +4,18 @@ import { useEffect, useRef, useState } from "react";
 
 import { RollingBetaChart } from "@/components/charts";
 import { loadRollingBeta } from "@/lib/data";
-import type { Row } from "@/lib/types";
+import type { DatasetStatus, Manifest, Row } from "@/lib/types";
 
-export function LazyRollingBeta() {
+export function LazyRollingBeta({ manifest, status }: { manifest: Manifest; status: DatasetStatus }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [rows, setRows] = useState<Row[] | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
+  const canLoad = status === "deferred" || status === "available";
 
   useEffect(() => {
     const node = containerRef.current;
-    if (!node || shouldLoad) return;
+    if (!node || shouldLoad || !canLoad) return;
 
     if (!("IntersectionObserver" in window)) {
       // Preserve immediate loading in browsers without IntersectionObserver.
@@ -34,19 +36,31 @@ export function LazyRollingBeta() {
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [shouldLoad]);
+  }, [shouldLoad, canLoad]);
 
   useEffect(() => {
-    if (!shouldLoad) return;
+    if (!shouldLoad || !canLoad) return;
 
     let active = true;
-    loadRollingBeta().then((data) => {
-      if (active) setRows(data);
-    });
+    loadRollingBeta(manifest)
+      .then((data) => {
+        if (!active) return;
+        if (data === null || data.length === 0) setUnavailable(true);
+        else setRows(data);
+      })
+      .catch(() => {
+        if (active) setUnavailable(true);
+      });
     return () => {
       active = false;
     };
-  }, [shouldLoad]);
+  }, [shouldLoad, canLoad, manifest]);
+
+  if (status === "excluded") return null;
+
+  if (status === "unavailable" || unavailable) {
+    return <p role="status" className="text-sm text-ink-muted">Country sensitivity is unavailable in this snapshot.</p>;
+  }
 
   if (!shouldLoad) {
     return (
@@ -60,14 +74,6 @@ export function LazyRollingBeta() {
     return (
       <div ref={containerRef} className="text-sm text-ink-muted">
         Loading sensitivity data...
-      </div>
-    );
-  }
-
-  if (rows.length === 0) {
-    return (
-      <div ref={containerRef} className="text-sm text-ink-muted">
-        No rolling-sensitivity data available.
       </div>
     );
   }

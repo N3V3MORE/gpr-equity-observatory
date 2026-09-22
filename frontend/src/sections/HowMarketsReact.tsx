@@ -2,6 +2,7 @@ import { Callout } from "@/components/Callout";
 import { ChartCard } from "@/components/ChartCard";
 import { DataTable } from "@/components/DataTable";
 import { Details } from "@/components/Details";
+import { OptionalDataset } from "@/components/OptionalDataset";
 import { Section } from "@/components/Section";
 import {
   EventRobustnessChart,
@@ -49,14 +50,16 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
             />
           </div>
         </div>
-        <Details summary="Details: event-study robustness (different shock cutoffs and windows)">
+        <OptionalDataset status={bundle.dataset_status.event_robustness} label="Event-study robustness">
+          <Details summary="Details: event-study robustness (different shock cutoffs and windows)">
           <p className="text-xs text-ink-muted">
             This checks whether the conclusion holds when the shock threshold or the post-shock window is changed.
           </p>
           <ChartCard title="Robustness: end-of-window abnormal return">
             <EventRobustnessChart rows={bundle.event_robustness} />
           </ChartCard>
-        </Details>
+          </Details>
+        </OptionalDataset>
       </SubSection>
 
       <SubSection title="Regression evidence (controlled panel)" idAnchor="regression">
@@ -93,7 +96,8 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
             the emerging-market question.
           </p>
           <RegressionBlock title="Date fixed-effects model" rows={bundle.regression.date_fe} filename="panel_regression_date_fe_terms.csv" />
-          <h4 className="text-sm font-semibold text-ink">Sample robustness - excluding crisis windows</h4>
+          <OptionalDataset status={bundle.dataset_status.panel_sample_robustness} label="Sample robustness">
+            <h4 className="text-sm font-semibold text-ink">Sample robustness - excluding crisis windows</h4>
           <p className="text-xs text-ink-muted">
             Large sign or p-value changes would warn that one episode is driving the result.
           </p>
@@ -102,10 +106,12 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
             columns={PANEL_ROBUSTNESS_COLUMNS}
             downloadFilename="panel_sample_robustness.csv"
           />
+          </OptionalDataset>
         </Details>
       </SubSection>
 
-      <SubSection title="Downside risk - is the link stronger on bad days?" idAnchor="downside-risk">
+      <OptionalDataset status={bundle.dataset_status.quantile_regression} label="Downside risk">
+        <SubSection title="Downside risk - is the link stronger on bad days?" idAnchor="downside-risk">
         <Callout variant="info" title="How to read this">
           {copy.how_to_read["downside_risk"]}
         </Callout>
@@ -115,9 +121,11 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
         >
           <QuantileChart rows={bundle.quantile_regression} />
         </ChartCard>
-      </SubSection>
+        </SubSection>
+      </OptionalDataset>
 
-      <SubSection title="Dynamic response - how long does the reaction last?" idAnchor="dynamic-response">
+      <OptionalDataset status={bundle.dataset_status.local_projections} label="Dynamic response">
+        <SubSection title="Dynamic response - how long does the reaction last?" idAnchor="dynamic-response">
         <Callout variant="info" title="How to read this">
           {copy.how_to_read["dynamic_response"]}
         </Callout>
@@ -127,9 +135,11 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
         >
           <LocalProjectionChart rows={bundle.local_projections} />
         </ChartCard>
-      </SubSection>
+        </SubSection>
+      </OptionalDataset>
 
-      <SubSection title="Country sensitivity over time" idAnchor="country-sensitivity">
+      {bundle.dataset_status.rolling_beta !== "excluded" ? (
+        <SubSection title="Country sensitivity over time" idAnchor="country-sensitivity">
         <Callout variant="info" title="How to read this">
           {copy.how_to_read["country_sensitivity"]}
         </Callout>
@@ -137,9 +147,10 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
           title="Rolling GPR sensitivity by country ETF"
           caption="Each line shows how one country ETF's return sensitivity to GPR changes as the estimation window moves through time. Use it as a diagnostic, not a stable country ranking."
         >
-          <LazyRollingBeta />
+          <LazyRollingBeta manifest={bundle.manifest} status={bundle.dataset_status.rolling_beta} />
         </ChartCard>
-      </SubSection>
+        </SubSection>
+      ) : null}
     </Section>
   );
 }

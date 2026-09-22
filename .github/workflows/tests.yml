@@ -88,6 +88,10 @@ jobs:
         working-directory: frontend
         run: npm run typecheck
 
+      - name: Test frontend data integrity
+        working-directory: frontend
+        run: npm run test:runtime
+
       - name: Build frontend
         working-directory: frontend
         run: npm run build

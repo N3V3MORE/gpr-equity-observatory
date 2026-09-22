@@ -3,6 +3,7 @@ import { ChartCard } from "@/components/ChartCard";
 import { DataTable } from "@/components/DataTable";
 import { Details } from "@/components/Details";
 import { MetricCard } from "@/components/MetricCard";
+import { OptionalDataset } from "@/components/OptionalDataset";
 import { Section } from "@/components/Section";
 import { GprTimelineChart, CumulativeReturnsChart } from "@/components/charts";
 import { EVIDENCE_MAP_COLUMNS, TOP_SHOCKS_COLUMNS } from "@/lib/labels";
@@ -86,14 +87,16 @@ export function Overview({ bundle }: { bundle: FrontendBundle }) {
         </div>
       </div>
 
-      <Details summary="Details: cumulative average returns by market group">
+      <OptionalDataset status={bundle.dataset_status.group_returns} label="Cumulative returns">
+        <Details summary="Details: cumulative average returns by market group">
         <ChartCard
           title="Cumulative average ETF returns"
           caption="Developed vs emerging market ETFs, cumulative average log returns over the sample. This is descriptive context, not a risk result."
         >
           <CumulativeReturnsChart rows={group_returns} />
         </ChartCard>
-      </Details>
+        </Details>
+      </OptionalDataset>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="min-w-0 lg:col-span-2">
