@@ -18,6 +18,9 @@ export interface Manifest {
   schema_version?: 1;
   profile?: "local" | "public";
   datasets?: DatasetName[];
+  // Publication approval is recorded separately from dataset selection.
+  publication_status?: "candidate" | "approved";
+  approved_downloads?: { label: string; path: string }[];
   build_date?: string;
   start_date?: string;
   end_date?: string;

@@ -3,11 +3,15 @@ const test = require("node:test");
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
 const { loadTs } = require("./load-ts.cjs");
+const { validSnapshot } = require("./snapshot-fixture.cjs");
 
 const render = (component, props) => renderToStaticMarkup(React.createElement(component, props));
 const { OptionalDataset } = loadTs("src/components/OptionalDataset.tsx");
 const { SectionNav } = loadTs("src/components/SectionNav.tsx");
-const { DataAndMethods } = loadTs("src/sections/DataAndMethods.tsx");
+const { DataAndMethods } = loadTs("src/sections/DataAndMethods.tsx", {
+  "@/components/charts": Object.fromEntries(["MonthlyForecastChart", "MonthlyGprChart", "MonthlySpreadChart"]
+    .map((name) => [name, () => React.createElement("div", { "data-chart": name })])),
+});
 const { PredictionLab } = loadTs("src/sections/PredictionLab.tsx");
 
 test("optional content distinguishes excluded, unavailable, and available", () => {
@@ -26,45 +30,74 @@ test("excluded optional sections have no navigation anchors", () => {
   assert.doesNotMatch(html, /#prediction-lab|#country-sensitivity/);
 });
 
-test("page uses validated monthly data instead of optional manifest metadata", () => {
-  const bundle = {
-    manifest: { available: true, monthly_mode: { malformed: true } },
-    copy: { intro: "Research overview", use_note: "Research only" },
-    overview: { headline: { country_count: 1, shock_count: 0, start_date: "2020-01-01", end_date: "2020-01-02" } },
-    monthly: { mode: "sample", mode_label: "Sample benchmark" },
-    dataset_status: { monthly: "available", prediction_summary: "excluded", rolling_beta: "excluded" },
-  };
-  const { default: Page } = loadTs("src/app/page.tsx", {
-    react: { useEffect: () => {}, useState: () => [{ status: "ready", bundle }] },
-    "@/sections/Overview": { Overview: () => "Core overview" },
-    "@/sections/HowMarketsReact": { HowMarketsReact: () => "Core evidence" },
-    "@/sections/PredictionLab": { PredictionLab: () => null },
-    "@/sections/DataAndMethods": { DataAndMethods: () => "Data and methods" },
-  });
-  const html = render(Page);
+test("monthly data stays local and uses validated payload fields instead of manifest metadata", () => {
+  const bundle = validSnapshot(["monthly"]);
+  bundle.manifest.monthly_mode = { malformed: true };
+  bundle.copy.monthly_notices = { sample: "Software demonstration, not empirical evidence." };
+  bundle.monthly = { available: true, mode: "sample", mode_label: "Sample benchmark" };
+  bundle.dataset_status = { monthly: "available", large_returns: "excluded" };
+  const html = render(DataAndMethods, { bundle, local: true });
   assert.match(html, /Sample benchmark/);
-  assert.match(html, /Core evidence/);
+  assert.match(html, /Software demonstration, not empirical evidence/);
+  const publicHtml = render(DataAndMethods, { bundle });
+  assert.match(publicHtml, /Data quality and coverage/);
+  assert.doesNotMatch(publicHtml, /Sample benchmark|Monthly benchmark|MonthlyGprChart/);
 });
 
 test("missing large-return data does not claim zero flags; monthly failure stays local", () => {
-  const bundle = {
-    copy: { monthly_notices: {}, glossary: { GPR: "Geopolitical risk" } },
-    country_coverage: [{ country: "A" }],
-    large_returns: [],
-    reader_summaries: { output_files: [] },
-    monthly: { available: false },
-    dataset_status: { large_returns: "unavailable", monthly: "unavailable" },
-  };
-  const unavailable = render(DataAndMethods, { bundle });
+  const bundle = validSnapshot();
+  bundle.copy.monthly_notices = {};
+  bundle.large_returns = [];
+  bundle.monthly = { available: false };
+  bundle.dataset_status = { large_returns: "unavailable", monthly: "unavailable" };
+  const unavailable = render(DataAndMethods, { bundle, local: true });
   assert.match(unavailable, /Large-return flags is unavailable/);
   assert.match(unavailable, /Monthly benchmark is unavailable/);
-  assert.match(unavailable, /Countries checked/);
+  assert.match(unavailable, /Download country coverage/);
   assert.doesNotMatch(unavailable, /No large daily returns flagged|Build them with/);
 
   bundle.dataset_status = { large_returns: "available", monthly: "excluded" };
-  const available = render(DataAndMethods, { bundle });
+  const available = render(DataAndMethods, { bundle, local: true });
   assert.match(available, /No large daily returns flagged/);
   assert.doesNotMatch(available, /Monthly benchmark|Large-return flags is unavailable/);
+});
+
+test("public methods focus on daily research, retain coverage downloads, and keep details closed", () => {
+  const bundle = validSnapshot();
+  bundle.copy.method_map = ["Event study", "Panel regression", "Prediction Lab", "Monthly benchmark", "Quantile regression"]
+    .map((Tool) => ({ Tool, Question: `Question for ${Tool}`, Output: "Table", "What to look for": "Uncertainty" }));
+  bundle.copy.glossary = { GPR: "Geopolitical risk", AUC: "Prediction metric" };
+  bundle.dataset_status = { large_returns: "unavailable", monthly: "unavailable" };
+  const html = render(DataAndMethods, { bundle });
+  for (const label of ["Event study", "Panel regression", "Download country coverage (CSV)", "Data sources", "USD-traded country ETF proxies", "Approved data download not available"]) {
+    assert.ok(html.includes(label), label);
+  }
+  assert.doesNotMatch(html, /Prediction Lab|Monthly benchmark|Quantile regression|Prediction metric|Large-return flags|generated files|Countries checked|<details[^>]* open=/);
+  assert.match(html, /href="https:\/\/www.matteoiacoviello.com\/gpr.htm"/);
+  assert.match(html, /href="https:\/\/github.com\/N3V3MORE\/gpr-equity-observatory\/blob\/main\/docs\/DATA_SOURCES.md"/);
+});
+
+test("approved data links require explicit approval and respect the deployment prefix", (t) => {
+  const previous = process.env.NEXT_PUBLIC_BASE_PATH;
+  t.after(() => {
+    if (previous === undefined) delete process.env.NEXT_PUBLIC_BASE_PATH;
+    else process.env.NEXT_PUBLIC_BASE_PATH = previous;
+  });
+  for (const prefix of ["", "/research/"]) {
+    process.env.NEXT_PUBLIC_BASE_PATH = prefix;
+    const { DataAndMethods: Methods } = loadTs("src/sections/DataAndMethods.tsx");
+    const bundle = validSnapshot();
+    bundle.manifest.approved_downloads = [{ label: "Approved summary data (CSV)", path: "downloads/summary.csv" }];
+    bundle.dataset_status = {};
+    const candidate = render(Methods, { bundle });
+    assert.match(candidate, /Approved data download not available/);
+    assert.doesNotMatch(candidate, /href="[^"]*downloads\/summary.csv"/);
+    bundle.manifest.publication_status = "approved";
+    const approved = render(Methods, { bundle });
+    assert.ok(approved.includes(`href="${prefix.replace(/\/$/, "")}/downloads/summary.csv" download=""`));
+    assert.match(approved, /Approved summary data \(CSV\)/);
+    assert.doesNotMatch(approved, /Approved data download not available/);
+  }
 });
 
 test("unavailable Prediction Lab shows a notice without metrics or empty charts", () => {

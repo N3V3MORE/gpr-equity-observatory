@@ -20,9 +20,11 @@ import {
 } from "@/lib/labels";
 import type { FrontendBundle, Row } from "@/lib/types";
 
-export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
+export function HowMarketsReact({ bundle, local = false }: { bundle: FrontendBundle; local?: boolean }) {
   const { copy } = bundle;
   const definitions = bundle.overview.definitions;
+  const regressionTranslation = bundle.reader_summaries.regression_translation.filter((row) =>
+    local || row.test === "Controlled GPR association" || row.test === "Emerging-market extra response");
   const eventDefinitions = [
     { definition: "Event-day alignment", detail: definitions.event_alignment },
     { definition: "Accumulation window", detail: definitions.accumulation },
@@ -33,9 +35,8 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
   return (
     <Section
       id="how-markets-react"
-      eyebrow="How markets react to risk"
-      title="Do markets look worse around geopolitical-risk shocks?"
-      intro={copy.how_to_read["market_response"]}
+      eyebrow="Daily ETF research"
+      title="Key evidence"
     >
       <SubSection title="Market response around selected GPR events" idAnchor="market-response">
         <ChartCard
@@ -46,8 +47,9 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
         </ChartCard>
         <p className="text-xs text-ink-muted">{bundle.overview.definitions.event_alignment}</p>
         <Callout variant="warning" title="Event-study uncertainty">
-          {bundle.overview.definitions.inference} Weak evidence is not proof of no effect.
+          {bundle.overview.definitions.inference}
         </Callout>
+        <Details summary="Details: event-study estimates, uncertainty, counts, and windows">
         <div>
           <h4 className="text-sm font-semibold text-ink">Readable event-study summary</h4>
           <p className="mt-1 text-xs text-ink-muted">
@@ -59,14 +61,14 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
               rows={bundle.reader_summaries.market_reaction}
               columns={MARKET_REACTION_READER_COLUMNS}
               downloadFilename="market_reaction_summary.csv"
+              downloadLabel="Download event-study summary (CSV)"
               compact
             />
           </div>
         </div>
-        <Details summary="Details: event-study estimates, uncertainty, counts, and windows">
           <DataTable
             rows={eventDefinitions}
-            columns={[{ key: "definition", label: "Definition" }, { key: "detail", label: "Published snapshot definition" }]}
+            columns={[{ key: "definition", label: "Definition" }, { key: "detail", label: "Snapshot definition" }]}
             downloadFilename="event_study_definitions.csv"
             downloadLabel="Download event-study definitions (CSV)"
             compact
@@ -86,7 +88,7 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
             compact
           />
         </Details>
-        <OptionalDataset status={bundle.dataset_status.event_robustness} label="Event-study robustness">
+        {local ? <OptionalDataset status={bundle.dataset_status.event_robustness} label="Event-study robustness">
           <Details summary="Details: event-study robustness (different shock cutoffs and windows)">
           <p className="text-xs text-ink-muted">
             This checks sensitivity to the shock threshold and the symmetric window around the event.
@@ -96,7 +98,7 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
             <EventRobustnessChart rows={bundle.event_robustness} />
           </ChartCard>
           </Details>
-        </OptionalDataset>
+        </OptionalDataset> : null}
       </SubSection>
 
       <SubSection title="Regression evidence (controlled panel)" idAnchor="regression">
@@ -104,12 +106,17 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
           {copy.how_to_read["regression"]}
         </Callout>
         <p className="text-xs text-ink-muted">
-          The key term is the <em>emerging-market interaction</em>: the extra association between a GPR jump and
-          returns for emerging-market ETFs relative to developed-market ETFs. Read its estimate and uncertainty
-          in the published snapshot below. A negative sign alone does not establish a reliable difference.
           These are associations for USD-traded country ETF proxies, not causal effects on local equity markets.
         </p>
-        <div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <RegressionBlock title="With market controls" rows={bundle.regression.controlled} filename="panel_regression_controlled_terms.csv" />
+          <RegressionBlock title="Date fixed-effects model" rows={bundle.regression.date_fe} filename="panel_regression_date_fe_terms.csv" />
+        </div>
+        <p className="text-xs text-ink-muted">
+          Date fixed effects absorb common date-level variation. Their interaction estimates the
+          conditional developed-versus-emerging association.
+        </p>
+        <Details summary="Details: interpreting the regressions and baseline comparison">
           <h4 className="text-sm font-semibold text-ink">Regression translation table</h4>
           <p className="mt-1 text-xs text-ink-muted">
             Start here before reading coefficient rows. The labels are cautious because these models show
@@ -117,24 +124,17 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
           </p>
           <div className="mt-3">
             <DataTable
-              rows={bundle.reader_summaries.regression_translation}
+              rows={regressionTranslation}
               columns={REGRESSION_TRANSLATION_COLUMNS}
               downloadFilename="regression_translation.csv"
+              downloadLabel="Download regression interpretation (CSV)"
               compact
             />
           </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
           <RegressionBlock title="Baseline model" rows={bundle.regression.baseline} filename="panel_regression_baseline_terms.csv" />
-          <RegressionBlock title="With market controls" rows={bundle.regression.controlled} filename="panel_regression_controlled_terms.csv" />
-        </div>
-        <Details summary="Details: date fixed-effects model and sample robustness">
-          <p className="text-xs text-ink-muted">
-            The date fixed-effects model absorbs common date-level variation. Its interaction describes a
-            conditional developed-versus-emerging association, not a causal effect.
-          </p>
-          <RegressionBlock title="Date fixed-effects model" rows={bundle.regression.date_fe} filename="panel_regression_date_fe_terms.csv" />
-          <OptionalDataset status={bundle.dataset_status.panel_sample_robustness} label="Sample robustness">
+        </Details>
+        {local ? <OptionalDataset status={bundle.dataset_status.panel_sample_robustness} label="Sample robustness">
+          <Details summary="Details: sample robustness">
             <h4 className="text-sm font-semibold text-ink">Sample robustness - excluding crisis windows</h4>
           <p className="text-xs text-ink-muted">
             Large sign or p-value changes can indicate sensitivity to an episode. Retaining the same sign
@@ -145,11 +145,11 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
             columns={PANEL_ROBUSTNESS_COLUMNS}
             downloadFilename="panel_sample_robustness.csv"
           />
-          </OptionalDataset>
-        </Details>
+          </Details>
+        </OptionalDataset> : null}
       </SubSection>
 
-      <OptionalDataset status={bundle.dataset_status.quantile_regression} label="Downside risk">
+      {local ? <OptionalDataset status={bundle.dataset_status.quantile_regression} label="Downside risk">
         <SubSection title="Downside risk - is the link stronger on bad days?" idAnchor="downside-risk">
         <Callout variant="info" title="How to read this">
           {copy.how_to_read["downside_risk"]}
@@ -161,9 +161,9 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
           <QuantileChart rows={bundle.quantile_regression} />
         </ChartCard>
         </SubSection>
-      </OptionalDataset>
+      </OptionalDataset> : null}
 
-      <OptionalDataset status={bundle.dataset_status.local_projections} label="Dynamic response">
+      {local ? <OptionalDataset status={bundle.dataset_status.local_projections} label="Dynamic response">
         <SubSection title="Dynamic response - how long does the reaction last?" idAnchor="dynamic-response">
         <Callout variant="info" title="How to read this">
           {copy.how_to_read["dynamic_response"]}
@@ -175,9 +175,9 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
           <LocalProjectionChart rows={bundle.local_projections} />
         </ChartCard>
         </SubSection>
-      </OptionalDataset>
+      </OptionalDataset> : null}
 
-      {bundle.dataset_status.rolling_beta !== "excluded" ? (
+      {local && bundle.dataset_status.rolling_beta !== "excluded" ? (
         <SubSection title="Country sensitivity over time" idAnchor="country-sensitivity">
         <Callout variant="info" title="How to read this">
           {copy.how_to_read["country_sensitivity"]}
@@ -207,10 +207,10 @@ function SubSection({ title, idAnchor, children }: { title: string; idAnchor: st
 
 function RegressionBlock({ title, rows, filename }: { title: string; rows: Row[]; filename: string }) {
   return (
-    <div>
+    <div className="min-w-0">
       <h4 className="text-sm font-semibold text-ink">{title}</h4>
       <div className="mt-2">
-        <DataTable rows={rows} columns={REGRESSION_TERM_COLUMNS} downloadFilename={filename} compact />
+        <DataTable rows={rows} columns={REGRESSION_TERM_COLUMNS} downloadFilename={filename} downloadLabel={`Download ${title.toLowerCase()} (CSV)`} compact />
       </div>
     </div>
   );

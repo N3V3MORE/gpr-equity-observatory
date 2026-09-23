@@ -4,9 +4,11 @@ Next.js is the single user-facing app. Python remains the research and export ba
 
 ## 5-Minute Review
 
-- Read the main finding in [README.md](../README.md).
+- Read the research status and boundaries in [README.md](../README.md).
 - Open [reports/RESULTS_BRIEF.md](../reports/RESULTS_BRIEF.md).
-- Skim [reports/screenshots](../reports/screenshots) for the app shape.
+- Inspect the actual candidate [desktop](../reports/screenshots/public-v1-candidate-desktop.png)
+  and [mobile](../reports/screenshots/public-v1-candidate-mobile.png) screenshots.
+  Other screenshots in that directory are historical views.
 - Check the Boundaries section in the README before repeating any result.
 
 Use this path to understand what the project claims and what it avoids
@@ -50,14 +52,22 @@ npm run build
 
 Start with these app sections:
 
-- Overview: reader path, GPR timeline, method map, and evidence map.
-- Market Response: event-study, robustness, regression, tail, and dynamic
-  response evidence. Start with the readable event-study and regression
-  translation tables before coefficient details.
-- Prediction Lab: out-of-sample drawdown-risk classification diagnostics.
-- Country Sensitivity: lazy-loaded rolling GPR sensitivity.
-- Data & Methods: generated-file map, country coverage, monthly benchmark
-  status, and provenance.
+- Research question: static introduction and limitations, available without JavaScript.
+- Current answer: derived from the displayed snapshot after approval; candidates
+  show a review notice with their estimates in a separate detail.
+- Key evidence: event-study and controlled/date fixed-effects results, with
+  keyboard-accessible inference and definition tables and CSV downloads.
+- Methods & data: source links, country coverage, limitations, and approved-data
+  links only when a reviewed artifact is explicitly listed.
+
+The data-through date is the last panel observation; the snapshot-export date
+records when JSON was written. The current candidate is not an approved public
+release. There is no live-demo URL to infer from the intended hosting provider.
+Research-code and results links work independently of data loading.
+
+Prediction Lab, monthly demonstrations, rolling sensitivity, and extended
+diagnostics remain accessible at `/local/` with a local snapshot. They are
+excluded from the default public page and its dataset requests.
 
 The daily ETF workflow is primary. The monthly benchmark is a separate
 aggregate layer and should not be mixed with the daily country ETF panel as one

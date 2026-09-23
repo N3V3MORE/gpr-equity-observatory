@@ -17,8 +17,7 @@ DASHBOARD_MAIN_TAKEAWAY = (
 )
 DASHBOARD_USE_NOTE = "Use this dashboard as a research observatory, not as a trading system."
 CENTRAL_PROJECT_QUESTION = (
-    "When geopolitical risk jumps, does it help us understand or rank downside risk in international equity "
-    "markets, especially for emerging markets?"
+    "How are geopolitical risk jumps associated with returns in developed and emerging equity markets?"
 )
 OVERVIEW_JOB_STATEMENTS = [
     (

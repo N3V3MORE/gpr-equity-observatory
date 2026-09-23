@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
+import { publicPath } from "@/lib/paths";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "GPR Equity Observatory",
   description:
-    "A research observatory studying whether geopolitical risk helps explain or rank downside risk in international equity markets.",
+    "Daily geopolitical risk and developed and emerging equity markets: snapshot-backed event-study and panel-regression evidence, methods, data coverage, and limitations.",
+  icons: { shortcut: publicPath("icon.svg") },
+  openGraph: {
+    title: "GPR Equity Observatory",
+    description: "Research on geopolitical risk and country ETF returns. Associations, uncertainty, and limitations alongside the evidence.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

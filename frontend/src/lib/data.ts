@@ -179,7 +179,15 @@ function validateManifest(value: unknown): Manifest {
     check(Number.isInteger(value.shock_count) && Number(value.shock_count) >= 0, "manifest.shock_count");
     if (versioned) check(REQUIRED_DATASETS.every((name) => (value.datasets as unknown[]).includes(name)), "manifest.datasets missing required payload");
   }
-  return { ...value, monthly_mode: text(value.monthly_mode) ? value.monthly_mode : null } as unknown as Manifest;
+  const publication_status = value.profile === "public" && value.publication_status === "approved" ? "approved" : "candidate";
+  const approved_downloads = publication_status === "approved" && Array.isArray(value.approved_downloads)
+    ? value.approved_downloads.filter((entry: unknown) => {
+      if (entry === null || typeof entry !== "object" || Array.isArray(entry)) return false;
+      const download = entry as Row;
+      return text(download.label) && typeof download.path === "string"
+        && /^downloads\/[a-z0-9][a-z0-9._-]*$/i.test(download.path) && !download.path.includes("..");
+    }) : [];
+  return { ...value, publication_status, approved_downloads, monthly_mode: text(value.monthly_mode) ? value.monthly_mode : null } as unknown as Manifest;
 }
 
 function validateCopy(value: unknown) {
@@ -338,13 +346,14 @@ function validateDisplayedCoverage(bundle: FrontendBundle) {
     && countries.some((row) => row.last_date === headline.end_date), "country sample coverage");
 }
 
-export async function loadBundle(): Promise<FrontendBundle> {
+export async function loadBundle({ publicOnly = false, localOnly = false }: { publicOnly?: boolean; localOnly?: boolean } = {}): Promise<FrontendBundle> {
   const manifest = validateManifest(await fetchJson("manifest.json"));
+  if (localOnly && manifest.profile === "public") throw new Error("The local research view requires a local snapshot.");
   const bundle = { ...emptyBundle(), manifest };
   if (!manifest.available) return bundle; // Local development's explicit missing-data state.
 
   await Promise.all(DATASET_NAMES.map(async (name) => {
-    if (!includesDataset(manifest, name)) return;
+    if (!includesDataset(manifest, name) || (publicOnly && !REQUIRED_DATASETS.includes(name))) return;
     if (name === "rolling_beta") { bundle.dataset_status[name] = "deferred"; return; }
     try {
       const value = await fetchJson(`${name}.json`);

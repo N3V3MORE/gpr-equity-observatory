@@ -230,3 +230,43 @@ test("highlighted and selected dates must match the displayed timeline", async (
   payloads.gpr_timeline.top_shocks[0].date = "2023-12-31";
   await assert.rejects(api.loadBundle(), /must match the displayed timeline/);
 });
+
+test("public reading view never requests optional datasets from a full local snapshot", async (t) => {
+  const payloads = validSnapshot(["monthly", "prediction_summary", "rolling_beta", "local_projections"]);
+  payloads.manifest.profile = "local";
+  const api = runtime(t, payloads);
+  const bundle = await api.loadBundle({ publicOnly: true });
+  assert.deepEqual(new Set(api.requests), new Set(["manifest", ...CORE].map((name) => `/data/${name}.json`)));
+  for (const name of ["monthly", "prediction_summary", "rolling_beta", "local_projections"]) assert.equal(bundle.dataset_status[name], "excluded");
+  assert.equal(bundle.manifest.publication_status, "candidate");
+});
+
+test("local research access is preserved for local snapshots and refuses public manifests", async (t) => {
+  const payloads = validSnapshot(["local_projections"]);
+  payloads.manifest.profile = "local";
+  payloads.local_projections = [{ market_group: "developed", horizon: 0, estimate: 0, ci_low: null, ci_high: null }];
+  const api = runtime(t, payloads);
+  assert.equal((await api.loadBundle({ localOnly: true })).dataset_status.local_projections, "available");
+  payloads.manifest.profile = "public";
+  await assert.rejects(api.loadBundle({ localOnly: true }), /requires a local snapshot/);
+});
+
+test("download approval is explicit and paths stay within the reviewed download directory", async (t) => {
+  const payloads = validSnapshot();
+  payloads.manifest.approved_downloads = [{ label: "Reviewed summary", path: "downloads/summary.csv" }];
+  const api = runtime(t, payloads);
+  assert.deepEqual((await api.loadBundle()).manifest.approved_downloads, []);
+  payloads.manifest.publication_status = "approved";
+  payloads.manifest.approved_downloads.push(
+    { label: "External", path: "https://example.com/data.csv" },
+    { label: "Private", path: "downloads/../private.csv" },
+    { label: "Encoded", path: "downloads/%2e%2e.csv" },
+    { label: "", path: "downloads/unlabeled.csv" },
+    null,
+  );
+  const manifest = (await api.loadBundle()).manifest;
+  assert.equal(manifest.publication_status, "approved");
+  assert.deepEqual(manifest.approved_downloads, [{ label: "Reviewed summary", path: "downloads/summary.csv" }]);
+  payloads.manifest.profile = "local";
+  assert.equal((await api.loadBundle()).manifest.publication_status, "candidate");
+});

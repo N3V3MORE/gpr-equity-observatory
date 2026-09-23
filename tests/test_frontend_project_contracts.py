@@ -68,24 +68,29 @@ def test_rolling_sensitivity_loads_only_when_revealed():
 
 
 def test_wide_evidence_table_cannot_force_mobile_page_overflow():
+    table = _read("frontend/src/components/DataTable.tsx")
+
+    assert "overflow-x-auto" in table
+    assert 'className="w-full border-collapse text-sm"' in table
+
+
+def test_static_research_introduction_precedes_client_evidence():
+    page = _read("frontend/src/app/page.tsx")
+
+    assert '"use client"' not in page
+    assert page.index("How are geopolitical risk jumps associated") < page.index("Research limitations:")
+    assert page.index("Research limitations:") < page.index("<ResearchDashboard")
+
+
+def test_snapshot_answer_precedes_evidence_and_methods():
     overview = _read("frontend/src/sections/Overview.tsx")
+    dashboard = _read("frontend/src/components/ResearchDashboard.tsx")
+    methods = _read("frontend/src/sections/DataAndMethods.tsx")
 
-    assert "min-w-0" in overview
-
-
-def test_overview_renders_beginner_reader_path_before_method_map():
-    overview = _read("frontend/src/sections/Overview.tsx")
-
-    assert "copy.reader_path" in overview
-    assert "copy.reader_path ?? []" in overview
-    assert "Read this first" in overview
-    assert overview.index("Read this first") < overview.index("Method map")
-
-
-def test_overview_leads_with_gpr_graph_before_method_map():
-    overview = _read("frontend/src/sections/Overview.tsx")
-
-    assert overview.index("Daily geopolitical risk over time") < overview.index("Method map")
+    assert overview.index("Candidate estimates") < overview.index("Daily geopolitical risk over time")
+    assert dashboard.index("<Overview") < dashboard.index("<HowMarketsReact") < dashboard.index("<DataAndMethods")
+    assert "How the evidence is estimated" in methods
+    assert "copy.reader_path" not in overview
 
 
 def test_section_nav_scroll_is_contained_on_mobile():
@@ -99,7 +104,7 @@ def test_section_nav_scroll_is_contained_on_mobile():
 def test_page_shell_clips_mobile_table_overflow():
     page = _read("frontend/src/app/page.tsx")
 
-    assert '<main className="overflow-x-hidden">' in page
+    assert '<main id="research-content" tabIndex={-1} className="overflow-x-hidden focus:outline-none">' in page
 
 
 def test_reader_summaries_are_rendered():

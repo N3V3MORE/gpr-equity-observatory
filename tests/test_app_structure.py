@@ -158,7 +158,8 @@ def test_dashboard_intro_keeps_cautious_project_framing():
 
 def test_overview_framing_answers_main_project_question():
     assert "geopolitical risk jumps" in app.CENTRAL_PROJECT_QUESTION
-    assert "rank downside risk" in app.CENTRAL_PROJECT_QUESTION
+    assert "associated with returns in developed and emerging equity markets" in app.CENTRAL_PROJECT_QUESTION
+    assert "rank downside risk" not in app.CENTRAL_PROJECT_QUESTION
     assert app.OVERVIEW_JOB_STATEMENTS == [
         (
             "Explanation",

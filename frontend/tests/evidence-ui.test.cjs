@@ -14,10 +14,12 @@ const mocks = {
 };
 const { HowMarketsReact } = loadTs("src/sections/HowMarketsReact.tsx", mocks);
 const { Overview } = loadTs("src/sections/Overview.tsx", mocks);
-const render = (component, bundle) => renderToStaticMarkup(React.createElement(component, { bundle }));
+const render = (component, bundle, local = false) => renderToStaticMarkup(React.createElement(component, { bundle, local }));
 
 function evidenceBundle() {
   const bundle = validSnapshot();
+  bundle.manifest.publication_status = "approved";
+  bundle.reader_summaries.regression_translation[0].test = "Controlled GPR association";
   bundle.dataset_status = Object.fromEntries(DATASET_NAMES.map((name) => [name, bundle.manifest.datasets.includes(name) ? "available" : "excluded"]));
   bundle.overview.headline = { ...bundle.overview.headline, shock_count: 3, selected_event_count: 2, represented_event_count: null };
   bundle.overview.definitions = {
@@ -26,7 +28,7 @@ function evidenceBundle() {
     selected_events: "Peak events are selected by Python across the GPR history, then clipped to panel coverage.",
     event_alignment: "Day 0 is each ETF's first trading observation on or after the selected GPR date.",
     accumulation: "Each ETF-event accumulates from its first available relative day, including negative relative days; no reset at day 0.",
-    inference: "Existing standard errors and p-values are not adjusted for dependence between ETFs exposed to common events.",
+    inference: "Existing standard errors and p-values are not adjusted for dependence between ETFs exposed to common events. Weak evidence is not proof of no effect.",
     return_units: "Returns are decimal log returns from USD ETF proxies; the table converts them to basis points.",
   };
   bundle.event_study = [{
@@ -69,4 +71,60 @@ test("overview distinguishes coverage, flagged counts, largest jumps, selection,
   assert.match(html, /2024-01-03/);
   assert.match(html, /What this snapshot supports/);
   assert.doesNotMatch(html, /Largest GPR shock days|which anchor the rest of the analysis/);
+});
+
+test("approved answer precedes evidence, dates distinguish data coverage from export, and introduction is not repeated", () => {
+  const bundle = evidenceBundle();
+  bundle.copy.intro = "Duplicate research introduction";
+  bundle.copy.central_question = "Duplicate research question";
+  bundle.copy.main_takeaway = bundle.copy.current_answer_points[0];
+  const html = render(Overview, bundle);
+  assert.ok(html.indexOf("Test answer") < html.indexOf("Daily geopolitical risk over time"));
+  assert.equal(html.split("Test answer").length - 1, 1);
+  assert.match(html, /Data through<\/div><div[^>]*>2024-01-03<\/div>/);
+  assert.match(html, /Snapshot exported<\/div><div[^>]*>2024-01-04<\/div>/);
+  assert.match(html, /Panel begins 2024-01-01/);
+  assert.doesNotMatch(html, /Duplicate research|Read this first|Evidence map|Method map/);
+});
+
+test("candidate estimates remain inspectable without becoming a reviewed headline answer", () => {
+  const bundle = evidenceBundle();
+  delete bundle.manifest.publication_status;
+  const html = render(Overview, bundle);
+  assert.match(html, /Candidate snapshot/);
+  assert.match(html, /A reviewed public answer is not available yet/);
+  assert.match(html, /<details[^>]*><summary[^>]*>Candidate estimates<\/summary>[\s\S]*?Test answer[\s\S]*?<\/details>/);
+  assert.doesNotMatch(html, /What this snapshot supports|<details[^>]* open=/);
+});
+
+test("public evidence keeps controlled and date-FE results while optional diagnostics require local access", () => {
+  const bundle = evidenceBundle();
+  bundle.dataset_status = Object.fromEntries(DATASET_NAMES.map((name) => [name, "available"]));
+  bundle.panel_sample_robustness = [];
+  const html = render(HowMarketsReact, bundle);
+  const visible = html.replace(/<details\b[\s\S]*?<\/details>/g, "");
+  assert.match(visible, /With market controls/);
+  assert.match(visible, /Date fixed-effects model/);
+  assert.doesNotMatch(visible, /Baseline model|Readable event-study summary/);
+  assert.match(html, /Download event-study estimates and inference \(CSV\)/);
+  for (const download of ["Download event-study summary (CSV)", "Download regression interpretation (CSV)", "Download with market controls (CSV)"]) {
+    assert.ok(html.includes(download), download);
+  }
+  for (const diagnostic of ["EventRobustnessChart", "QuantileChart", "LocalProjectionChart", "Country sensitivity over time", "excluding crisis windows"]) {
+    assert.ok(!html.includes(diagnostic), diagnostic);
+    assert.ok(render(HowMarketsReact, bundle, true).includes(diagnostic), diagnostic);
+  }
+});
+
+test("public regression translation excludes the Python-owned downside diagnostic while local retains it", () => {
+  const bundle = evidenceBundle();
+  const row = bundle.reader_summaries.regression_translation[0];
+  bundle.reader_summaries.regression_translation = [
+    "Controlled GPR association", "Emerging-market extra response", "Downside-risk check",
+  ].map((name) => ({ ...row, test: name }));
+  const publicHtml = render(HowMarketsReact, bundle);
+  assert.match(publicHtml, /Controlled GPR association/);
+  assert.match(publicHtml, /Emerging-market extra response/);
+  assert.doesNotMatch(publicHtml, /Downside-risk check/);
+  assert.match(render(HowMarketsReact, bundle, true), /Downside-risk check/);
 });

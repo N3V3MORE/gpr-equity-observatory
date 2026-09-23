@@ -48,8 +48,43 @@ by Git. A public static deployment needs one explicit choice:
 - rebuild the JSON in a deployment pipeline before `npm run build`
 - keep the project local-first and publish screenshots plus the results brief
 
-Do not deploy an app that silently lacks processed data. Missing data should
-show the app's empty state and rebuild instructions.
+Do not deploy an app that silently lacks processed data. The static research
+introduction and limitations remain visible while data loads or fails; visitors
+see an unavailable message and research links rather than maintainer commands.
+
+### Public Reading View And Local Research View
+
+The root page follows question -> snapshot-backed answer -> key evidence ->
+methods, data, coverage, and limitations. Its introduction is server-rendered at
+build time; interactive charts and JSON loading remain client-side. No runtime
+backend is required. `/local/` preserves Prediction Lab, monthly demonstrations,
+and extended diagnostics for local-profile snapshots. A public-profile manifest
+cannot unlock that view, and the root view never requests optional datasets.
+
+`manifest.build_date` is the snapshot-export date; `overview.headline.end_date`
+is the data-through date. They must remain separately labeled.
+
+Dataset selection (`profile: "public"`) is not publication approval. Only after
+review, record `publication_status: "approved"` in the selected public manifest.
+Missing approval leaves a candidate notice and keeps empirical takeaways out of
+the public headline. The exporter continues to create local candidates and does
+not grant approval. No approved release or live demo URL is currently recorded.
+
+Approved-data links use an explicit `approved_downloads` list of `{label, path}`
+entries in that approved manifest. Each path must be a filename under
+`downloads/`, such as `downloads/reviewed-summary.csv`, and the corresponding
+reviewed file must be placed in `frontend/public/downloads/` before building.
+Record the selected files, provenance, redistribution permission, and checksums
+as part of release review before adding entries. This field is not an automatic
+publication workflow. No entries are added for the current candidate; the UI
+states that approved downloads are unavailable. CSV buttons for displayed
+results remain distinct from redistribution of raw third-party data.
+
+Current presentation screenshots use actual candidate outputs:
+[desktop](../reports/screenshots/public-v1-candidate-desktop.png) and
+[mobile](../reports/screenshots/public-v1-candidate-mobile.png). These are local
+review evidence, not empirical replication or publication approval. Older
+screenshots and the verification notes below describe earlier stages.
 
 ## Static Path Prefix
 

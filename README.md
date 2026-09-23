@@ -26,39 +26,38 @@ and the limits of what public data can show.
 - Exports validated Python outputs into `frontend/public/data` for the Next.js
   app.
 
-## Main Finding
+## Current Research Status
 
-The current evidence should be reported carefully: geopolitical risk is
-associated with equity-market risk, but the emerging-market asymmetry result is
-mixed and not statistically strong in the current specification.
+Read the estimates and uncertainty in [the results brief](reports/RESULTS_BRIEF.md)
+alongside the snapshot shown in the app. Weak evidence is not proof of no effect,
+and retaining an estimate's sign after excluding crisis windows does not establish
+a robust GPR association.
 
-Prediction Lab shows modest drawdown-risk ranking signal. GPR alone is weak
-relative to volatility and broader market features. The monthly benchmark is a
-separate aggregate comparison layer; sample mode is software validation and the
-real monthly benchmark is not a country-panel proof.
-
-See [reports/RESULTS_BRIEF.md](reports/RESULTS_BRIEF.md) for the generated
-short summary.
+The available daily candidate covers 20 countries from 2005-01-04 through
+2026-06-30. It is awaiting provenance and publication review. The app labels it
+as a candidate, withholds a public headline finding, and does not invent an
+approved-data download or an already-live demo URL.
 
 ## How To Read The App
 
-The Next.js app now starts with a three-step reader path:
+1. Research question and limitations, present in the static HTML before data loads.
+2. Snapshot-backed current answer, or an explicit candidate-review notice.
+3. Key event-study, controlled-panel, and date fixed-effects evidence.
+4. Methods, sources, coverage, limitations, and approved downloads when available.
 
-1. Start with the question.
-2. Look at the GPR and market-reaction graphs.
-3. Check the evidence labels before reading technical tables.
+Data-through and snapshot-export dates are shown separately. Expandable details
+retain inference, definitions, and CSV result downloads. Research-code and results
+links remain usable during loading or a data error.
 
-Use the first page in this order:
-
-- read the "Read this first" cards
-- inspect the GPR timeline and largest shock markers
-- use the Evidence Map for the current answer
-- open details sections only when you want the generated file map or raw tables
-
-The Market Response section now shows a readable event-study summary and a
-regression translation table before the coefficient details. The Data & Methods
-section lists the generated Python outputs behind the app. The frontend still
+Prediction Lab, monthly demonstrations, and extended diagnostics are preserved at
+`/local/` (under the deployment prefix when configured), using a local snapshot.
+They are not fetched or shown in the default public journey. The frontend still
 reads exported JSON only; it does not parse raw CSVs or rerun models.
+
+Screenshots from the actual candidate, not synthetic chart fixtures:
+[desktop](reports/screenshots/public-v1-candidate-desktop.png) ·
+[mobile](reports/screenshots/public-v1-candidate-mobile.png).
+These document presentation for review, not publication approval or replication.
 
 ## Quick Start
 
@@ -106,8 +105,9 @@ pytest --cov=gprobs --cov=app --cov-report=term-missing -q
 ```
 
 `frontend/public/data` is generated from Python outputs and is ignored by Git.
-If the generated data is missing, the app renders an empty state with rebuild
-commands instead of recomputing analysis in TypeScript.
+If generated data is missing or invalid, the static research introduction and
+limitations remain visible with a visitor-facing unavailable state. Setup commands
+stay in this documentation, not in the public page.
 
 ## Monthly Real Mode
 
@@ -184,8 +184,7 @@ Useful interview framing:
 - Daily ETF findings and monthly benchmark findings answer related but
   different questions.
 - Monthly sample mode validates the workflow; it is not empirical evidence.
-- The two-market monthly benchmark is useful as an aggregate comparison, not as
-  a country-panel proof.
+- The two-market monthly benchmark is an aggregate comparison, not a country-panel proof.
 - Results are associations, not clean causal estimates.
 - This is not a trading system and it is not investment advice.
 

@@ -20,22 +20,57 @@ import {
   OUTPUT_FILE_READER_COLUMNS,
 } from "@/lib/labels";
 import { num } from "@/lib/format";
+import { publicPath } from "@/lib/paths";
 import type { FrontendBundle } from "@/lib/types";
 
-export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
+export function DataAndMethods({ bundle, local = false }: { bundle: FrontendBundle; local?: boolean }) {
   const { copy, country_coverage, large_returns, monthly } = bundle;
   const notices = copy.monthly_notices;
+  const methods = copy.method_map.filter((row) => local || ["Event study", "Panel regression"].includes(row.Tool));
+  const glossary = Object.fromEntries(Object.entries(copy.glossary).filter(([term]) =>
+    local || ["GPR", "ETF", "shock", "control", "p-value"].includes(term)));
+  const downloads = bundle.manifest.publication_status === "approved" ? bundle.manifest.approved_downloads ?? [] : [];
 
   return (
     <Section
       id="data-and-methods"
       eyebrow="Data & methods"
-      title="What's underneath, and what to watch out for"
-      intro="These are checks on the research inputs and coverage, not standalone findings."
+      title="Methods, sources, and limitations"
     >
+      <SubSection title="How the evidence is estimated">
+        <div className="grid gap-4 md:grid-cols-2">
+          {methods.map((row) => (
+            <div key={row.Tool} className="rounded-lg border border-surface-border bg-surface p-4">
+              <h4 className="text-sm font-semibold text-ink">{row.Tool}</h4>
+              <p className="mt-1 text-sm text-ink-soft">{row.Question}</p>
+              <p className="mt-2 text-xs text-ink-muted">{row["What to look for"]}</p>
+            </div>
+          ))}
+        </div>
+      </SubSection>
+
+      <SubSection title="Data sources">
+        <ul className="list-disc space-y-2 pl-4 text-sm text-ink-soft">
+          <li>
+            Geopolitical risk: the <a className="font-medium text-accent hover:underline" href="https://www.matteoiacoviello.com/gpr.htm">Caldara–Iacoviello GPR index</a>.
+          </li>
+          <li>
+            Country ETFs: adjusted prices from Yahoo Finance through yfinance, converted to USD log returns.
+            ETF inception and missing observations make country coverage uneven.
+          </li>
+          <li>
+            Market controls: global equities (ACWI), volatility (VIX), oil (WTI), the US dollar (UUP), and a US 10-year yield proxy.
+            See the <a className="font-medium text-accent hover:underline" href="https://github.com/N3V3MORE/gpr-equity-observatory/blob/main/docs/DATA_SOURCES.md">source and transformation notes</a>.
+          </li>
+        </ul>
+      </SubSection>
+
       <SubSection title="Data quality and coverage">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <MetricCard label="Countries checked" value={num(country_coverage.length, "n/a")} />
+        <p className="text-sm text-ink-soft">
+          The dates above describe the full panel. The coverage table gives each ETF&apos;s own first and last
+          observation and sample size.
+        </p>
+        {local ? <>
           {bundle.dataset_status.large_returns !== "excluded" ? (
             <MetricCard
               label="Large-return flags"
@@ -43,8 +78,7 @@ export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
               hint="Unusually large daily returns worth manual review"
             />
           ) : null}
-        </div>
-        <Details summary="Details: generated files used by the app" defaultOpen>
+        <Details summary="Details: generated files used by the app">
           <p className="text-xs text-ink-muted">
             These are processed outputs, not raw source files. The public app reads the exported JSON copy of these
             results.
@@ -56,7 +90,8 @@ export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
             downloadLabel="Download output file map (CSV)"
           />
         </Details>
-        <Details summary="Details: country coverage" defaultOpen>
+        </> : null}
+        <Details summary="Details: country coverage">
           <DataTable
             rows={country_coverage}
             columns={COUNTRY_COVERAGE_COLUMNS}
@@ -64,7 +99,7 @@ export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
             downloadLabel="Download country coverage (CSV)"
           />
         </Details>
-        <OptionalDataset status={bundle.dataset_status.large_returns} label="Large-return flags">
+        {local ? <OptionalDataset status={bundle.dataset_status.large_returns} label="Large-return flags">
           <Details summary="Details: large daily return flags">
           <DataTable
             rows={large_returns}
@@ -74,10 +109,41 @@ export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
             emptyMessage="No large daily returns flagged."
           />
           </Details>
-        </OptionalDataset>
+        </OptionalDataset> : null}
       </SubSection>
 
-      <OptionalDataset status={bundle.dataset_status.monthly} label="Monthly benchmark">
+      <SubSection title="Limitations">
+        <Callout variant="warning">
+          <p>
+            These are observational associations for USD-traded country ETF proxies, including currency exposure;
+            they do not establish causal effects on local equity markets. Weak evidence is not proof of no effect.
+          </p>
+          <p className="mt-2">{bundle.overview.definitions.inference}</p>
+          <p className="mt-2">{copy.use_note} This is not investment advice.</p>
+        </Callout>
+      </SubSection>
+
+      <SubSection title="Research downloads">
+        <p className="text-sm text-ink-soft">
+          Result tables and their definitions can be downloaded beside the evidence above. Coverage is available
+          in the table here. These summaries are distinct from the underlying source data.
+        </p>
+        {downloads.length ? (
+          <ul className="space-y-2 text-sm">
+            {downloads.map((download) => (
+              <li key={download.path}>
+                <a className="font-medium text-accent hover:underline" href={publicPath(download.path)} download>
+                  {download.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-ink-muted">Approved data download not available for this snapshot.</p>
+        )}
+      </SubSection>
+
+      {local ? <OptionalDataset status={bundle.dataset_status.monthly} label="Monthly benchmark">
         <SubSection title="Monthly benchmark (separate from the daily panel)">
         <Callout variant="warning" title="Keep the daily and monthly evidence separate">
           {notices.cluster} {notices.mode_priority}
@@ -134,11 +200,11 @@ export function DataAndMethods({ bundle }: { bundle: FrontendBundle }) {
           </Callout>
         )}
         </SubSection>
-      </OptionalDataset>
+      </OptionalDataset> : null}
 
-      <SubSection title="Glossary">
-        <Glossary terms={copy.glossary} />
-      </SubSection>
+      <Details summary="Glossary">
+        <Glossary terms={glossary} />
+      </Details>
     </Section>
   );
 }
