@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from gprobs.dashboard import export
 from gprobs.dashboard.contracts import OUTPUT_SPECS
@@ -177,3 +178,183 @@ def test_build_frontend_payloads_handles_missing_data(tmp_path):
     assert payloads["manifest"]["datasets"] == ["copy"]
     assert payloads["manifest"]["missing_files"]
     assert payloads["copy"]["central_question"]
+
+
+def _write_output(root: Path, name: str, table: pd.DataFrame) -> None:
+    table.to_csv(root / OUTPUT_SPECS[name].path.relative_to(export.PROJECT_ROOT), index=False)
+
+
+def _write_shock_selection_fixture(root: Path) -> None:
+    _write_minimal_processed(root)
+    panel_path = root / OUTPUT_SPECS["analysis_panel"].path.relative_to(export.PROJECT_ROOT)
+    panel = pd.read_csv(panel_path)
+    panel["date"] = ["2024-01-01", "2024-03-01"]
+    _write_output(root, "analysis_panel", panel)
+    gpr_path = root / OUTPUT_SPECS["gpr"].path.relative_to(export.PROJECT_ROOT)
+    template = pd.read_csv(gpr_path).iloc[0].to_dict()
+    gpr = pd.DataFrame([
+        {**template, "date": date, "gpr": 100.0, "gpr_change": change, "gpr_change_shock": flag}
+        for date, change, flag in [
+            ("2023-12-25", 1000.0, True),
+            ("2024-01-02", 900.0, True),
+            ("2024-01-30", 4.0, True),
+            ("2024-02-01", 50.0, False),
+            ("2024-02-29", 10.0, True),
+            ("2024-04-01", 2000.0, True),
+        ]
+    ])
+    _write_output(root, "gpr", gpr)
+
+
+def test_overview_dates_counts_and_highlights_use_the_displayed_sample(tmp_path):
+    _write_shock_selection_fixture(tmp_path)
+    # A selected peak can fail market-model history requirements for every ETF.
+    pd.DataFrame({"event_date": ["2024-01-30", "2024-01-30"]}).to_csv(
+        tmp_path / "data" / "processed" / "event_windows_abnormal.csv", index=False
+    )
+
+    payloads = export.build_frontend_payloads(root=tmp_path)
+    headline = payloads["overview"]["headline"]
+    timeline = payloads["gpr_timeline"]
+
+    assert headline["shock_count"] == payloads["manifest"]["shock_count"] == 3
+    assert headline["selected_event_count"] == 2
+    assert headline["represented_event_count"] == 1
+    assert headline["start_date"] == "2024-01-01"
+    assert headline["end_date"] == "2024-03-01"
+    assert [row["date"] for row in timeline["top_shocks"]] == [
+        "2024-01-02", "2024-02-01", "2024-02-29", "2024-01-30",
+    ]
+    assert [row["date"] for row in timeline["selected_events"]] == ["2024-01-30", "2024-02-29"]
+    assert [row["represented_in_abnormal_study"] for row in timeline["selected_events"]] == [True, False]
+    # Clipping before selection would incorrectly promote January 2 to a peak.
+    largest = timeline["top_shocks"][0]
+    assert largest["gpr_change_shock"] is True
+    assert largest["selected_for_event_study"] is False
+    assert timeline["top_shocks"][1]["gpr_change_shock"] is False
+    for row in timeline["series"] + timeline["top_shocks"] + timeline["selected_events"]:
+        assert headline["start_date"] <= row["date"] <= headline["end_date"]
+    definitions = payloads["overview"]["definitions"]
+    assert "90%" in definitions["shock_days"] and "252" in definitions["shock_days"]
+    assert "20 calendar" in definitions["selected_events"]
+    assert "not calendar days" in definitions["event_alignment"]
+    assert "not necessarily flagged" in definitions["largest_jumps"]
+
+
+def test_unrecorded_event_membership_stays_unknown(tmp_path):
+    _write_shock_selection_fixture(tmp_path)
+
+    payloads = export.build_frontend_payloads(root=tmp_path)
+
+    assert payloads["overview"]["headline"]["selected_event_count"] == 2
+    assert payloads["overview"]["headline"]["represented_event_count"] is None
+    assert all(row["represented_in_abnormal_study"] is None for row in payloads["gpr_timeline"]["selected_events"])
+
+
+def test_recorded_event_dates_must_match_the_gpr_selection(tmp_path):
+    _write_shock_selection_fixture(tmp_path)
+    pd.DataFrame({"event_date": ["2024-01-02"]}).to_csv(
+        tmp_path / "data" / "processed" / "event_windows_abnormal.csv", index=False
+    )
+
+    with pytest.raises(ValueError, match="Recorded abnormal event dates"):
+        export.build_frontend_payloads(root=tmp_path)
+
+
+def test_event_inference_and_accumulation_are_exported_without_changing_estimates(tmp_path):
+    _write_minimal_processed(tmp_path)
+    abnormal = pd.DataFrame([
+        {
+            "market_group": "emerging", "relative_day": day,
+            "average_abnormal_return": average, "cumulative_average_abnormal_return": cumulative,
+            "observation_count": observations, "event_count": events,
+            "std_error": error, "t_stat": t_stat, "p_value": p_value,
+        }
+        for day, average, cumulative, observations, events, error, t_stat, p_value in [
+            (-5, -0.001, -0.003, 9, 2, 0.001, -3.0, 0.05),
+            (0, 0.002, 0.005, 10, 3, 0.002, 2.5, 0.10),
+            (5, 0.003, 0.009, 10, 3, 0.0, float("inf"), float("nan")),
+        ]
+    ])
+    raw = pd.DataFrame([
+        {
+            "market_group": "emerging", "relative_day": day, "average_return": 0.012,
+            "cumulative_average_return": cumulative, "observation_count": 20, "event_count": 6,
+        }
+        for day, cumulative in [(-3, 0.011), (0, 0.023), (5, 0.035)]
+    ])
+    _write_output(tmp_path, "abnormal_event_study", abnormal.assign(unpublished_note="internal"))
+    _write_output(tmp_path, "event_study", raw.assign(unpublished_note="internal"))
+
+    payloads = export.build_frontend_payloads(root=tmp_path)
+    rows = {row["relative_day"]: row for row in payloads["event_study"]}
+    assert all("unpublished_note" not in row for row in rows.values())
+
+    for source in abnormal.to_dict(orient="records"):
+        exported = rows[source["relative_day"]]
+        for field, value in source.items():
+            if field == "t_stat" and source["relative_day"] == 5 or pd.isna(value):
+                assert exported[field] is None
+            else:
+                assert exported[field] == value
+        assert exported["accumulation_start_day"] == -5
+    for source in raw.to_dict(orient="records"):
+        exported = rows[source["relative_day"]]
+        assert exported["cumulative_average_return"] == source["cumulative_average_return"]
+        assert exported["average_return"] == source["average_return"]
+        assert exported["raw_accumulation_start_day"] == -3
+        assert exported["raw_observation_count"] == 20
+        assert exported["raw_event_count"] == 6
+    assert rows[0]["cumulative_average_abnormal_return"] == 0.005  # No day-0 rebasing.
+    assert rows[-3]["cumulative_average_abnormal_return"] is None
+    assert rows[-5]["cumulative_average_return"] is None
+    reader = payloads["reader_summaries"]["market_reaction"]
+    assert [row["relative_day"] for row in reader] == [0, 5]
+    for row in reader:
+        for field in ["std_error", "t_stat", "p_value", "observation_count", "event_count", "accumulation_start_day"]:
+            assert row[field] == rows[row["relative_day"]][field]
+        assert "not rebased" in row["plain_note"]
+        assert "not adjusted for dependence" in row["plain_note"]
+    definitions = payloads["overview"]["definitions"]
+    assert "decimal log-return" in definitions["return_units"]
+    assert "multiplying by 100" in definitions["return_units"]
+    assert "neither series resets" in definitions["accumulation"]
+    assert "raw-window limitation, left unchanged" in definitions["accumulation"]
+    assert "pre-inception events" in definitions["accumulation"]
+    assert "not adjusted for dependence" in definitions["inference"]
+    # A zero SE and missing p-value must not introduce nonstandard JSON Infinity/NaN.
+    json.dumps(payloads["event_study"], allow_nan=False)
+    json.dumps(reader, allow_nan=False)
+
+
+def test_empirical_takeaways_follow_snapshot_coefficients_and_country_count(tmp_path):
+    _write_minimal_processed(tmp_path)
+    columns = ["term", "estimate", "std_error", "t_stat", "p_value"]
+    controlled = pd.DataFrame([
+        ["gpr_change_z", -0.0012, 0.0003, -4.0, 0.002],
+        ["gpr_change_z:emerging_market", 0.0004, 0.0008, 0.5, 0.65],
+    ], columns=columns)
+    date_fe = pd.DataFrame([
+        ["gpr_change_z:emerging_market", -0.0007, 0.0009, -0.8, 0.45],
+    ], columns=columns)
+    _write_output(tmp_path, "controlled_regression", controlled)
+    _write_output(tmp_path, "date_fe_regression", date_fe)
+    controlled_before = controlled.copy(deep=True)
+    date_fe_before = date_fe.copy(deep=True)
+
+    first = export.build_frontend_payloads(root=tmp_path)
+
+    assert first["copy"]["current_answer_points"] == export.build_snapshot_answer(controlled, date_fe)
+    assert first["copy"]["main_takeaway"] == first["copy"]["current_answer_points"][0]
+    assert "1 country ETF proxies" in first["copy"]["intro"]
+    assert first["regression"]["controlled"] == controlled.to_dict(orient="records")
+    assert first["regression"]["date_fe"] == date_fe.to_dict(orient="records")
+    pd.testing.assert_frame_equal(controlled, controlled_before)
+    pd.testing.assert_frame_equal(date_fe, date_fe_before)
+
+    controlled.loc[0, ["estimate", "p_value"]] = [0.0001, 0.9]
+    _write_output(tmp_path, "controlled_regression", controlled)
+    second = export.build_frontend_payloads(root=tmp_path)
+
+    assert second["copy"]["main_takeaway"] != first["copy"]["main_takeaway"]
+    assert second["copy"]["current_answer_points"] == export.build_snapshot_answer(controlled, date_fe)

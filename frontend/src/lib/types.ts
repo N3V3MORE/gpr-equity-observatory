@@ -70,12 +70,16 @@ export interface OverviewPayload {
     start_date: string;
     end_date: string;
     shock_count: number;
+    selected_event_count: number;
+    represented_event_count: number | null;
   };
+  definitions: Record<"shock_days" | "largest_jumps" | "selected_events" | "event_alignment" | "accumulation" | "inference" | "return_units", string>;
 }
 
 export interface GprTimelinePayload {
   series: Row[];
   top_shocks: Row[];
+  selected_events: Row[];
 }
 
 export interface MonthlyPayload {

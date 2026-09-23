@@ -173,7 +173,7 @@ test("unsupported terms and market groups are unavailable rather than mislabeled
   const bundle = await runtime(t, payloads).loadBundle();
   assert.equal(bundle.dataset_status.quantile_regression, "unavailable");
   assert.equal(bundle.dataset_status.local_projections, "unavailable");
-  payloads.event_study.push({ market_group: "unknown", relative_day: 0, cumulative_average_abnormal_return: 1, cumulative_average_return: 1 });
+  payloads.event_study.push({ ...payloads.event_study[0], market_group: "unknown" });
   await assert.rejects(runtime(t, payloads).loadBundle(), /event_study.market_group/);
 });
 
@@ -183,4 +183,50 @@ test("a partial Prediction Lab cannot look available", async (t) => {
   const bundle = await runtime(t, payloads).loadBundle();
   assert.equal(bundle.dataset_status.prediction_summary, "unavailable");
   assert.equal(bundle.dataset_status.overview, "available");
+});
+
+for (const field of ["average_abnormal_return", "std_error", "t_stat", "p_value", "observation_count", "event_count", "accumulation_start_day"]) {
+  test(`required event-study detail includes ${field}, preserving unavailable values`, async (t) => {
+    const payloads = validSnapshot();
+    delete payloads.event_study[0][field];
+    await assert.rejects(runtime(t, payloads).loadBundle(), new RegExp(field));
+  });
+}
+
+test("inference fields retain their original units, zero and null", async (t) => {
+  const payloads = validSnapshot();
+  Object.assign(payloads.event_study[0], { cumulative_average_abnormal_return: 0.00725, std_error: 0.000629152869606, t_stat: 11.523431506465876, p_value: 0.00140305562648, observation_count: 4, event_count: 2, accumulation_start_day: -2 });
+  const bundle = await runtime(t, payloads).loadBundle();
+  assert.deepEqual(bundle.event_study, payloads.event_study);
+  assert.equal(bundle.event_study[1].p_value, null);
+});
+
+for (const [label, mutate] of [
+  ["flagged shock count", (p) => { p.overview.headline.shock_count = p.manifest.shock_count = 1; }],
+  ["selected event count", (p) => { p.overview.headline.selected_event_count = 1; }],
+  ["represented event count", (p) => { p.overview.headline.represented_event_count = 1; }],
+  ["timeline sample coverage", (p) => { p.gpr_timeline.series[0].date = "2023-12-31"; }],
+  ["country sample coverage", (p) => { p.country_coverage[0].last_date = "2024-01-04"; }],
+  ["p_value", (p) => { p.event_study[0].p_value = 2; }],
+  ["event_count", (p) => { p.event_study[0].event_count = -1; }],
+  ["relative_day", (p) => { p.event_study[0].relative_day = 0.5; }],
+]) {
+  test(`inconsistent displayed ${label} is rejected`, async (t) => {
+    const payloads = validSnapshot(); mutate(payloads);
+    await assert.rejects(runtime(t, payloads).loadBundle(), new RegExp(label));
+  });
+}
+
+test("highlighted and selected dates must match the displayed timeline", async (t) => {
+  const payloads = validSnapshot();
+  const event = { ...payloads.gpr_timeline.series[2], gpr_change: 1, gpr_act: 1, gpr_threat: 1, gpr_change_shock: true, selected_for_event_study: true };
+  payloads.gpr_timeline.series[2] = event;
+  payloads.gpr_timeline.top_shocks = [{ ...event }];
+  payloads.gpr_timeline.selected_events = [{ ...event, represented_in_abnormal_study: null }];
+  payloads.overview.headline.selected_event_count = 1;
+  payloads.overview.headline.shock_count = payloads.manifest.shock_count = 1;
+  const api = runtime(t, payloads);
+  assert.equal((await api.loadBundle()).overview.headline.represented_event_count, null);
+  payloads.gpr_timeline.top_shocks[0].date = "2023-12-31";
+  await assert.rejects(api.loadBundle(), /must match the displayed timeline/);
 });

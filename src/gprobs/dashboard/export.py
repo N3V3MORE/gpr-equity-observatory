@@ -17,7 +17,14 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from gprobs.config import DRAWDOWN_HORIZON_DAYS, DRAWDOWN_THRESHOLD
+from gprobs.analysis.event_study import select_peak_cluster_events
+from gprobs.config import (
+    DEFAULT_GPR_SHOCK_QUANTILE,
+    DRAWDOWN_HORIZON_DAYS,
+    DRAWDOWN_THRESHOLD,
+    EVENT_MIN_GAP_DAYS,
+    GPR_EXPANDING_SHOCK_MIN_PERIODS,
+)
 from gprobs.dashboard.components import (
     BEGINNER_TAB_GUIDES,
     CENTRAL_PROJECT_QUESTION,
@@ -32,6 +39,7 @@ from gprobs.dashboard.components import (
     OVERVIEW_JOB_STATEMENTS,
     OVERVIEW_READER_PATH,
     PREDICTION_METRIC_EXPLANATIONS,
+    build_snapshot_answer,
 )
 from gprobs.dashboard.contracts import (
     OUTPUT_SPECS,
@@ -111,13 +119,13 @@ def _missing_spec_paths(root: Path) -> list[str]:
 def _scalar(value: Any) -> Any:
     if value is None:
         return None
-    if isinstance(value, float) and math.isnan(value):
+    if isinstance(value, float) and not math.isfinite(value):
         return None
     if isinstance(value, np.integer):
         return int(value)
     if isinstance(value, np.floating):
         v = float(value)
-        return None if math.isnan(v) else v
+        return None if not math.isfinite(v) else v
     if isinstance(value, np.bool_):
         return bool(value)
     if isinstance(value, pd.Timestamp):
@@ -187,6 +195,8 @@ def _output_file_rows(outputs: dict[str, pd.DataFrame]) -> list[dict[str, Any]]:
 
 
 def _event_study_reader_rows(abnormal: pd.DataFrame) -> list[dict[str, Any]]:
+    abnormal = abnormal.copy()
+    abnormal["accumulation_start_day"] = abnormal.groupby("market_group")["relative_day"].transform("min")
     wanted_days = [0, 1, 5, 10]
     key_days = abnormal.loc[abnormal["relative_day"].isin(wanted_days)].copy()
     if key_days.empty:
@@ -198,6 +208,7 @@ def _event_study_reader_rows(abnormal: pd.DataFrame) -> list[dict[str, Any]]:
         group = _market_group_label(row["market_group"])
         day = int(row["relative_day"])
         estimate = row["cumulative_average_abnormal_return"]
+        start_day = int(row["accumulation_start_day"])
         direction = _direction_label(estimate)
         strength = _p_value_reader_label(row.get("p_value"))
         rows.append(
@@ -205,15 +216,24 @@ def _event_study_reader_rows(abnormal: pd.DataFrame) -> list[dict[str, Any]]:
                 "market_group": group,
                 "relative_day": day,
                 "cumulative_average_abnormal_return": estimate,
+                "average_abnormal_return": row["average_abnormal_return"],
+                "std_error": row["std_error"],
+                "t_stat": row["t_stat"],
+                "p_value": row["p_value"],
+                "observation_count": row["observation_count"],
+                "event_count": row["event_count"],
+                "accumulation_start_day": start_day,
                 "direction": direction,
                 "evidence_strength": strength,
                 "plain_note": (
-                    f"{group} average abnormal return was {direction.lower()} by day {day}. "
-                    f"Treat this as {strength.lower()}, not as a one-day rule."
+                    f"{group} cumulative abnormal log return was {direction.lower()} at relative day {day}; "
+                    f"the displayed series starts at day {start_day} and is not rebased at this checkpoint. "
+                    f"The existing p-value is {strength.lower()} and is not adjusted for dependence "
+                    "between ETFs exposed to common events. Weak evidence is not proof of no effect."
                 ),
             }
         )
-    return rows
+    return [{key: _scalar(value) for key, value in row.items()} for row in rows]
 
 
 def _first_term_row(df: pd.DataFrame, term: str) -> pd.Series | None:
@@ -327,14 +347,46 @@ def _static_copy() -> dict[str, Any]:
     }
 
 
-def _overview_payloads(outputs: dict[str, pd.DataFrame], panel: pd.DataFrame, gpr: pd.DataFrame) -> dict[str, Any]:
+def _recorded_abnormal_event_dates(root: Path, selected_dates: pd.Series) -> pd.DatetimeIndex | None:
+    path = root / "data" / "processed" / "event_windows_abnormal.csv"
+    if not path.exists():
+        return None
+    recorded = pd.read_csv(path, usecols=["event_date"])
+    dates = pd.DatetimeIndex(pd.to_datetime(recorded["event_date"], errors="raise").drop_duplicates())
+    if dates.isna().any() or not dates.isin(selected_dates).all():
+        raise ValueError("Recorded abnormal event dates do not match the selected GPR events.")
+    return dates
+
+
+def _overview_payloads(
+    outputs: dict[str, pd.DataFrame], panel: pd.DataFrame, gpr: pd.DataFrame, root: Path
+) -> dict[str, Any]:
     start_date = panel["date"].min().date().isoformat()
     end_date = panel["date"].max().date().isoformat()
     country_count = int(panel["country"].nunique())
-    shock_count = int(gpr["gpr_change_shock"].sum())
-
-    gpr_window = gpr.loc[gpr["date"].between(panel["date"].min(), panel["date"].max())].sort_values("date")
-    top_shocks = gpr.sort_values("gpr_change", ascending=False).head(25)
+    gpr = gpr.copy()
+    gpr["gpr_change_shock"] = gpr["gpr_change_shock"].eq(True)
+    # Match run_event_study: select peaks before restricting the overview dates.
+    selected_dates = select_peak_cluster_events(
+        gpr, shock_column="gpr_change_shock", value_column="gpr_change", min_gap_days=EVENT_MIN_GAP_DAYS
+    )
+    gpr["selected_for_event_study"] = gpr["date"].isin(selected_dates)
+    gpr_window = gpr.loc[gpr["date"].between(start_date, end_date)].sort_values("date")
+    shock_count = int(gpr_window["gpr_change_shock"].sum())
+    top_shocks = gpr_window.dropna(subset=["gpr_change"]).sort_values("gpr_change", ascending=False).head(25)
+    selected_events = gpr_window.loc[
+        gpr_window["selected_for_event_study"], ["date", "gpr", "gpr_change", "gpr_change_shock"]
+    ].copy()
+    recorded_dates = _recorded_abnormal_event_dates(root, selected_dates)
+    represented_count = None
+    selected_events["represented_in_abnormal_study"] = None
+    if recorded_dates is not None:
+        selected_events["represented_in_abnormal_study"] = selected_events["date"].isin(recorded_dates)
+        represented_count = int(((recorded_dates >= start_date) & (recorded_dates <= end_date)).sum())
+    timeline_columns = [
+        "date", "gpr", "gpr_change", "gpr_act", "gpr_threat", "event",
+        "gpr_change_shock", "selected_for_event_study",
+    ]
 
     group_chart = outputs["group_returns"].copy()
     group_chart["cumulative_average_return"] = group_chart.groupby("market_group")[
@@ -350,15 +402,60 @@ def _overview_payloads(outputs: dict[str, pd.DataFrame], panel: pd.DataFrame, gp
                 "start_date": start_date,
                 "end_date": end_date,
                 "shock_count": shock_count,
+                "selected_event_count": int(len(selected_events)),
+                "represented_event_count": represented_count,
+            },
+            "definitions": {
+                "shock_days": (
+                    "Flagged GPR-change days within the displayed ETF-panel dates, using the stored "
+                    f"expanding-window flag: change at or above the prior-data {DEFAULT_GPR_SHOCK_QUANTILE:.0%} "
+                    f"quantile after at least {GPR_EXPANDING_SHOCK_MIN_PERIODS} prior observations."
+                ),
+                "largest_jumps": (
+                    "The 25 largest available daily GPR index-point changes within the displayed sample. "
+                    "These highlighted dates are not necessarily flagged days or selected event-study dates."
+                ),
+                "selected_events": (
+                    "Peak dates are selected from flagged days over the full GPR source history before "
+                    f"clipping this list to the displayed sample: gaps of at least {EVENT_MIN_GAP_DAYS} calendar "
+                    "days separate clusters, and the largest GPR change in each cluster is selected. "
+                    "Selection does not guarantee usable ETF estimation history. Represented dates come "
+                    "from the recorded abnormal-event windows when available; otherwise they are unknown. "
+                    "Per-group, per-day contributing event counts are reported in the inference table."
+                ),
+                "event_alignment": (
+                    "Day 0 is each ETF's first available trading observation on or after the GPR event date; "
+                    "relative days count ETF trading observations, not calendar days."
+                ),
+                "accumulation": (
+                    "Abnormal cumulative returns sum each ETF-event's abnormal log returns from its first "
+                    "available relative day, then average those cumulative sums. Raw cumulative returns sum "
+                    "the group average log return from its earliest relative day. The table reports each "
+                    "group series' earliest day; boundary-truncated ETF-event windows can start later. "
+                    "Negative relative days are included: neither series resets to zero on day 0. "
+                    "Known raw-window limitation, left unchanged: events before an ETF's first observation "
+                    "can be aligned to that first observation, so raw counts can include pre-inception events. "
+                    "The abnormal-return builder excludes those cases through its estimation-history requirement."
+                ),
+                "inference": (
+                    "Existing standard errors equal the sample standard deviation of ETF-event cumulative "
+                    "abnormal returns divided by the square root of their count; p-values use a two-sided "
+                    "Student t test. This inference is not adjusted for dependence between ETFs exposed "
+                    "to common events. Observation counts describe nonmissing daily abnormal returns; "
+                    "event counts describe distinct dates at that relative day. No confidence intervals "
+                    "are supplied. Weak evidence is not proof of no effect."
+                ),
+                "return_units": (
+                    "Returns and standard errors are decimal log-return units in the export; multiplying "
+                    "by 100 gives log-return percentage points. They are USD country-ETF proxies, not "
+                    "local-market simple returns, causal effects, or trading forecasts."
+                ),
             },
         },
         "gpr_timeline": {
-            "series": _df_records(
-                gpr_window[["date", "gpr", "gpr_change", "gpr_act", "gpr_threat", "event"]]
-            ),
-            "top_shocks": _df_records(
-                top_shocks[["date", "gpr", "gpr_change", "gpr_act", "gpr_threat", "event"]]
-            ),
+            "series": _df_records(gpr_window[timeline_columns]),
+            "top_shocks": _df_records(top_shocks[timeline_columns]),
+            "selected_events": _df_records(selected_events),
         },
         "group_returns": _df_records(
             group_chart[["date", "market_group", "average_return", "cumulative_average_return"]]
@@ -368,12 +465,17 @@ def _overview_payloads(outputs: dict[str, pd.DataFrame], panel: pd.DataFrame, gp
 
 
 def _explanation_payloads(outputs: dict[str, pd.DataFrame]) -> dict[str, Any]:
-    abnormal = outputs["abnormal_event_study"]
-    raw = outputs["event_study"]
+    abnormal = outputs["abnormal_event_study"].loc[
+        :, list(OUTPUT_SPECS["abnormal_event_study"].required_columns)
+    ].copy()
+    abnormal["accumulation_start_day"] = abnormal.groupby("market_group")["relative_day"].transform("min")
+    raw = outputs["event_study"].loc[:, list(OUTPUT_SPECS["event_study"].required_columns)].copy()
+    raw["raw_accumulation_start_day"] = raw.groupby("market_group")["relative_day"].transform("min")
+    raw = raw.rename(columns={"observation_count": "raw_observation_count", "event_count": "raw_event_count"})
     event_study = (
-        abnormal[["relative_day", "market_group", "cumulative_average_abnormal_return"]]
+        abnormal
         .merge(
-            raw[["relative_day", "market_group", "cumulative_average_return"]],
+            raw,
             on=["relative_day", "market_group"],
             how="outer",
         )
@@ -492,11 +594,18 @@ def build_frontend_payloads(root: Path | None = None) -> dict[str, Any]:
     panel = outputs["analysis_panel"]
     gpr = outputs["gpr"]
 
-    payloads.update(_overview_payloads(outputs, panel, gpr))
+    payloads.update(_overview_payloads(outputs, panel, gpr, root))
     payloads.update(_explanation_payloads(outputs))
     payloads.update(_prediction_payloads(outputs))
     payloads.update(_data_methods_payloads(outputs, panel, root))
     payloads.update(_reader_summary_payloads(outputs))
+    answer_points = build_snapshot_answer(outputs["controlled_regression"], outputs["date_fe_regression"])
+    payloads["copy"]["intro"] = (
+        "This dashboard studies whether equity markets respond to geopolitical risk shocks, "
+        f"using {payloads['overview']['headline']['country_count']} country ETF proxies in this snapshot."
+    )
+    payloads["copy"]["main_takeaway"] = answer_points[0]
+    payloads["copy"]["current_answer_points"] = answer_points
 
     payloads["manifest"] = {
         "schema_version": SNAPSHOT_SCHEMA_VERSION,
@@ -507,7 +616,7 @@ def build_frontend_payloads(root: Path | None = None) -> dict[str, Any]:
         "start_date": panel["date"].min().date().isoformat(),
         "end_date": panel["date"].max().date().isoformat(),
         "country_count": int(panel["country"].nunique()),
-        "shock_count": int(gpr["gpr_change_shock"].sum()),
+        "shock_count": payloads["overview"]["headline"]["shock_count"],
         "monthly_mode": (
             payloads["monthly"]["mode"] if payloads["monthly"].get("available") else None
         ),

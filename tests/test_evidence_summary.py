@@ -96,6 +96,11 @@ def test_build_evidence_summary_collects_core_outputs_in_order():
     assert summary.loc[1, "p_value"] == 0.01
     assert summary.loc[4, "inference"] == "i.i.d. QuantReg asymptotic p-value"
     assert summary.loc[7, "p_value"] == 0.20
+    assert summary.loc[7, "estimate"] == -0.001
+    assert summary.loc[7, "unit"] == "percent"
+    assert "-10 to +10 trading-day endpoint" in summary.loc[7, "focus"]
+    assert "not adjusted for common-event dependence between ETFs" in summary.loc[7, "inference"]
+    assert "not a day-0-onward return" in summary.loc[7, "plain_english"]
     assert summary.loc[9, "estimate"] == 0.65
 
 

@@ -10,8 +10,9 @@ FEATURE_IMPORTANCE_CAPTION = (
     "drawdown-risk classifier, not out-of-sample evidence by itself."
 )
 PREDICTION_LAB_CONCLUSION = (
-    "Prediction Lab currently shows modest drawdown-risk ranking signal, mostly from volatility and broad market "
-    "features; GPR alone is weak and should not be read as a price forecast or trading signal."
+    "Compare the displayed out-of-sample scores for GPR alone, volatility, market controls and combined "
+    "features in this snapshot. Ranking performance depends on the evaluation sample and does not "
+    "establish a price forecast or trading signal."
 )
 MODEL_DESCRIPTIONS = {
     "constant_baseline": "Average historical event rate only",

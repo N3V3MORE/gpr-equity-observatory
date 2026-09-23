@@ -73,8 +73,11 @@ function emptyBundle(): FrontendBundle {
         drawdown_threshold: 0,
       },
     },
-    overview: { headline: { country_count: 0, start_date: "", end_date: "", shock_count: 0 } },
-    gpr_timeline: { series: [], top_shocks: [] },
+    overview: {
+      headline: { country_count: 0, start_date: "", end_date: "", shock_count: 0, selected_event_count: 0, represented_event_count: null },
+      definitions: { shock_days: "", largest_jumps: "", selected_events: "", event_alignment: "", accumulation: "", inference: "", return_units: "" },
+    },
+    gpr_timeline: { series: [], top_shocks: [], selected_events: [] },
     group_returns: [],
     evidence_map: [],
     event_study: [],
@@ -193,6 +196,20 @@ function validateCopy(value: unknown) {
 }
 
 const REGRESSION_NUMBERS = ["estimate", "std_error", "t_stat", "p_value"];
+const EVENT_INFERENCE_NUMBERS = ["std_error", "t_stat", "p_value", "observation_count", "event_count", "accumulation_start_day"];
+function eventInference(value: Row[], field: string) {
+  for (const row of value) {
+    check(Number.isInteger(row.relative_day), `${field}.relative_day`);
+    check(row.p_value === null || (Number(row.p_value) >= 0 && Number(row.p_value) <= 1), `${field}.p_value`);
+    check(row.std_error === null || Number(row.std_error) >= 0, `${field}.std_error`);
+    for (const key of ["observation_count", "event_count"]) {
+      check(row[key] === null || (Number.isInteger(row[key]) && Number(row[key]) >= 0), `${field}.${key}`);
+    }
+    if (finite(row.cumulative_average_abnormal_return)) {
+      check(Number.isInteger(row.accumulation_start_day) && Number(row.accumulation_start_day) <= Number(row.relative_day), `${field}.accumulation_start_day`);
+    }
+  }
+}
 function validatePayload(name: DatasetName, value: unknown) {
   switch (name) {
     case "copy": validateCopy(value); return;
@@ -200,17 +217,32 @@ function validatePayload(name: DatasetName, value: unknown) {
       record(value, name); record(value.headline, `${name}.headline`);
       check(Number.isInteger(value.headline.country_count) && Number(value.headline.country_count) > 0, "overview.country_count");
       check(Number.isInteger(value.headline.shock_count) && Number(value.headline.shock_count) >= 0, "overview.shock_count");
-      check(date(value.headline.start_date) && date(value.headline.end_date), "overview dates"); return;
+      check(date(value.headline.start_date) && date(value.headline.end_date), "overview dates");
+      check(Number.isInteger(value.headline.selected_event_count) && Number(value.headline.selected_event_count) >= 0, "overview.selected_event_count");
+      check(value.headline.represented_event_count === null || (Number.isInteger(value.headline.represented_event_count) && Number(value.headline.represented_event_count) >= 0), "overview.represented_event_count");
+      record(value.definitions, "overview.definitions");
+      for (const key of ["shock_days", "largest_jumps", "selected_events", "event_alignment", "accumulation", "inference", "return_units"]) check(text(value.definitions[key]), `overview.definitions.${key}`);
+      return;
     case "gpr_timeline":
       record(value, name);
       rows(value.series, `${name}.series`, ["date"], ["gpr"]);
       observed(value.series, "gpr", name);
       rows(value.top_shocks, `${name}.top_shocks`, ["date"], ["gpr", "gpr_change", "gpr_act", "gpr_threat"], [], true);
-      check([...value.series, ...value.top_shocks].every((row) => date(row.date)), `${name}.date`); return;
+      rows(value.selected_events, `${name}.selected_events`, ["date"], ["gpr", "gpr_change"], [], true);
+      check([...value.series, ...value.top_shocks, ...value.selected_events].every((row) => date(row.date)), `${name}.date`);
+      for (const row of [...value.series, ...value.top_shocks]) {
+        check(typeof row.gpr_change_shock === "boolean" && typeof row.selected_for_event_study === "boolean", `${name}.event flags`);
+      }
+      for (const row of value.selected_events) {
+        check(row.gpr_change_shock === true, `${name}.selected_events.shock flag`);
+        check(row.represented_in_abnormal_study === null || typeof row.represented_in_abnormal_study === "boolean", `${name}.selected_events.represented_in_abnormal_study`);
+      }
+      return;
     case "evidence_map":
       rows(value, name, ["Method", "Question answered", "Direction", "Estimate", "p-value / metric", "Evidence strength", "Plain-English takeaway"], []); return;
     case "event_study":
-      rows(value, name, ["market_group"], ["cumulative_average_abnormal_return"], ["relative_day"]);
+      rows(value, name, ["market_group"], ["average_abnormal_return", "cumulative_average_abnormal_return", ...EVENT_INFERENCE_NUMBERS], ["relative_day"]);
+      eventInference(value, name);
       marketGroups(value, name);
       for (const group of ["developed", "emerging"]) observed(value.filter((row) => row.market_group === group), "cumulative_average_abnormal_return", `${name}.${group}`); return;
     case "regression":
@@ -225,7 +257,8 @@ function validatePayload(name: DatasetName, value: unknown) {
     case "reader_summaries":
       record(value, name);
       rows(value.output_files, `${name}.output_files`, ["file", "reader_page", "plain_meaning"], [], ["rows"]);
-      rows(value.market_reaction, `${name}.market_reaction`, ["market_group", "direction", "evidence_strength", "plain_note"], ["cumulative_average_abnormal_return"], ["relative_day"]);
+      rows(value.market_reaction, `${name}.market_reaction`, ["market_group", "direction", "evidence_strength", "plain_note"], ["cumulative_average_abnormal_return", ...EVENT_INFERENCE_NUMBERS], ["relative_day"]);
+      eventInference(value.market_reaction, `${name}.market_reaction`);
       rows(value.regression_translation, `${name}.regression_translation`, ["test", "what_it_checks", "direction", "evidence_strength", "plain_note"], ["estimate", "p_value"]); return;
     case "country_coverage":
       rows(value, name, ["country", "ticker", "market_group", "first_date", "last_date"], [], ["observation_count"]);
@@ -275,6 +308,36 @@ function includesDataset(manifest: Manifest, name: DatasetName) {
   return manifest.datasets ? manifest.datasets.includes(name) : manifest.profile !== "public";
 }
 
+function validateDisplayedCoverage(bundle: FrontendBundle) {
+  const { headline } = bundle.overview;
+  const { series, top_shocks, selected_events } = bundle.gpr_timeline;
+  const inCoverage = (value: unknown) => String(value) >= headline.start_date && String(value) <= headline.end_date;
+  const timeline = new Map(series.map((row) => [row.date, row]));
+  check(timeline.size === series.length && series.every((row) => inCoverage(row.date)), "timeline sample coverage");
+  check(series.filter((row) => row.gpr_change_shock).length === headline.shock_count, "headline flagged shock count");
+  check(selected_events.length === headline.selected_event_count, "headline selected event count");
+  check(headline.represented_event_count === null
+    ? selected_events.every((row) => row.represented_in_abnormal_study === null)
+    : selected_events.every((row) => typeof row.represented_in_abnormal_study === "boolean")
+      && selected_events.filter((row) => row.represented_in_abnormal_study).length === headline.represented_event_count,
+  "headline represented event count");
+  check(series.filter((row) => row.selected_for_event_study).length === selected_events.length, "timeline selected event count");
+  for (const [name, selectedRows] of [["largest jumps", top_shocks], ["selected events", selected_events]] as const) {
+    check(new Set(selectedRows.map((row) => row.date)).size === selectedRows.length, `${name} duplicate dates`);
+    for (const row of selectedRows) {
+      const source = timeline.get(row.date);
+      check(source && source.gpr === row.gpr && source.gpr_change === row.gpr_change && source.gpr_change_shock === row.gpr_change_shock, `${name} must match the displayed timeline`);
+      if (name === "selected events") check(source.selected_for_event_study === true, "selected event is not selected in timeline");
+      else check(source.selected_for_event_study === row.selected_for_event_study, "largest jumps event selection flag");
+    }
+  }
+  const countries = bundle.country_coverage;
+  check(new Set(countries.map((row) => row.country)).size === headline.country_count, "headline country count");
+  check(countries.every((row) => inCoverage(row.first_date) && inCoverage(row.last_date))
+    && countries.some((row) => row.first_date === headline.start_date)
+    && countries.some((row) => row.last_date === headline.end_date), "country sample coverage");
+}
+
 export async function loadBundle(): Promise<FrontendBundle> {
   const manifest = validateManifest(await fetchJson("manifest.json"));
   const bundle = { ...emptyBundle(), manifest };
@@ -297,6 +360,7 @@ export async function loadBundle(): Promise<FrontendBundle> {
   for (const key of ["country_count", "shock_count", "start_date", "end_date"] as const) {
     check(headline[key] === manifest[key], `overview.${key} does not match manifest`);
   }
+  validateDisplayedCoverage(bundle);
 
   // Optional copy is validated separately so it cannot break the core page.
   const rawCopy = bundle.copy;

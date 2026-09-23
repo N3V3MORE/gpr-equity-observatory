@@ -12,6 +12,7 @@ import {
 } from "@/components/charts";
 import { LazyRollingBeta } from "@/components/LazyRollingBeta";
 import {
+  EVENT_STUDY_COLUMNS,
   MARKET_REACTION_READER_COLUMNS,
   PANEL_ROBUSTNESS_COLUMNS,
   REGRESSION_TERM_COLUMNS,
@@ -21,6 +22,13 @@ import type { FrontendBundle, Row } from "@/lib/types";
 
 export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
   const { copy } = bundle;
+  const definitions = bundle.overview.definitions;
+  const eventDefinitions = [
+    { definition: "Event-day alignment", detail: definitions.event_alignment },
+    { definition: "Accumulation window", detail: definitions.accumulation },
+    { definition: "Inference limitation", detail: definitions.inference },
+    { definition: "Return units", detail: definitions.return_units },
+  ];
 
   return (
     <Section
@@ -29,17 +37,22 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
       title="Do markets look worse around geopolitical-risk shocks?"
       intro={copy.how_to_read["market_response"]}
     >
-      <SubSection title="Market response around shock days" idAnchor="market-response">
+      <SubSection title="Market response around selected GPR events" idAnchor="market-response">
         <ChartCard
-          title="Average cumulative abnormal returns around GPR shock days"
-          caption="Day 0 is the shock day. A line dropping below zero after day 0 means ETFs tended to underperform their normal market-model expectation. Bands and p-values live in the details."
+          title="Average cumulative abnormal returns around selected GPR events"
+          caption="The cumulative path includes pre-event trading days; it is not a day-0-onward return. Values below zero describe cumulative underperformance relative to the fitted market model over the included window. No confidence bands are shown."
         >
           <EventStudyChart rows={bundle.event_study} />
         </ChartCard>
+        <p className="text-xs text-ink-muted">{bundle.overview.definitions.event_alignment}</p>
+        <Callout variant="warning" title="Event-study uncertainty">
+          {bundle.overview.definitions.inference} Weak evidence is not proof of no effect.
+        </Callout>
         <div>
           <h4 className="text-sm font-semibold text-ink">Readable event-study summary</h4>
           <p className="mt-1 text-xs text-ink-muted">
-            This table pulls out the main shock-day checkpoints before the technical robustness checks.
+            These checkpoints come from this snapshot. The cumulative window begins before the event;
+            the endpoint is a relative trading day, not the number of days accumulated from day 0.
           </p>
           <div className="mt-3">
             <DataTable
@@ -50,12 +63,36 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
             />
           </div>
         </div>
+        <Details summary="Details: event-study estimates, uncertainty, counts, and windows">
+          <DataTable
+            rows={eventDefinitions}
+            columns={[{ key: "definition", label: "Definition" }, { key: "detail", label: "Published snapshot definition" }]}
+            downloadFilename="event_study_definitions.csv"
+            downloadLabel="Download event-study definitions (CSV)"
+            compact
+          />
+          <p>
+            One basis point is 0.01 percentage points of log return.
+            {" "}
+            Standard errors, t-statistics, and p-values refer to cumulative abnormal returns.
+            Observation counts are ETF-event rows with a daily abnormal return; event counts are distinct
+            event dates represented at that relative day. Counts can change across the window.
+          </p>
+          <DataTable
+            rows={bundle.event_study}
+            columns={EVENT_STUDY_COLUMNS}
+            downloadFilename="event_study_inference.csv"
+            downloadLabel="Download event-study estimates and inference (CSV)"
+            compact
+          />
+        </Details>
         <OptionalDataset status={bundle.dataset_status.event_robustness} label="Event-study robustness">
           <Details summary="Details: event-study robustness (different shock cutoffs and windows)">
           <p className="text-xs text-ink-muted">
-            This checks whether the conclusion holds when the shock threshold or the post-shock window is changed.
+            This checks sensitivity to the shock threshold and the symmetric window around the event.
+            Each endpoint includes the pre-event side of its window.
           </p>
-          <ChartCard title="Robustness: end-of-window abnormal return">
+          <ChartCard title="Robustness: cumulative abnormal return across the full event window">
             <EventRobustnessChart rows={bundle.event_robustness} />
           </ChartCard>
           </Details>
@@ -68,8 +105,9 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
         </Callout>
         <p className="text-xs text-ink-muted">
           The key term is the <em>emerging-market interaction</em>: the extra association between a GPR jump and
-          returns for emerging-market ETFs relative to developed-market ETFs. Negative and statistically strong
-          would support the idea that emerging markets react more. In the current data, this is not strong.
+          returns for emerging-market ETFs relative to developed-market ETFs. Read its estimate and uncertainty
+          in the published snapshot below. A negative sign alone does not establish a reliable difference.
+          These are associations for USD-traded country ETF proxies, not causal effects on local equity markets.
         </p>
         <div>
           <h4 className="text-sm font-semibold text-ink">Regression translation table</h4>
@@ -92,14 +130,15 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
         </div>
         <Details summary="Details: date fixed-effects model and sample robustness">
           <p className="text-xs text-ink-muted">
-            The date fixed-effects model absorbs common global shocks, so its interaction is the cleanest version of
-            the emerging-market question.
+            The date fixed-effects model absorbs common date-level variation. Its interaction describes a
+            conditional developed-versus-emerging association, not a causal effect.
           </p>
           <RegressionBlock title="Date fixed-effects model" rows={bundle.regression.date_fe} filename="panel_regression_date_fe_terms.csv" />
           <OptionalDataset status={bundle.dataset_status.panel_sample_robustness} label="Sample robustness">
             <h4 className="text-sm font-semibold text-ink">Sample robustness - excluding crisis windows</h4>
           <p className="text-xs text-ink-muted">
-            Large sign or p-value changes would warn that one episode is driving the result.
+            Large sign or p-value changes can indicate sensitivity to an episode. Retaining the same sign
+            after exclusions does not establish a robust GPR effect; magnitude and uncertainty still matter.
           </p>
           <DataTable
             rows={bundle.panel_sample_robustness}
@@ -117,7 +156,7 @@ export function HowMarketsReact({ bundle }: { bundle: FrontendBundle }) {
         </Callout>
         <ChartCard
           title="GPR coefficients across return percentiles"
-          caption="Lower percentiles describe worse return days. A more negative line on the left suggests stronger downside association, but p-values still determine strength."
+          caption="Lower percentiles describe worse return days. A more negative estimate on the left is a descriptive downside association. This chart does not display inference and cannot establish its statistical strength."
         >
           <QuantileChart rows={bundle.quantile_regression} />
         </ChartCard>

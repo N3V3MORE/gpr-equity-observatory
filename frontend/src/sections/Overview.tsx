@@ -6,7 +6,7 @@ import { MetricCard } from "@/components/MetricCard";
 import { OptionalDataset } from "@/components/OptionalDataset";
 import { Section } from "@/components/Section";
 import { GprTimelineChart, CumulativeReturnsChart } from "@/components/charts";
-import { EVIDENCE_MAP_COLUMNS, TOP_SHOCKS_COLUMNS } from "@/lib/labels";
+import { EVIDENCE_MAP_COLUMNS, SELECTED_EVENT_COLUMNS, TOP_SHOCKS_COLUMNS } from "@/lib/labels";
 import { num } from "@/lib/format";
 import type { FrontendBundle } from "@/lib/types";
 
@@ -30,8 +30,9 @@ export function Overview({ bundle }: { bundle: FrontendBundle }) {
         <MetricCard label="Countries" value={num(headline.country_count, "n/a")} hint="Country ETFs in the daily panel" />
         <MetricCard label="Start date" value={headline.start_date || "n/a"} />
         <MetricCard label="End date" value={headline.end_date || "n/a"} />
-        <MetricCard label="GPR shock days" value={num(headline.shock_count, "n/a")} hint="Days with a large jump in geopolitical risk" />
+        <MetricCard label="Flagged GPR shock days" value={num(headline.shock_count, "n/a")} hint="Flagged dates within the displayed panel coverage" />
       </div>
+      <p className="text-xs text-ink-muted">{overview.definitions.shock_days}</p>
 
       <Callout variant="warning" title="What this is - and is not">
         <p className="font-medium">{copy.main_takeaway}</p>
@@ -68,7 +69,7 @@ export function Overview({ bundle }: { bundle: FrontendBundle }) {
 
       <ChartCard
         title="Daily geopolitical risk over time"
-        caption="The line shows the Geopolitical Risk index. Red dots mark the largest daily jumps, which anchor the rest of the analysis."
+        caption={overview.definitions.largest_jumps}
       >
         <GprTimelineChart series={gpr_timeline.series} topShocks={gpr_timeline.top_shocks} />
       </ChartCard>
@@ -102,7 +103,8 @@ export function Overview({ bundle }: { bundle: FrontendBundle }) {
         <div className="min-w-0 lg:col-span-2">
           <h3 className="text-sm font-semibold text-ink">Evidence map - what each method concludes, in plain English</h3>
           <p className="mt-1 text-xs text-ink-muted">
-            Treat weak p-values and exploratory metrics as signals to investigate, not as proof.
+            These estimates and takeaways describe this snapshot. Weak evidence is not proof of no effect;
+            exploratory metrics and sign stability do not establish a robust effect.
           </p>
           <div className="mt-3">
             <DataTable
@@ -114,7 +116,7 @@ export function Overview({ bundle }: { bundle: FrontendBundle }) {
           </div>
         </div>
         <div className="space-y-4">
-          <Callout variant="info" title="What the answer is so far">
+          <Callout variant="info" title="What this snapshot supports">
             <ul className="list-disc space-y-1 pl-4">
               {copy.current_answer_points.map((point) => (
                 <li key={point}>{point}</li>
@@ -133,18 +135,35 @@ export function Overview({ bundle }: { bundle: FrontendBundle }) {
 
       {gpr_timeline.top_shocks.length > 0 ? (
         <div>
-          <h3 className="text-sm font-semibold text-ink">Largest GPR shock days</h3>
+          <h3 className="text-sm font-semibold text-ink">Largest GPR jumps within panel coverage</h3>
           <div className="mt-3">
             <DataTable
               rows={gpr_timeline.top_shocks}
               columns={TOP_SHOCKS_COLUMNS}
               downloadFilename="top_gpr_shocks.csv"
-              downloadLabel="Download top shocks (CSV)"
+              downloadLabel="Download largest GPR jumps (CSV)"
               compact
             />
           </div>
         </div>
       ) : null}
+      <Details summary="Details: flagged shock days and selected event dates">
+        <p>{overview.definitions.selected_events}</p>
+        <p>
+          Selected event dates within panel coverage: <strong>{num(headline.selected_event_count)}</strong>.
+          {" "}Dates represented in the recorded abnormal-return windows within that coverage:
+          {" "}<strong>{num(headline.represented_event_count, "unavailable")}</strong>.
+          Selection does not guarantee usable return or market-model estimation data for every ETF.
+        </p>
+        <DataTable
+          rows={gpr_timeline.selected_events}
+          columns={SELECTED_EVENT_COLUMNS}
+          downloadFilename="selected_event_dates.csv"
+          downloadLabel="Download selected event dates (CSV)"
+          emptyMessage="No event dates were selected within this snapshot's panel coverage."
+          compact
+        />
+      </Details>
     </Section>
   );
 }

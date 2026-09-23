@@ -4,14 +4,16 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from gprobs.reporting.formatting import format_basis_points, format_p_value
+
 DASHBOARD_MODES = ("Beginner", "Technical")
 DASHBOARD_INTRO = (
     "This dashboard studies whether equity markets respond to geopolitical risk shocks, "
     "using 20 country ETF proxies."
 )
 DASHBOARD_MAIN_TAKEAWAY = (
-    "Geopolitical risk appears associated with equity-market risk, but the evidence "
-    "does not strongly prove that emerging markets always react more than developed markets."
+    "Read the estimates and uncertainty in the displayed snapshot. These conditional associations "
+    "do not establish causality or a consistently larger emerging-market response."
 )
 DASHBOARD_USE_NOTE = "Use this dashboard as a research observatory, not as a trading system."
 CENTRAL_PROJECT_QUESTION = (
@@ -84,10 +86,10 @@ METHOD_MAP_ROWS = [
     },
 ]
 OVERVIEW_CURRENT_ANSWER_POINTS = [
-    "GPR is associated with equity-market risk, but the current evidence is mixed rather than dramatic.",
-    "The emerging-market asymmetry is mixed and not statistically strong after controls.",
-    "Prediction Lab shows modest ranking signal for drawdown risk.",
-    "GPR alone is weak compared with volatility and broader market features.",
+    "Use the controlled and date fixed-effects estimates in this snapshot to assess the GPR association.",
+    "Weak statistical evidence is not proof of no effect.",
+    "USD country ETF proxies include currency exposure and are not local equity indexes.",
+    "Optional prediction results describe only the models and evaluation sample displayed.",
 ]
 OVERVIEW_DOES_NOT_PROVE_POINTS = [
     "causality",
@@ -101,22 +103,27 @@ HOW_TO_READ_NOTES = {
         "says about explanation or drawdown-risk ranking. Mixed or weak labels mean the result should stay cautious."
     ),
     "shocks": (
-        "The line shows the GPR index over time. Markers highlight the largest daily GPR changes, which anchor "
-        "the question of what happens when geopolitical risk jumps."
+        "The line and highlighted largest daily GPR jumps use the displayed ETF-panel date range. "
+        "Largest jumps, flagged shock days, and the cluster-peak dates selected for the event study "
+        "are different sets; a highlighted date need not be a selected event."
     ),
     "market_response": (
-        "The line shows average cumulative abnormal returns around GPR shock dates. Day 0 is the "
-        "shock day. A negative line after day 0 means ETFs tended to underperform their "
-        "market-model expectation after shocks."
+        "The line shows average cumulative abnormal returns around selected GPR events. Day 0 is each "
+        "ETF's first observed trading date on or after the event date. Accumulation starts at each "
+        "ETF-event's earliest observed relative day (the negative window boundary for a complete window), "
+        "not at day 0; "
+        "a negative endpoint can include pre-event underperformance. Event-study standard errors and "
+        "p-values are not adjusted for dependence between ETFs exposed to common events."
     ),
     "regression": (
         "The key term is the emerging-market interaction. If it is negative and statistically strong, "
-        "that would support the idea that emerging markets react more. In the current version, this "
-        "evidence is not strong."
+        "that would support an emerging-market differential within the specification. Read the "
+        "estimate and p-value in this snapshot; weak evidence is not proof of no effect."
     ),
     "downside_risk": (
         "Lower return quantiles describe worse return days. A more negative coefficient in the lower "
-        "tail suggests downside association, but p-values still determine how strong the evidence is."
+        "tail suggests downside association. This chart does not display p-values or uncertainty. "
+        "The underlying quantile inference is i.i.d. asymptotic, not dependence-adjusted panel inference."
     ),
     "dynamic_response": (
         "Each horizon shows the estimated cumulative abnormal-return response after a GPR shock. "
@@ -149,11 +156,11 @@ BEGINNER_TAB_GUIDES = {
             ),
             (
                 "Current answer",
-                "GPR is associated with risk, but the emerging-market asymmetry is mixed and not strong.",
+                "Read the controlled and date fixed-effects estimates and p-values in this snapshot.",
             ),
             (
                 "Prediction signal",
-                "Prediction Lab has modest ranking signal, mostly beyond GPR alone.",
+                "When available, compare the displayed out-of-sample scores and evaluation sample.",
             ),
         ],
         "does_not_prove": (
@@ -164,12 +171,12 @@ BEGINNER_TAB_GUIDES = {
         "question": "When did geopolitical risk jump the most?",
         "takeaways": [
             (
-                "Shock days",
+                "Largest jumps",
                 "Marked dates are the largest daily increases in the GPR index.",
             ),
             (
-                "Starting points",
-                "These dates anchor the event studies and follow-up risk checks.",
+                "Different date sets",
+                "Highlighted jumps need not be flagged shock days or selected cluster-peak events.",
             ),
         ],
         "does_not_prove": (
@@ -205,7 +212,7 @@ BEGINNER_TAB_GUIDES = {
             ),
             (
                 "Cautious result",
-                "Current emerging-market asymmetry is mixed and not statistically strong.",
+                "The displayed p-values qualify the estimates; weak evidence is not proof of no effect.",
             ),
             (
                 "Association only",
@@ -256,8 +263,8 @@ BEGINNER_TAB_GUIDES = {
                 "Prediction Lab ranks drawdown risk for ETF-date observations; it does not predict prices.",
             ),
             (
-                "Modest signal",
-                "The full-feature model has some ranking signal, while GPR alone is weak.",
+                "Model comparison",
+                "Compare GPR-only and full-feature scores in the displayed evaluation sample.",
             ),
             (
                 "Probability check",
@@ -324,7 +331,10 @@ BEGINNER_TAB_GUIDES = {
 GLOSSARY_TERMS = {
     "GPR": "Geopolitical Risk index: a news-based measure of geopolitical tension and threat.",
     "ETF": "Exchange-traded fund: this project uses country ETFs as public market proxies.",
-    "shock": "A large jump in GPR, used as an event date or high-risk signal.",
+    "shock": (
+        "A daily GPR increase flagged by the Python shock rule. The event study selects cluster peaks "
+        "from flagged dates; the largest-jump display is a separate ranking."
+    ),
     "control": "Another market variable included so the GPR estimate is not standing alone.",
     "p-value": (
         "A statistical check for how surprising an estimate would be if the true effect "
@@ -364,6 +374,33 @@ PREDICTION_METRIC_EXPLANATIONS = {
         "about 20% of rows in that bucket actually had drawdowns."
     ),
 }
+
+
+def build_snapshot_answer(
+    controlled_regression: pd.DataFrame,
+    date_fe_regression: pd.DataFrame,
+) -> list[str]:
+    """Describe only the supplied snapshot's existing regression results."""
+    def result(table: pd.DataFrame, term: str) -> str:
+        matches = table.loc[table["term"] == term]
+        if matches.empty:
+            return "unavailable"
+        row = matches.iloc[0]
+        return (
+            f"{format_basis_points(row['estimate'])} per one-SD daily GPR jump "
+            f"(p-value {format_p_value(row['p_value'])})"
+        )
+
+    return [
+        "In this snapshot, the controlled developed-market association is "
+        f"{result(controlled_regression, 'gpr_change_z')}.",
+        "The controlled emerging-market differential is "
+        f"{result(controlled_regression, 'gpr_change_z:emerging_market')}; "
+        "the date fixed-effects differential is "
+        f"{result(date_fe_regression, 'gpr_change_z:emerging_market')}.",
+        "These are conditional associations in USD country ETF proxies, including currency exposure.",
+        "Weak statistical evidence is not proof of no effect; compare magnitudes, uncertainty and specifications.",
+    ]
 
 
 def is_beginner_mode(mode: str) -> bool:
@@ -430,8 +467,8 @@ def render_summary_cards() -> None:
         ),
         (
             "Bottom line",
-            "Evidence is useful but mixed. Stronger for general risk association than for "
-            "emerging-market asymmetry.",
+            "Read the estimates and uncertainty in the displayed snapshot. Weak evidence "
+            "is not proof of no effect.",
         ),
     ]
     columns = st.columns(4)

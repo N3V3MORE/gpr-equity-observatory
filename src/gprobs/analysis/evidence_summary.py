@@ -205,12 +205,14 @@ def build_evidence_summary(
         _add_row(
             rows,
             f"Event robustness {market_group}",
-            f"{EVIDENCE_EVENT_SHOCK_QUANTILE:.0%} shock, {EVIDENCE_EVENT_WINDOW_DAYS}-day endpoint",
+            f"{EVIDENCE_EVENT_SHOCK_QUANTILE:.0%} shock, "
+            f"-{EVIDENCE_EVENT_WINDOW_DAYS} to +{EVIDENCE_EVENT_WINDOW_DAYS} trading-day endpoint",
             event_row["cumulative_average_abnormal_return"],
             "percent",
             float(event_row.get("p_value", math.nan)),
-            "cross-sectional t-test across event-ticker CARs",
-            "This is the abnormal-return endpoint under a wider shock definition.",
+            "t-test across ETF-event CARs; not adjusted for common-event dependence between ETFs",
+            "This abnormal-return endpoint includes pre-event days, starting at each ETF-event's "
+            "earliest observed relative day; it is not a day-0-onward return.",
         )
 
     if drawdown_metrics.empty:

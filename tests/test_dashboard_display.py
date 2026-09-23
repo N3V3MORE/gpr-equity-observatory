@@ -102,6 +102,29 @@ def test_build_evidence_map_adds_strength_and_reader_columns():
     assert evidence_map.loc[1, "p-value / metric"] == "n/a"
 
 
+def test_evidence_map_qualifies_legacy_event_labels_without_changing_numbers():
+    summary = pd.DataFrame([{
+        "method": "Event robustness developed",
+        "focus": "90% shock, 10-day endpoint",
+        "estimate": -0.002,
+        "unit": "percent",
+        "p_value": 0.02,
+        "inference": "cross-sectional t-test across event-ticker CARs",
+        "plain_english": "Old endpoint label.",
+    }])
+    original = summary.copy(deep=True)
+
+    evidence_map = app.build_evidence_map(summary)
+
+    assert evidence_map.loc[0, "Estimate"] == "-0.2%"
+    assert evidence_map.loc[0, "p-value / metric"] == "0.020"
+    assert evidence_map.loc[0, "Evidence strength"] == "Unadjusted event-study inference"
+    assert "Pre-event-inclusive" in evidence_map.loc[0, "Question answered"]
+    assert "earliest observed relative day" in evidence_map.loc[0, "Plain-English takeaway"]
+    assert "not adjusted for dependence between ETFs" in evidence_map.loc[0, "Plain-English takeaway"]
+    pd.testing.assert_frame_equal(summary, original)
+
+
 def test_prediction_lab_best_metric_labels_include_model_names():
     metrics = pd.DataFrame(
         {

@@ -2,7 +2,7 @@
 // without going through one of these configs. This is the single source of
 // truth for plain-English headers, tooltips, and value formatting.
 
-import { bps, fixed, multiple, num, percent, signedFixed, str } from "./format";
+import { bps, fixed, multiple, num, percent, signedFixed, str, toNumber } from "./format";
 
 export type Align = "left" | "right";
 
@@ -115,11 +115,12 @@ export const OUTPUT_FILE_READER_COLUMNS: ColumnSpec[] = [
 
 export const MARKET_REACTION_READER_COLUMNS: ColumnSpec[] = [
   { key: "market_group", label: "Market group" },
-  { key: "relative_day", label: "Days after shock", align: "right", format: (v) => num(v) },
+  { key: "relative_day", label: "Endpoint (relative trading day)", align: "right", format: (v) => num(v) },
+  { key: "accumulation_start_day", label: "Earliest series day", align: "right", format: (v) => num(v) },
   {
     key: "cumulative_average_abnormal_return",
-    label: "Cumulative abnormal return",
-    tooltip: "Average return around shock days after removing the normal market-model expectation.",
+    label: "Cumulative abnormal log return (%)",
+    tooltip: "Average ETF-event cumulative abnormal log return, including available pre-event days. Not rebased at day 0.",
     align: "right",
     format: (v) => percent(v),
   },
@@ -127,6 +128,25 @@ export const MARKET_REACTION_READER_COLUMNS: ColumnSpec[] = [
   { key: "evidence_strength", label: "Evidence label" },
   { key: "plain_note", label: "Plain-English note" },
 ];
+
+export const EVENT_STUDY_COLUMNS: ColumnSpec[] = [
+  { key: "market_group", label: "Market group", format: groupLabel },
+  { key: "relative_day", label: "Endpoint (relative trading day)", align: "right", format: (v) => num(v) },
+  { key: "accumulation_start_day", label: "Earliest series day", tooltip: "Earliest relative day in this group's summary. Each ETF-event accumulates from its own first available day; truncated windows can differ.", align: "right", format: (v) => num(v) },
+  { key: "average_abnormal_return", label: "Daily abnormal log return (bps)", align: "right", format: (v) => bps(v, 3) },
+  { key: "cumulative_average_abnormal_return", label: "Cumulative abnormal log return (bps)", align: "right", format: (v) => bps(v, 3) },
+  { key: "std_error", label: "Cumulative std. error (bps)", align: "right", format: (v) => bps(v, 3) },
+  { key: "t_stat", label: "Cumulative t-statistic", align: "right", format: (v) => fixed(v, 4) },
+  { key: "p_value", label: "Cumulative p-value (unadjusted)", tooltip: "Existing two-sided t-test; not adjusted for dependence between ETFs exposed to common events.", align: "right", format: eventPValue },
+  { key: "observation_count", label: "ETF-event observations", tooltip: "ETF-event rows with a daily abnormal return at this relative day.", align: "right", format: (v) => num(v) },
+  { key: "event_count", label: "Represented event dates", tooltip: "Distinct event dates represented in this market group at this relative day.", align: "right", format: (v) => num(v) },
+];
+
+function eventPValue(value: unknown): string {
+  const numeric = toNumber(value);
+  if (numeric === null) return "n/a";
+  return numeric !== 0 && numeric < 0.0001 ? numeric.toExponential(3) : numeric.toFixed(4);
+}
 
 export const REGRESSION_TRANSLATION_COLUMNS: ColumnSpec[] = [
   { key: "test", label: "Test" },
@@ -296,11 +316,25 @@ export const MONTHLY_FORECAST_COLUMNS: ColumnSpec[] = [
 export const TOP_SHOCKS_COLUMNS: ColumnSpec[] = [
   { key: "date", label: "Date" },
   { key: "gpr", label: "GPR level", align: "right", format: (v) => num(v) },
-  { key: "gpr_change", label: "Daily change", align: "right", format: (v) => signedFixed(v, 1) },
+  { key: "gpr_change", label: "Daily change (index points)", align: "right", format: (v) => signedFixed(v, 1) },
   { key: "gpr_act", label: "Actions", align: "right", format: (v) => num(v) },
   { key: "gpr_threat", label: "Threats", align: "right", format: (v) => num(v) },
   { key: "event", label: "Event" },
+  { key: "gpr_change_shock", label: "Flagged shock day", format: yesNo },
+  { key: "selected_for_event_study", label: "Selected event date", format: yesNo },
 ];
+
+export const SELECTED_EVENT_COLUMNS: ColumnSpec[] = [
+  { key: "date", label: "Selected GPR event date" },
+  { key: "gpr", label: "GPR level", align: "right", format: (v) => num(v) },
+  { key: "gpr_change", label: "Daily change (index points)", align: "right", format: (v) => signedFixed(v, 1) },
+  { key: "gpr_change_shock", label: "Flagged shock day", format: yesNo },
+  { key: "represented_in_abnormal_study", label: "In recorded abnormal-return windows", format: yesNo },
+];
+
+function yesNo(value: unknown): string {
+  return value === true ? "Yes" : value === false ? "No" : "Unavailable";
+}
 
 function termLabel(value: unknown): string {
   const raw = str(value);

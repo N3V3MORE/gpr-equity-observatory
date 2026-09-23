@@ -105,7 +105,7 @@ function Hero({ bundle }: { bundle: FrontendBundle }) {
         </div>
         <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-1">
           <HeroStat label="Countries" value={num(headline.country_count, "n/a")} />
-          <HeroStat label="GPR shock days" value={num(headline.shock_count, "n/a")} />
+          <HeroStat label="Flagged GPR shock days" value={num(headline.shock_count, "n/a")} />
           {bundle.dataset_status.monthly !== "excluded" ? (
             <HeroStat
               label="Monthly benchmark"

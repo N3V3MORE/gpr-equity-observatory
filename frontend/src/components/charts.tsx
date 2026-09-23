@@ -60,7 +60,7 @@ export function GprTimelineChart({ series, topShocks }: { series: Row[]; topShoc
           formatter={(value, name) => name === "date" ? null : value}
         />
         <Line type="monotone" dataKey="gpr" stroke="#4f46e5" strokeWidth={2} dot={false} connectNulls={false} name="GPR index" />
-        <Scatter dataKey="shock" fill="#ef4444" name="Top shock days" />
+        <Scatter dataKey="shock" fill="#ef4444" name="Largest GPR jumps" />
       </ComposedChart>
     </ResponsiveContainer>
   );
@@ -124,7 +124,7 @@ export function EventStudyChart({ rows }: { rows: Row[] }) {
           dataKey="relative_day"
           tick={AXIS}
           tickFormatter={(v) => `${num(v)}`}
-          label={{ value: "Days from shock (0 = shock day)", position: "insideBottom", offset: -2, fontSize: 11 }}
+          label={{ value: "Trading days relative to event (0 = ETF alignment)", position: "insideBottom", offset: -2, fontSize: 11 }}
         />
         <YAxis tick={AXIS} tickFormatter={(v) => bps(v, 0)} />
         <Tooltip itemSorter={() => 0}
@@ -153,7 +153,7 @@ export function EventStudyChart({ rows }: { rows: Row[] }) {
 
 export function EventRobustnessChart({ rows }: { rows: Row[] }) {
   const data = rows.map((row) => ({
-    label: `${num(row.window)}d @ ${percent(row.shock_quantile, 0)}`,
+    label: `±${num(row.window)} trading days @ ${percent(row.shock_quantile, 0)}`,
     group: String(row.market_group ?? ""),
     value: toNumber(row.cumulative_average_abnormal_return),
   }));

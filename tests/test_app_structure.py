@@ -114,7 +114,9 @@ def test_prediction_lab_beginner_copy_explains_risk_ranking_not_prices():
     assert "drawdown risk" in prediction_copy
     assert "does not predict prices" in prediction_copy
     assert "gpr alone" in prediction_copy
-    assert "modest" in prediction_copy
+    assert "displayed out-of-sample scores" in prediction_copy
+    assert "in this snapshot" in prediction_copy
+    assert "modest" not in prediction_copy
 
     for metric in ["AUC", "average precision", "Brier score", "lift", "calibration"]:
         assert metric in app.PREDICTION_METRIC_EXPLANATIONS
@@ -149,7 +151,8 @@ def test_monthly_empty_state_guides_full_sample_and_real_pipelines():
 
 def test_dashboard_intro_keeps_cautious_project_framing():
     assert "20 country ETF proxies" in app.DASHBOARD_INTRO
-    assert "does not strongly prove" in app.DASHBOARD_MAIN_TAKEAWAY
+    assert "displayed snapshot" in app.DASHBOARD_MAIN_TAKEAWAY
+    assert "do not establish causality" in app.DASHBOARD_MAIN_TAKEAWAY
     assert "not as a trading system" in app.DASHBOARD_USE_NOTE
 
 
@@ -178,10 +181,10 @@ def test_overview_framing_answers_main_project_question():
     ]
 
     answer_copy = " ".join(app.OVERVIEW_CURRENT_ANSWER_POINTS)
-    assert "associated with equity-market risk" in answer_copy
-    assert "emerging-market asymmetry is mixed" in answer_copy
-    assert "modest ranking signal" in answer_copy
-    assert "GPR alone is weak" in answer_copy
+    assert "estimates in this snapshot" in answer_copy
+    assert "Weak statistical evidence is not proof of no effect" in answer_copy
+    assert "USD country ETF proxies" in answer_copy
+    assert "evaluation sample displayed" in answer_copy
 
     does_not_prove_copy = " ".join(app.OVERVIEW_DOES_NOT_PROVE_POINTS)
     for claim_boundary in [
