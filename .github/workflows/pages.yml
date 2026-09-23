@@ -1,0 +1,107 @@
+name: Publish reviewed public snapshot
+
+on:
+  workflow_dispatch:
+
+# Publication is a manual owner action; pull requests cannot reach this workflow.
+permissions: {}
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+env:
+  NEXT_PUBLIC_BASE_PATH: /gpr-equity-observatory
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Check out the selected main commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Require the committed publication approval
+        working-directory: .
+        run: git ls-files --error-unmatch publication/approved-snapshot.json
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: frontend/.nvmrc
+          package-manager-cache: false
+
+      - name: Install locked frontend dependencies
+        run: npm ci --strict-peer-deps
+
+      - name: Validate the reviewed real snapshot
+        run: npm run snapshot:validate -- --tracked
+
+      - name: Stage only approved publication files
+        run: npm run snapshot:stage
+
+      - name: Check the frontend
+        run: npm run checks
+
+      - name: Install the locked browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Build the reviewed static release
+        run: npm run build:public
+
+      - name: Test the exact static release
+        env:
+          GPR_BROWSER_PUBLICATION: "1"
+        run: npm run test:browser
+
+      - name: Verify all artifact bytes immediately before upload
+        run: npm run snapshot:artifact
+
+      # No copying, rebuilding, or fixture generation after the release checks.
+      - name: Upload the checked release
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          name: github-pages
+          path: frontend/out
+          retention-days: 7
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    # The owner must restrict this environment to main and add review protection
+    # where the repository plan supports it. This file cannot create that rule.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Read the existing Pages configuration
+        id: pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+        with:
+          enablement: false
+
+      - name: Check that Pages matches the tested base path
+        env:
+          CONFIGURED_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: test "$CONFIGURED_BASE_PATH" = "$NEXT_PUBLIC_BASE_PATH"
+
+      - name: Deploy the checked artifact without rebuilding
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        with:
+          artifact_name: github-pages

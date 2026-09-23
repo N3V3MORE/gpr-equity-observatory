@@ -89,13 +89,21 @@ npm install
 npm run dev
 ```
 
-Build the static frontend:
+Build a local static preview:
 
 ```powershell
 cd frontend
 npm run lint
 npm run build
 ```
+
+For reproducible public-v1 checks and the guarded Pages release path, use the
+[deployment guide](docs/DEPLOYMENT_GUIDE.md). It documents synthetic browser
+checks against `frontend/out`, preparation and review of existing Python
+exports, `snapshot:validate`, `snapshot:stage`, and `build:public`. A reviewed
+real snapshot is required for publication; the current candidate cannot pass
+that gate. No live vendor download or empirical rebuild is required for frontend
+checks, and the manual workflow does not enable Pages automatically.
 
 Run Python checks:
 

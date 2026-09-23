@@ -318,6 +318,9 @@ function includesDataset(manifest: Manifest, name: DatasetName) {
 
 function validateDisplayedCoverage(bundle: FrontendBundle) {
   const { headline } = bundle.overview;
+  for (const key of ["country_count", "shock_count", "start_date", "end_date"] as const) {
+    check(headline[key] === bundle.manifest[key], `overview.${key} does not match manifest`);
+  }
   const { series, top_shocks, selected_events } = bundle.gpr_timeline;
   const inCoverage = (value: unknown) => String(value) >= headline.start_date && String(value) <= headline.end_date;
   const timeline = new Map(series.map((row) => [row.date, row]));
@@ -346,6 +349,20 @@ function validateDisplayedCoverage(bundle: FrontendBundle) {
     && countries.some((row) => row.last_date === headline.end_date), "country sample coverage");
 }
 
+// The static release gate uses the same field and coverage checks as the browser.
+export function validatePublicSnapshot(payloads: Record<string, unknown>): FrontendBundle {
+  const manifest = validateManifest(payloads.manifest);
+  check(manifest.available && manifest.profile === "public", "available public snapshot required");
+  const bundle = { ...emptyBundle(), manifest };
+  for (const name of REQUIRED_DATASETS) {
+    validatePayload(name, payloads[name]);
+    Object.assign(bundle, { [name]: payloads[name] });
+    bundle.dataset_status[name] = "available";
+  }
+  validateDisplayedCoverage(bundle);
+  return bundle;
+}
+
 export async function loadBundle({ publicOnly = false, localOnly = false }: { publicOnly?: boolean; localOnly?: boolean } = {}): Promise<FrontendBundle> {
   const manifest = validateManifest(await fetchJson("manifest.json"));
   if (localOnly && manifest.profile === "public") throw new Error("The local research view requires a local snapshot.");
@@ -365,10 +382,6 @@ export async function loadBundle({ publicOnly = false, localOnly = false }: { pu
       bundle.dataset_status[name] = "unavailable";
     }
   }));
-  const headline = bundle.overview.headline;
-  for (const key of ["country_count", "shock_count", "start_date", "end_date"] as const) {
-    check(headline[key] === manifest[key], `overview.${key} does not match manifest`);
-  }
   validateDisplayedCoverage(bundle);
 
   // Optional copy is validated separately so it cannot break the core page.

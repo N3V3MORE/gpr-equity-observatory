@@ -20,7 +20,9 @@ export interface Manifest {
   datasets?: DatasetName[];
   // Publication approval is recorded separately from dataset selection.
   publication_status?: "candidate" | "approved";
-  approved_downloads?: { label: string; path: string }[];
+  snapshot_id?: string;
+  data_kind?: "real" | "synthetic" | "unreviewed";
+  approved_downloads?: { label: string; path: string; table?: string; units?: string }[];
   build_date?: string;
   start_date?: string;
   end_date?: string;

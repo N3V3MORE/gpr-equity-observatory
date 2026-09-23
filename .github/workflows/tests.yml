@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   pytest:
     runs-on: ${{ matrix.os }}
@@ -64,6 +67,13 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        base-path: ["", "/gpr-equity-observatory"]
+    env:
+      NEXT_PUBLIC_BASE_PATH: ${{ matrix.base-path }}
+      NEXT_TELEMETRY_DISABLED: "1"
 
     steps:
       - name: Check out repository
@@ -92,6 +102,15 @@ jobs:
         working-directory: frontend
         run: npm run test:runtime
 
-      - name: Build frontend
+      - name: Install the locked browser
         working-directory: frontend
-        run: npm run build
+        run: npx playwright install --with-deps chromium
+
+      # Software fixtures never enter the manual Pages publication workflow.
+      - name: Build synthetic software-test artifact
+        working-directory: frontend
+        run: npm run build:test
+
+      - name: Test the built artifact at desktop and mobile sizes
+        working-directory: frontend
+        run: npm run test:browser

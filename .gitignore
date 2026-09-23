@@ -29,3 +29,9 @@ frontend/out/
 frontend/public/data/
 frontend/.eslintcache
 frontend/.coverage
+frontend/public/downloads/
+frontend/public/SYNTHETIC_TEST_ARTIFACT.txt
+frontend/test-results/
+frontend/playwright-report/
+frontend/.release-artifact.json
+publication/*.review-draft.json

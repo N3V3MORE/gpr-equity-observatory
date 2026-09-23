@@ -10,7 +10,17 @@
     "build": "next build",
     "lint": "eslint .",
     "test:runtime": "node --test tests/*.test.cjs",
-    "typecheck": "next typegen && tsc --noEmit --incremental false"
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
+    "checks": "npm run lint && npm run typecheck && npm run test:runtime",
+    "snapshot:prepare": "node scripts/public-snapshot.cjs prepare",
+    "snapshot:hashes": "node scripts/public-snapshot.cjs hashes",
+    "snapshot:validate": "node scripts/public-snapshot.cjs validate",
+    "snapshot:stage": "node scripts/public-snapshot.cjs stage",
+    "snapshot:artifact": "node scripts/public-snapshot.cjs artifact",
+    "build:public": "node scripts/build-artifact.cjs public",
+    "build:test": "node scripts/build-artifact.cjs test",
+    "test:publication": "npm run snapshot:validate -- --tracked",
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "next": "16.3.6",
@@ -20,6 +30,7 @@
     "recharts": "3.10.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@types/node": "24.13.6",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",

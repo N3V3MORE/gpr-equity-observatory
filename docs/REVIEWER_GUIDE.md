@@ -30,12 +30,16 @@ Use this path to judge whether the empirical story is coherent and cautious.
 - Inspect `src/gprobs/dashboard/export.py`, the backend UI contract.
 - Inspect `frontend/src/lib` for labels, formatting, and runtime data loading.
 - Inspect `tests/` for data, model, exporter, frontend, and docs checks.
+- Follow the [deployment guide](DEPLOYMENT_GUIDE.md) for built-artifact browser
+  checks and the reviewed-snapshot gate. Inspect the fixed publication review
+  record and its bundle hashes before accepting a release artifact. A passing
+  synthetic fixture suite is software evidence, not publication approval.
 
 Use this path to assess maintainability, test coverage, and reproducibility.
 
 ## App Path
 
-When running the app locally:
+For a local research rebuild (separate from frontend release checks):
 
 ```powershell
 python -m pip install -r requirements.txt
@@ -49,6 +53,14 @@ npm install
 npm run dev
 npm run build
 ```
+
+For frontend review without market downloads or model runs, use the guide's
+`npm run build:test` and `npm run test:browser` sequence in a clean workspace.
+It serves the built `frontend/out` artifact with explicitly synthetic data.
+Public release checks instead require the committed approved real bundle and
+`npm run build:public`; the positive real-publication check remains blocked
+until that review exists. Deployment and testing of an actual Pages URL are
+separate owner actions, not implied by local browser checks.
 
 Start with these app sections:
 
