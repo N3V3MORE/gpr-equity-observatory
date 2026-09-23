@@ -1,5 +1,7 @@
 import json
 import math
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -33,7 +35,7 @@ def _placeholder_value(column: str) -> object:
     return text_defaults.get(column, "")
 
 
-def _write_minimal_processed(root: Path) -> None:
+def _write_minimal_processed(root: Path, names: tuple[str, ...] | None = None) -> None:
     text_columns = {
         "country",
         "ticker",
@@ -56,6 +58,8 @@ def _write_minimal_processed(root: Path) -> None:
     processed = root / "data" / "processed"
     processed.mkdir(parents=True, exist_ok=True)
     for _name, spec in OUTPUT_SPECS.items():
+        if names is not None and _name not in names:
+            continue
         rows = []
         for offset in range(2):
             row: dict[str, object] = {}
@@ -292,6 +296,99 @@ def test_build_frontend_payloads_handles_missing_data(tmp_path):
     assert payloads["manifest"]["datasets"] == ["copy"]
     assert payloads["manifest"]["missing_files"]
     assert payloads["copy"]["central_question"]
+
+
+def test_public_export_uses_only_core_outputs_without_loading_optional_models(tmp_path, monkeypatch):
+    _write_minimal_processed(tmp_path, export.PUBLIC_OUTPUT_NAMES)
+
+    def unexpected_optional_call(*args, **kwargs):
+        pytest.fail("Public export must not load or build an optional section")
+
+    monkeypatch.setattr(export, "_load_monthly_bundle", unexpected_optional_call)
+    monkeypatch.setattr(export, "_prediction_payloads", unexpected_optional_call)
+    monkeypatch.setattr(export, "build_evidence_map", unexpected_optional_call)
+
+    payloads = export.build_frontend_payloads(root=tmp_path, profile="public")
+
+    assert set(payloads) == {
+        "manifest", "copy", "overview", "gpr_timeline", "event_study",
+        "regression", "country_coverage", "reader_summaries",
+    }
+    manifest = payloads["manifest"]
+    assert manifest["available"] is True
+    assert manifest["profile"] == "public"
+    assert manifest["publication_status"] == "candidate"
+    assert manifest["data_kind"] == "unreviewed"
+    assert manifest["datasets"] == sorted(set(payloads) - {"manifest"})
+    assert "monthly_mode" not in manifest
+    assert [row["test"] for row in payloads["reader_summaries"]["regression_translation"]] == [
+        "Controlled GPR association", "Emerging-market extra response",
+    ]
+    assert all(row["reader_page"] != "Prediction Lab" for row in payloads["reader_summaries"]["output_files"])
+    # Default local behavior remains an unavailable state when optional inputs are absent.
+    assert export.build_frontend_payloads(root=tmp_path)["manifest"]["available"] is False
+
+
+def test_public_and_local_exports_preserve_the_same_core_estimates_and_copy(tmp_path):
+    _write_shock_selection_fixture(tmp_path)
+    local = export.build_frontend_payloads(root=tmp_path)
+    public = export.build_frontend_payloads(root=tmp_path, profile="public")
+
+    for name in ["copy", "overview", "gpr_timeline", "event_study", "regression", "country_coverage"]:
+        assert public[name] == local[name], name
+    assert public["reader_summaries"]["market_reaction"] == local["reader_summaries"]["market_reaction"]
+    assert (
+        public["reader_summaries"]["regression_translation"]
+        == local["reader_summaries"]["regression_translation"][:2]
+    )
+    assert export.build_frontend_payloads(root=tmp_path, profile="local") == local
+
+
+@pytest.mark.parametrize("name", export.PUBLIC_OUTPUT_NAMES)
+def test_public_export_missing_core_input_fails_before_writing(tmp_path, name):
+    _write_minimal_processed(tmp_path, tuple(item for item in export.PUBLIC_OUTPUT_NAMES if item != name))
+    target = tmp_path / "not_created"
+
+    with pytest.raises(FileNotFoundError, match=OUTPUT_SPECS[name].path.name):
+        export.export_frontend_data(root=tmp_path, target_dir=target, profile="public")
+
+    assert not target.exists()
+
+
+@pytest.mark.parametrize("name", export.PUBLIC_OUTPUT_NAMES)
+@pytest.mark.parametrize("invalid", ["empty", "missing_columns"])
+def test_public_export_rejects_empty_or_malformed_core_input(tmp_path, name, invalid):
+    _write_minimal_processed(tmp_path, export.PUBLIC_OUTPUT_NAMES)
+    spec = OUTPUT_SPECS[name]
+    table = pd.DataFrame(columns=spec.required_columns) if invalid == "empty" else pd.DataFrame({"wrong": [1]})
+    table.to_csv(tmp_path / spec.path.relative_to(export.PROJECT_ROOT), index=False)
+    target = tmp_path / "not_created"
+
+    with pytest.raises(ValueError, match=spec.path.name):
+        export.export_frontend_data(root=tmp_path, target_dir=target, profile="public")
+
+    assert not target.exists()
+
+
+def test_public_profile_cli_exports_only_candidate_files(tmp_path):
+    _write_minimal_processed(tmp_path, export.PUBLIC_OUTPUT_NAMES)
+    target = tmp_path / "exported"
+    result = subprocess.run(
+        [sys.executable, str(export.PROJECT_ROOT / "scripts" / "export_frontend_data.py"),
+         "--root", str(tmp_path), "--target", str(target), "--profile", "public"],
+        capture_output=True, text=True, check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert {path.stem for path in target.iterdir()} == set(export.build_frontend_payloads(tmp_path, profile="public"))
+    manifest = _strict_json((target / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["publication_status"] == "candidate"
+    assert manifest["data_kind"] == "unreviewed"
+
+
+def test_export_rejects_unknown_profile(tmp_path):
+    with pytest.raises(ValueError, match="Unknown frontend export profile"):
+        export.build_frontend_payloads(tmp_path, profile="approved")
 
 
 def _write_output(root: Path, name: str, table: pd.DataFrame) -> None:

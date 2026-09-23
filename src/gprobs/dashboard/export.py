@@ -73,6 +73,10 @@ __all__ = ["build_frontend_payloads", "write_frontend_payloads", "export_fronten
 
 DEFAULT_TARGET_DIR = PROJECT_ROOT / "frontend" / "public" / "data"
 SNAPSHOT_SCHEMA_VERSION = 1
+PUBLIC_OUTPUT_NAMES = (
+    "analysis_panel", "gpr", "event_study", "abnormal_event_study",
+    "regression", "controlled_regression", "date_fe_regression",
+)
 
 OUTPUT_FILE_MEANINGS = {
     "gpr": ("GPR Data", "Daily geopolitical risk values and shock flags."),
@@ -102,14 +106,17 @@ def _read_output(spec: OutputSpec, root: Path) -> pd.DataFrame:
         options["parse_dates"] = list(spec.date_columns)
     if spec.low_memory is not None:
         options["low_memory"] = spec.low_memory
-    df = pd.read_csv(_spec_path(spec, root), **options)
+    try:
+        df = pd.read_csv(_spec_path(spec, root), **options)
+    except ValueError as error:
+        raise ValueError(f"Cannot read {spec.path.name}: {error}") from error
     validate_output_schema(df, spec)
     return df
 
 
-def _missing_spec_paths(root: Path) -> list[str]:
+def _missing_spec_paths(root: Path, specs: dict[str, OutputSpec]) -> list[str]:
     missing: list[str] = []
-    for spec in OUTPUT_SPECS.values():
+    for spec in specs.values():
         path = _spec_path(spec, root)
         if not path.exists():
             missing.append(str(path.relative_to(root)))
@@ -184,6 +191,8 @@ def _load_monthly_bundle(root: Path):
 def _output_file_rows(outputs: dict[str, pd.DataFrame]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for key, (reader_page, meaning) in OUTPUT_FILE_MEANINGS.items():
+        if key not in outputs:
+            continue
         spec = OUTPUT_SPECS[key]
         rows.append(
             {
@@ -280,16 +289,13 @@ def _reader_regression_row(
     }
 
 
-def _regression_translation_rows(outputs: dict[str, pd.DataFrame]) -> list[dict[str, Any]]:
+def _regression_translation_rows(
+    outputs: dict[str, pd.DataFrame], *, include_optional: bool = True
+) -> list[dict[str, Any]]:
     controlled_gpr = _first_term_row(outputs["controlled_regression"], "gpr_change_z")
     emerging_extra = _first_term_row(outputs["date_fe_regression"], "gpr_change_z:emerging_market")
 
-    quantile = outputs["quantile_regression"].sort_values("quantile")
-    quantile_gpr = _first_term_row(quantile, "gpr_change_z")
-    if quantile_gpr is None and not quantile.empty:
-        quantile_gpr = quantile.iloc[0]
-
-    return [
+    rows = [
         _reader_regression_row(
             test="Controlled GPR association",
             check="Whether GPR jumps are associated with ETF returns after market controls.",
@@ -302,13 +308,19 @@ def _regression_translation_rows(outputs: dict[str, pd.DataFrame]) -> list[dict[
             row=emerging_extra,
             note="This is the cleanest daily-panel check for the emerging-market question.",
         ),
-        _reader_regression_row(
+    ]
+    if include_optional:
+        quantile = outputs["quantile_regression"].sort_values("quantile")
+        quantile_gpr = _first_term_row(quantile, "gpr_change_z")
+        if quantile_gpr is None and not quantile.empty:
+            quantile_gpr = quantile.iloc[0]
+        rows.append(_reader_regression_row(
             test="Downside-risk check",
             check="Whether lower-return days show a different GPR relationship.",
             row=quantile_gpr,
             note="This is a tail-risk diagnostic; it is not proof that the pattern is stable.",
-        ),
-    ]
+        ))
+    return rows
 
 
 def _static_copy() -> dict[str, Any]:
@@ -368,7 +380,8 @@ def _recorded_abnormal_event_dates(root: Path, selected_dates: pd.Series) -> pd.
 
 
 def _overview_payloads(
-    outputs: dict[str, pd.DataFrame], panel: pd.DataFrame, gpr: pd.DataFrame, root: Path
+    outputs: dict[str, pd.DataFrame], panel: pd.DataFrame, gpr: pd.DataFrame, root: Path,
+    *, include_optional: bool = True,
 ) -> dict[str, Any]:
     start_date = panel["date"].min().date().isoformat()
     end_date = panel["date"].max().date().isoformat()
@@ -397,14 +410,7 @@ def _overview_payloads(
         "gpr_change_shock", "selected_for_event_study",
     ]
 
-    group_chart = outputs["group_returns"].copy()
-    group_chart["cumulative_average_return"] = group_chart.groupby("market_group")[
-        "average_return"
-    ].cumsum()
-
-    evidence_map = build_evidence_map(outputs["evidence_summary"])
-
-    return {
+    payloads = {
         "overview": {
             "headline": {
                 "country_count": country_count,
@@ -466,14 +472,22 @@ def _overview_payloads(
             "top_shocks": _df_records(top_shocks[timeline_columns]),
             "selected_events": _df_records(selected_events),
         },
-        "group_returns": _df_records(
-            group_chart[["date", "market_group", "average_return", "cumulative_average_return"]]
-        ),
-        "evidence_map": _df_records(evidence_map),
     }
+    if include_optional:
+        group_chart = outputs["group_returns"].copy()
+        group_chart["cumulative_average_return"] = group_chart.groupby("market_group")[
+            "average_return"
+        ].cumsum()
+        payloads["group_returns"] = _df_records(
+            group_chart[["date", "market_group", "average_return", "cumulative_average_return"]]
+        )
+        payloads["evidence_map"] = _df_records(build_evidence_map(outputs["evidence_summary"]))
+    return payloads
 
 
-def _explanation_payloads(outputs: dict[str, pd.DataFrame]) -> dict[str, Any]:
+def _explanation_payloads(
+    outputs: dict[str, pd.DataFrame], *, include_optional: bool = True
+) -> dict[str, Any]:
     abnormal = outputs["abnormal_event_study"].loc[
         :, list(OUTPUT_SPECS["abnormal_event_study"].required_columns)
     ].copy()
@@ -495,22 +509,26 @@ def _explanation_payloads(outputs: dict[str, pd.DataFrame]) -> dict[str, Any]:
         .sort_values(["market_group", "relative_day"])
     )
 
-    robustness = outputs["event_robustness"].copy()
-    robustness["shock_quantile_label"] = robustness["shock_quantile"].map(lambda value: f"{value:.0%}")
-
-    return {
+    payloads = {
         "event_study": _df_records(event_study),
-        "event_robustness": _df_records(robustness),
         "regression": {
             "baseline": _df_records(select_key_regression_terms(outputs["regression"])),
             "controlled": _df_records(select_key_regression_terms(outputs["controlled_regression"])),
             "date_fe": _df_records(select_key_regression_terms(outputs["date_fe_regression"])),
         },
+    }
+    if not include_optional:
+        return payloads
+    robustness = outputs["event_robustness"].copy()
+    robustness["shock_quantile_label"] = robustness["shock_quantile"].map(lambda value: f"{value:.0%}")
+    payloads.update({
+        "event_robustness": _df_records(robustness),
         "panel_sample_robustness": _df_records(outputs["panel_sample_robustness"]),
         "quantile_regression": _df_records(select_key_regression_terms(outputs["quantile_regression"])),
         "local_projections": _df_records(outputs["local_projections"]),
         "rolling_beta": _df_records(outputs["rolling_beta"][["date", "country", "market_group", "rolling_gpr_beta"]]),
-    }
+    })
+    return payloads
 
 
 def _prediction_payloads(outputs: dict[str, pd.DataFrame]) -> dict[str, Any]:
@@ -536,8 +554,12 @@ def _prediction_payloads(outputs: dict[str, pd.DataFrame]) -> dict[str, Any]:
     }
 
 
-def _data_methods_payloads(outputs: dict[str, pd.DataFrame], panel: pd.DataFrame, root: Path) -> dict[str, Any]:
+def _data_methods_payloads(
+    outputs: dict[str, pd.DataFrame], panel: pd.DataFrame, root: Path, *, include_optional: bool = True
+) -> dict[str, Any]:
     coverage = build_country_coverage(panel)
+    if not include_optional:
+        return {"country_coverage": _df_records(coverage)}
     monthly_bundle = _load_monthly_bundle(root)
 
     monthly: dict[str, Any]
@@ -571,28 +593,38 @@ def _data_methods_payloads(outputs: dict[str, pd.DataFrame], panel: pd.DataFrame
     }
 
 
-def _reader_summary_payloads(outputs: dict[str, pd.DataFrame]) -> dict[str, Any]:
+def _reader_summary_payloads(
+    outputs: dict[str, pd.DataFrame], *, include_optional: bool = True
+) -> dict[str, Any]:
     return {
         "reader_summaries": {
             "output_files": _output_file_rows(outputs),
             "market_reaction": _event_study_reader_rows(outputs["abnormal_event_study"]),
-            "regression_translation": _regression_translation_rows(outputs),
+            "regression_translation": _regression_translation_rows(outputs, include_optional=include_optional),
         }
     }
 
 
-def build_frontend_payloads(root: Path | None = None) -> dict[str, Any]:
+def build_frontend_payloads(root: Path | None = None, *, profile: str = "local") -> dict[str, Any]:
     """Build every JSON payload the frontend needs, rooted at ``root``.
 
-    When processed data is missing, returns a minimal payload with
+    The default local profile includes every implemented section. Its missing
+    processed data returns a minimal payload with
     ``available=False`` plus the static copy so the frontend can render an
-    empty state.
+    empty state. The public profile requires only core daily outputs, fails
+    on missing inputs, and emits an unreviewed candidate, never an approval.
     """
+    if profile not in {"local", "public"}:
+        raise ValueError(f"Unknown frontend export profile: {profile}")
     root = Path(root) if root is not None else PROJECT_ROOT
     payloads: dict[str, Any] = {"copy": _static_copy()}
+    include_optional = profile == "local"
+    specs = OUTPUT_SPECS if include_optional else {name: OUTPUT_SPECS[name] for name in PUBLIC_OUTPUT_NAMES}
 
-    missing = _missing_spec_paths(root)
+    missing = _missing_spec_paths(root, specs)
     if missing:
+        if not include_optional:
+            raise FileNotFoundError(f"Public export requires core processed files: {', '.join(missing)}")
         payloads["manifest"] = {
             "schema_version": SNAPSHOT_SCHEMA_VERSION,
             "profile": "local",
@@ -603,15 +635,20 @@ def build_frontend_payloads(root: Path | None = None) -> dict[str, Any]:
         }
         return payloads
 
-    outputs = {name: _read_output(spec, root) for name, spec in OUTPUT_SPECS.items()}
+    outputs = {name: _read_output(spec, root) for name, spec in specs.items()}
+    if not include_optional:
+        for name, table in outputs.items():
+            if table.empty:
+                raise ValueError(f"Public export requires nonempty core data: {specs[name].path.name}")
     panel = outputs["analysis_panel"]
     gpr = outputs["gpr"]
 
-    payloads.update(_overview_payloads(outputs, panel, gpr, root))
-    payloads.update(_explanation_payloads(outputs))
-    payloads.update(_prediction_payloads(outputs))
-    payloads.update(_data_methods_payloads(outputs, panel, root))
-    payloads.update(_reader_summary_payloads(outputs))
+    payloads.update(_overview_payloads(outputs, panel, gpr, root, include_optional=include_optional))
+    payloads.update(_explanation_payloads(outputs, include_optional=include_optional))
+    if include_optional:
+        payloads.update(_prediction_payloads(outputs))
+    payloads.update(_data_methods_payloads(outputs, panel, root, include_optional=include_optional))
+    payloads.update(_reader_summary_payloads(outputs, include_optional=include_optional))
     answer_points = build_snapshot_answer(outputs["controlled_regression"], outputs["date_fe_regression"])
     payloads["copy"]["intro"] = (
         "This dashboard studies whether equity markets respond to geopolitical risk shocks, "
@@ -622,7 +659,7 @@ def build_frontend_payloads(root: Path | None = None) -> dict[str, Any]:
 
     payloads["manifest"] = {
         "schema_version": SNAPSHOT_SCHEMA_VERSION,
-        "profile": "local",
+        "profile": profile,
         "datasets": sorted(payloads),
         "available": True,
         "build_date": pd.Timestamp.now("UTC").date().isoformat(),
@@ -630,10 +667,13 @@ def build_frontend_payloads(root: Path | None = None) -> dict[str, Any]:
         "end_date": panel["date"].max().date().isoformat(),
         "country_count": int(panel["country"].nunique()),
         "shock_count": payloads["overview"]["headline"]["shock_count"],
-        "monthly_mode": (
-            payloads["monthly"]["mode"] if payloads["monthly"].get("available") else None
-        ),
     }
+    if include_optional:
+        payloads["manifest"]["monthly_mode"] = (
+            payloads["monthly"]["mode"] if payloads["monthly"].get("available") else None
+        )
+    else:
+        payloads["manifest"].update({"publication_status": "candidate", "data_kind": "unreviewed"})
     return payloads
 
 
@@ -652,10 +692,12 @@ def write_frontend_payloads(payloads: dict[str, Any], target_dir: Path) -> Path:
     return target_dir
 
 
-def export_frontend_data(root: Path | None = None, target_dir: Path | None = None) -> Path:
+def export_frontend_data(
+    root: Path | None = None, target_dir: Path | None = None, *, profile: str = "local"
+) -> Path:
     root = Path(root) if root is not None else PROJECT_ROOT
     target = Path(target_dir) if target_dir is not None else root / "frontend" / "public" / "data"
-    payloads = build_frontend_payloads(root)
+    payloads = build_frontend_payloads(root, profile=profile)
     return write_frontend_payloads(payloads, target)
 
 

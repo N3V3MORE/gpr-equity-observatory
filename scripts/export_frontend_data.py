@@ -15,6 +15,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Export frontend JSON from processed outputs.")
     parser.add_argument(
+        "--profile",
+        choices=("local", "public"),
+        default="local",
+        help="Export all local sections (default), or only the required daily public candidate data.",
+    )
+    parser.add_argument(
         "--root",
         default=None,
         help="Project root containing data/processed. Defaults to this repo.",
@@ -31,7 +37,7 @@ def main() -> None:
     args = parse_args()
     root = Path(args.root) if args.root else PROJECT_ROOT
     target = Path(args.target) if args.target else None
-    output_dir = export_frontend_data(root=root, target_dir=target)
+    output_dir = export_frontend_data(root=root, target_dir=target, profile=args.profile)
     print(f"Exported frontend JSON to {output_dir}")
 
 
