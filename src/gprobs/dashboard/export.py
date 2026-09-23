@@ -117,19 +117,21 @@ def _missing_spec_paths(root: Path) -> list[str]:
 
 
 def _scalar(value: Any) -> Any:
-    if value is None:
+    if value is None or value is pd.NA or value is pd.NaT:
         return None
-    if isinstance(value, float) and not math.isfinite(value):
+    if isinstance(value, float) and math.isnan(value):
         return None
     if isinstance(value, np.integer):
         return int(value)
     if isinstance(value, np.floating):
         v = float(value)
-        return None if not math.isfinite(v) else v
+        return None if math.isnan(v) else v
     if isinstance(value, np.bool_):
         return bool(value)
     if isinstance(value, pd.Timestamp):
         return value.date().isoformat()
+    if isinstance(value, np.datetime64):
+        return None if np.isnat(value) else pd.Timestamp(value).date().isoformat()
     return value
 
 
@@ -218,7 +220,7 @@ def _event_study_reader_rows(abnormal: pd.DataFrame) -> list[dict[str, Any]]:
                 "cumulative_average_abnormal_return": estimate,
                 "average_abnormal_return": row["average_abnormal_return"],
                 "std_error": row["std_error"],
-                "t_stat": row["t_stat"],
+                "t_stat": _event_t_stat(row["t_stat"], row["std_error"]),
                 "p_value": row["p_value"],
                 "observation_count": row["observation_count"],
                 "event_count": row["event_count"],
@@ -234,6 +236,13 @@ def _event_study_reader_rows(abnormal: pd.DataFrame) -> list[dict[str, Any]]:
             }
         )
     return [{key: _scalar(value) for key, value in row.items()} for row in rows]
+
+
+def _event_t_stat(value: Any, standard_error: Any) -> Any:
+    # Preserve the existing null representation of undefined zero-SE inference.
+    if _scalar(standard_error) == 0 and _scalar(value) in (math.inf, -math.inf):
+        return None
+    return value
 
 
 def _first_term_row(df: pd.DataFrame, term: str) -> pd.Series | None:
@@ -469,6 +478,10 @@ def _explanation_payloads(outputs: dict[str, pd.DataFrame]) -> dict[str, Any]:
         :, list(OUTPUT_SPECS["abnormal_event_study"].required_columns)
     ].copy()
     abnormal["accumulation_start_day"] = abnormal.groupby("market_group")["relative_day"].transform("min")
+    abnormal["t_stat"] = [
+        _event_t_stat(value, error)
+        for value, error in zip(abnormal["t_stat"], abnormal["std_error"], strict=True)
+    ]
     raw = outputs["event_study"].loc[:, list(OUTPUT_SPECS["event_study"].required_columns)].copy()
     raw["raw_accumulation_start_day"] = raw.groupby("market_group")["relative_day"].transform("min")
     raw = raw.rename(columns={"observation_count": "raw_observation_count", "event_count": "raw_event_count"})
@@ -625,13 +638,17 @@ def build_frontend_payloads(root: Path | None = None) -> dict[str, Any]:
 
 
 def write_frontend_payloads(payloads: dict[str, Any], target_dir: Path) -> Path:
+    # Validate all payloads before touching output files. This protects against
+    # serialization failures, not filesystem errors during the subsequent writes.
+    serialized = {
+        name: json.dumps(_json_default(payload, name), indent=2, allow_nan=False)
+        for name, payload in payloads.items()
+    }
     target_dir = Path(target_dir)
     target_dir.mkdir(parents=True, exist_ok=True)
-    for name, payload in payloads.items():
+    for name, content in serialized.items():
         path = target_dir / f"{name}.json"
-        path.write_text(
-            json.dumps(payload, indent=2, default=_json_default), encoding="utf-8"
-        )
+        path.write_text(content, encoding="utf-8")
     return target_dir
 
 
@@ -642,13 +659,14 @@ def export_frontend_data(root: Path | None = None, target_dir: Path | None = Non
     return write_frontend_payloads(payloads, target)
 
 
-def _json_default(value: Any) -> Any:
-    if isinstance(value, pd.Timestamp):
-        return value.date().isoformat()
-    if isinstance(value, (np.integer,)):
-        return int(value)
-    if isinstance(value, (np.floating,)):
-        return float(value)
-    if isinstance(value, (np.bool_,)):
-        return bool(value)
-    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+def _json_default(value: Any, path: str) -> Any:
+    if isinstance(value, dict):
+        return {key: _json_default(item, f"{path}[{key!r}]") for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_default(item, f"{path}[{index}]") for index, item in enumerate(value)]
+    value = _scalar(value)
+    if isinstance(value, float) and math.isinf(value):
+        raise ValueError(f"Unexpected infinite number at {path}: {value}")
+    if value is None or isinstance(value, (str, bool, int, float)):
+        return value
+    raise TypeError(f"Object of type {type(value).__name__} at {path} is not JSON serializable")

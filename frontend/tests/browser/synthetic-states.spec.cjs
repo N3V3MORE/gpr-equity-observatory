@@ -55,19 +55,37 @@ test("synthetic null observations remain gaps, with genuine zero retained in tab
   healthy();
 });
 
-test("synthetic optional 404 stays local to its section and public view excludes it", async ({ page }) => {
-  const healthy = browserHealth(page, [`${basePath}/data/local_projections.json`]);
-  const snapshot = syntheticSnapshot(["local_projections"]);
+for (const [name, label] of [["local_projections", "Dynamic response"], ["evidence_map", "Evidence map"]]) {
+  test(`synthetic optional ${name} 404 stays local to its section and public view excludes it`, async ({ page }) => {
+    const healthy = browserHealth(page, [`${basePath}/data/${name}.json`]);
+    const snapshot = syntheticSnapshot([name]);
+    snapshot.manifest.profile = "local";
+    await interceptSynthetic(page, snapshot, { [name]: { status: 404, body: "Synthetic optional-data fault" } });
+    const requests = [];
+    page.on("request", (request) => { requests.push(new URL(request.url()).pathname); });
+    await ready(page);
+    expect(requests).not.toContain(`${basePath}/data/${name}.json`);
+    await ready(page, "local/");
+    await expect(page.getByRole("status")).toHaveText(`${label} is unavailable in this snapshot.`);
+    await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
+    await expect(page.locator("#market-response .recharts-line-curve")).toHaveCount(2);
+    expect(requests).toContain(`${basePath}/data/${name}.json`);
+    healthy();
+  });
+}
+
+test("synthetic local evidence map retains its details and keyboard download", async ({ page }) => {
+  const healthy = browserHealth(page);
+  const snapshot = syntheticSnapshot(["evidence_map"]);
   snapshot.manifest.profile = "local";
   await interceptSynthetic(page, snapshot);
-  const requests = [];
-  page.on("request", (request) => { requests.push(new URL(request.url()).pathname); });
-  await ready(page);
-  expect(requests).not.toContain(`${basePath}/data/local_projections.json`);
   await ready(page, "local/");
-  await expect(page.getByRole("status")).toHaveText("Dynamic response is unavailable in this snapshot.");
-  await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
-  await expect(page.locator("#market-response .recharts-line-curve")).toHaveCount(2);
-  expect(requests).toContain(`${basePath}/data/local_projections.json`);
+  const details = page.locator("summary").filter({ hasText: "Details: evidence across all local methods" });
+  await details.focus();
+  await page.keyboard.press("Enter");
+  const { rows, filename } = await downloadTable(page, "Download evidence map (CSV)");
+  expect(filename).toBe("evidence_map.csv");
+  expect(rows).toHaveLength(2);
+  expect(rows[1]).toContain("Test fixture");
   healthy();
 });

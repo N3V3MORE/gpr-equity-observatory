@@ -18,7 +18,7 @@ type PartialCopy = Partial<Omit<Copy, "monthly_notices" | "prediction_lab">> & {
 };
 
 export const REQUIRED_DATASETS: readonly DatasetName[] = [
-  "copy", "overview", "gpr_timeline", "evidence_map", "event_study",
+  "copy", "overview", "gpr_timeline", "event_study",
   "regression", "reader_summaries", "country_coverage",
 ];
 const PREDICTION_DATASETS: readonly DatasetName[] = [

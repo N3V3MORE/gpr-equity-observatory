@@ -1,5 +1,5 @@
 // Synthetic contract fixture; never used as research evidence or publication data.
-const CORE = ["copy", "overview", "gpr_timeline", "evidence_map", "event_study", "regression", "reader_summaries", "country_coverage"];
+const CORE = ["copy", "overview", "gpr_timeline", "event_study", "regression", "reader_summaries", "country_coverage"];
 
 function validSnapshot(extraDatasets = []) {
   const headline = { country_count: 1, shock_count: 0, selected_event_count: 0, represented_event_count: null, start_date: "2024-01-01", end_date: "2024-01-03" };
@@ -23,7 +23,9 @@ function validSnapshot(extraDatasets = []) {
       return_units: "Cumulative log-return units; multiply by 100 for percent or 10,000 for basis points.",
     } },
     gpr_timeline: { series: [{ date: "2024-01-01", gpr: 0 }, { date: "2024-01-02", gpr: null }, { date: "2024-01-03", gpr: 1 }].map((row) => ({ ...row, gpr_change_shock: false, selected_for_event_study: false })), top_shocks: [], selected_events: [] },
-    evidence_map: [{ Method: "Regression", "Question answered": "Test", Direction: "Uncertain", Estimate: "0 bps", "p-value / metric": "n/a", "Evidence strength": "Unavailable", "Plain-English takeaway": "Test fixture" }],
+    ...(extraDatasets.includes("evidence_map") ? {
+      evidence_map: [{ Method: "Regression", "Question answered": "Test", Direction: "Uncertain", Estimate: "0 bps", "p-value / metric": "n/a", "Evidence strength": "Unavailable", "Plain-English takeaway": "Test fixture" }],
+    } : {}),
     event_study: ["developed", "emerging"].flatMap((market_group) => [
       { market_group, relative_day: 0, average_abnormal_return: 0, cumulative_average_abnormal_return: 0, cumulative_average_return: 0, ...inference },
       { market_group, relative_day: 1, average_abnormal_return: null, cumulative_average_abnormal_return: null, cumulative_average_return: null, ...inference, std_error: null, t_stat: null, p_value: null },

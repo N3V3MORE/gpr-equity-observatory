@@ -1,7 +1,7 @@
 // SYNTHETIC SOFTWARE TEST DATA. Never use this bundle as empirical research.
 const fs = require("node:fs");
 const path = require("node:path");
-const { validSnapshot } = require("./snapshot-fixture.cjs");
+const { CORE, validSnapshot } = require("./snapshot-fixture.cjs");
 const { loadTs } = require("./load-ts.cjs");
 const { rowsToCsv } = loadTs("src/lib/csv.ts");
 const { EVENT_STUDY_COLUMNS } = loadTs("src/lib/labels.ts");
@@ -41,7 +41,7 @@ function writeBrowserFixture(directory) {
   const bundle = browserSnapshot();
   fs.mkdirSync(path.join(directory, "data"), {recursive:true});
   fs.mkdirSync(path.join(directory, "downloads"), {recursive:true});
-  for (const [name,value] of Object.entries(bundle)) fs.writeFileSync(path.join(directory,"data",`${name}.json`),JSON.stringify(value,null,2)+"\n",{flag:"wx"});
+  for (const name of ["manifest", ...CORE]) fs.writeFileSync(path.join(directory,"data",`${name}.json`),JSON.stringify(bundle[name],null,2)+"\n",{flag:"wx"});
   fs.writeFileSync(path.join(directory,"downloads/synthetic-event-study.csv"), rowsToCsv(bundle.event_study,EVENT_STUDY_COLUMNS),{flag:"wx"});
   fs.writeFileSync(path.join(directory,"SYNTHETIC_TEST_ARTIFACT.txt"),"SYNTHETIC SOFTWARE TEST DATA. NOT A RESEARCH PUBLICATION.\n",{flag:"wx"});
   return bundle;

@@ -4,10 +4,10 @@ const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 const { execFileSync } = require("node:child_process");
-const { APPROVAL, REPO, SYNTHETIC_MARKER, readPayloads, validateDownloads, validatePublication, stageFiles, snapshotHashes, verifyStaged, sealArtifact, verifyArtifact } = require("../scripts/public-snapshot.cjs");
+const { APPROVAL, REPO, SYNTHETIC_MARKER, readPayloads, validateDownloads, validatePublication, stageFiles, snapshotHashes, verifyStaged, sealArtifact, verifyArtifact, prepare } = require("../scripts/public-snapshot.cjs");
 const { build } = require("../scripts/build-artifact.cjs");
 const { writeBrowserFixture } = require("./browser-fixture.cjs");
-const { CORE } = require("./snapshot-fixture.cjs");
+const { CORE, validSnapshot } = require("./snapshot-fixture.cjs");
 
 function fixture() {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(),"gpr-publication-test-"));
@@ -26,6 +26,40 @@ test("synthetic content passes schema checks only, preserves missing values and 
   assert.equal(bundle.event_study[0].cumulative_average_abnormal_return,0);
   assert.equal(bundle.event_study[2].cumulative_average_abnormal_return,null);
 });
+
+for (const [state, contents] of Object.entries({
+  absent: null,
+  malformed: "{",
+  valid: JSON.stringify(validSnapshot(["evidence_map"]).evidence_map),
+})) {
+  test(`public preparation excludes ${state} local evidence_map without requiring or changing it`, () => {
+    const {repoRoot,directory,payloads}=fixture();
+    const source=path.join(directory,"data");
+    const evidencePath=path.join(source,"evidence_map.json");
+    payloads.manifest.profile="local";
+    payloads.manifest.datasets=[...CORE,"evidence_map"];
+    fs.writeFileSync(path.join(source,"manifest.json"),JSON.stringify(payloads.manifest));
+    payloads.copy.job_statements[0].title="Explanation";
+    payloads.reader_summaries.output_files[0].file="event_study_abnormal_summary.csv";
+    for (const name of ["copy","reader_summaries"]) {
+      fs.writeFileSync(path.join(source,`${name}.json`),JSON.stringify(payloads[name]));
+    }
+    if (contents !== null) fs.writeFileSync(evidencePath,contents);
+    const candidate=prepare({source,id:"selected-public",repoRoot});
+    const selected=readPayloads(candidate.directory).payloads;
+    assert.deepEqual(selected.manifest.datasets,CORE);
+    assert.equal(selected.manifest.datasets.includes("evidence_map"),false);
+    assert.equal(fs.existsSync(path.join(candidate.directory,"data/evidence_map.json")),false);
+    assert.equal(selected.manifest.publication_status,"candidate");
+    assert.equal(selected.manifest.data_kind,"synthetic");
+    assert.deepEqual(validateDownloads(candidate.directory,selected).sort(),[
+      "downloads/country_coverage.csv", "downloads/event_study.csv",
+      "downloads/regression_controlled.csv", "downloads/regression_date_fe.csv",
+    ]);
+    if (contents === null) assert.equal(fs.existsSync(evidencePath),false);
+    else assert.equal(fs.readFileSync(evidencePath,"utf8"),contents);
+  });
+}
 
 for (const name of ["manifest",...CORE]) {
   test(`missing required ${name} blocks the public build before Next.js`, () => {
@@ -104,6 +138,22 @@ test("staging is idempotent and refuses to overwrite unrelated local data", () =
   assert.throws(()=>stageFiles(directory,destination,files),/Refusing to overwrite/);
   assert.equal(fs.readFileSync(unrelated,"utf8"),"preserve this local output");
 });
+
+for (const file of ["data/evidence_map.json", "data/monthly.json", "data/event_study.json"]) {
+  test(`staging and inventory still reject stale or conflicting ${file}`, () => {
+    const {directory,repoRoot}=fixture();
+    const source=path.join(directory,"data");
+    const sourceFiles=Object.keys(snapshotHashes(source));
+    const destination=path.join(repoRoot,"staged/data");
+    stageFiles(source,destination,sourceFiles);
+    const release={files:sourceFiles,review:{files:snapshotHashes(destination)}};
+    const stale=path.join(repoRoot,"staged",file);
+    fs.writeFileSync(stale,"preserve this prior local output");
+    assert.throws(()=>stageFiles(source,destination,sourceFiles),/Refusing to overwrite/);
+    assert.throws(()=>verifyStaged(release,destination),/file selection|checksum mismatch/);
+    assert.equal(fs.readFileSync(stale,"utf8"),"preserve this prior local output");
+  });
+}
 
 test("synthetic artifact marker and changed staged bytes block release", () => {
   const {directory,record}=fixture();

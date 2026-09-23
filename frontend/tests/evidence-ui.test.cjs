@@ -16,8 +16,8 @@ const { HowMarketsReact } = loadTs("src/sections/HowMarketsReact.tsx", mocks);
 const { Overview } = loadTs("src/sections/Overview.tsx", mocks);
 const render = (component, bundle, local = false) => renderToStaticMarkup(React.createElement(component, { bundle, local }));
 
-function evidenceBundle() {
-  const bundle = validSnapshot();
+function evidenceBundle(extraDatasets = []) {
+  const bundle = validSnapshot(extraDatasets);
   bundle.manifest.publication_status = "approved";
   bundle.reader_summaries.regression_translation[0].test = "Controlled GPR association";
   bundle.dataset_status = Object.fromEntries(DATASET_NAMES.map((name) => [name, bundle.manifest.datasets.includes(name) ? "available" : "excluded"]));
@@ -95,6 +95,25 @@ test("candidate estimates remain inspectable without becoming a reviewed headlin
   assert.match(html, /A reviewed public answer is not available yet/);
   assert.match(html, /<details[^>]*><summary[^>]*>Candidate estimates<\/summary>[\s\S]*?Test answer[\s\S]*?<\/details>/);
   assert.doesNotMatch(html, /What this snapshot supports|<details[^>]* open=/);
+});
+
+test("local evidence map retains its table and download while public rendering omits it", () => {
+  const bundle = evidenceBundle(["evidence_map"]);
+  const localHtml = render(Overview, bundle, true);
+  assert.match(localHtml, /Details: evidence across all local methods/);
+  assert.match(localHtml, /Download evidence map \(CSV\)/);
+  assert.match(localHtml, /Test fixture/);
+  assert.doesNotMatch(render(Overview, bundle), /evidence across all local methods|Download evidence map/);
+});
+
+test("unavailable local evidence map has an isolated status message and no empty table", () => {
+  const bundle = evidenceBundle(["evidence_map"]);
+  bundle.dataset_status.evidence_map = "unavailable";
+  bundle.evidence_map = [];
+  const html = render(Overview, bundle, true);
+  assert.match(html, /role="status"[^>]*>Evidence map is unavailable in this snapshot/);
+  assert.match(html, /Daily geopolitical risk over time/);
+  assert.doesNotMatch(html, /evidence across all local methods|Download evidence map/);
 });
 
 test("public evidence keeps controlled and date-FE results while optional diagnostics require local access", () => {

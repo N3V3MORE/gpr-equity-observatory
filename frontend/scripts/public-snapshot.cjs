@@ -168,7 +168,6 @@ function prepare({ source, id, repoRoot = REPO }) {
   payloads.copy.job_statements = payloads.copy.job_statements.filter(row => row.title === "Explanation");
   payloads.copy.method_map = payloads.copy.method_map.filter(row => ["Event study", "Panel regression"].includes(row.Tool));
   payloads.copy.how_to_read = Object.fromEntries(["market_response", "regression"].map(key => [key, payloads.copy.how_to_read[key]]));
-  payloads.evidence_map = payloads.evidence_map.filter(row => ["Baseline panel regression", "Controlled panel regression", "Controlled emerging interaction", "Date fixed-effects emerging interaction"].includes(row.Method));
   payloads.reader_summaries.regression_translation = payloads.reader_summaries.regression_translation.filter(row => ["Controlled GPR association", "Emerging-market extra response"].includes(row.test));
   payloads.reader_summaries.output_files = payloads.reader_summaries.output_files.filter(row => ["gpr_daily.csv", "analysis_panel.csv", "event_study_abnormal_summary.csv"].includes(path.basename(row.file)));
   const previous = payloads.manifest;

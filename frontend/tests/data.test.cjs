@@ -27,7 +27,7 @@ function runtime(t, payloads, overrides = {}, basePath = "") {
   return { ...loadTs("src/lib/data.ts"), requests };
 }
 
-test("valid public core preserves zero and null and never fetches excluded optional datasets", async (t) => {
+test("valid public core without evidence_map preserves zero and null and never fetches excluded optional datasets", async (t) => {
   const api = runtime(t, validSnapshot(), {}, "/observatory/");
   const bundle = await api.loadBundle();
   assert.deepEqual(bundle.gpr_timeline.series.map((row) => row.gpr), [0, null, 1]);
@@ -35,6 +35,7 @@ test("valid public core preserves zero and null and never fetches excluded optio
   assert.equal(bundle.regression.controlled[0].p_value, null);
   assert.deepEqual(new Set(api.requests), new Set(["manifest", ...CORE].map((name) => `/observatory/data/${name}.json`)));
   assert.equal(bundle.dataset_status.monthly, "excluded");
+  assert.equal(bundle.dataset_status.evidence_map, "excluded");
   assert.equal(bundle.dataset_status.prediction_summary, "excluded");
   assert.equal(await api.loadRollingBeta(bundle.manifest), null);
   assert.equal(api.requests.length, CORE.length + 1);
@@ -55,7 +56,6 @@ const malformed = {
   copy: (p) => { p.copy.job_statements = [null]; },
   overview: (p) => { p.overview.headline = {}; },
   gpr_timeline: (p) => { p.gpr_timeline.series = [{ date: "2024-01-01" }]; },
-  evidence_map: (p) => { p.evidence_map = [{}]; },
   event_study: (p) => { p.event_study[0].relative_day = " "; },
   regression: (p) => { p.regression.controlled = []; },
   reader_summaries: (p) => { p.reader_summaries.regression_translation = {}; },
@@ -232,14 +232,49 @@ test("highlighted and selected dates must match the displayed timeline", async (
 });
 
 test("public reading view never requests optional datasets from a full local snapshot", async (t) => {
-  const payloads = validSnapshot(["monthly", "prediction_summary", "rolling_beta", "local_projections"]);
+  const payloads = validSnapshot(["monthly", "prediction_summary", "rolling_beta", "local_projections", "evidence_map"]);
   payloads.manifest.profile = "local";
   const api = runtime(t, payloads);
   const bundle = await api.loadBundle({ publicOnly: true });
   assert.deepEqual(new Set(api.requests), new Set(["manifest", ...CORE].map((name) => `/data/${name}.json`)));
-  for (const name of ["monthly", "prediction_summary", "rolling_beta", "local_projections"]) assert.equal(bundle.dataset_status[name], "excluded");
+  for (const name of ["monthly", "prediction_summary", "rolling_beta", "local_projections", "evidence_map"]) assert.equal(bundle.dataset_status[name], "excluded");
   assert.equal(bundle.manifest.publication_status, "candidate");
 });
+
+for (const profile of ["public", "local"]) {
+  for (const response of [{ status: 404 }, { body: "{broken" }, { body: "[{}]" }]) {
+    test(`public reading view ignores missing or malformed evidence_map from a ${profile} manifest`, async (t) => {
+      const payloads = validSnapshot(["evidence_map"]);
+      payloads.manifest.profile = profile;
+      const api = runtime(t, payloads, { evidence_map: response });
+      const bundle = await api.loadBundle({ publicOnly: true });
+      assert.equal(bundle.dataset_status.event_study, "available");
+      assert.equal(bundle.dataset_status.evidence_map, "excluded");
+      assert.ok(!api.requests.some((url) => url.endsWith("/evidence_map.json")));
+    });
+  }
+}
+
+test("local exploration still loads and validates an included evidence map", async (t) => {
+  const payloads = validSnapshot(["evidence_map"]);
+  payloads.manifest.profile = "local";
+  const api = runtime(t, payloads);
+  const bundle = await api.loadBundle({ localOnly: true });
+  assert.equal(bundle.dataset_status.evidence_map, "available");
+  assert.deepEqual(bundle.evidence_map, payloads.evidence_map);
+  assert.ok(api.requests.includes("/data/evidence_map.json"));
+});
+
+for (const response of [{ status: 404 }, { body: "{broken" }, { body: "[{}]" }, new Error("offline")]) {
+  test("missing or invalid local evidence_map is unavailable without breaking core evidence", async (t) => {
+    const payloads = validSnapshot(["evidence_map"]);
+    payloads.manifest.profile = "local";
+    const bundle = await runtime(t, payloads, { evidence_map: response }).loadBundle({ localOnly: true });
+    assert.equal(bundle.dataset_status.event_study, "available");
+    assert.equal(bundle.dataset_status.evidence_map, "unavailable");
+    assert.deepEqual(bundle.evidence_map, []);
+  });
+}
 
 test("local research access is preserved for local snapshots and refuses public manifests", async (t) => {
   const payloads = validSnapshot(["local_projections"]);

@@ -60,7 +60,7 @@ export function Overview({ bundle, local = false }: { bundle: FrontendBundle; lo
         </Details>
       </OptionalDataset> : null}
 
-      {local ? (
+      {local ? <OptionalDataset status={bundle.dataset_status.evidence_map} label="Evidence map">
         <Details summary="Details: evidence across all local methods">
           <p className="mt-1 text-xs text-ink-muted">
             These estimates and takeaways describe this snapshot. Weak evidence is not proof of no effect;
@@ -75,7 +75,7 @@ export function Overview({ bundle, local = false }: { bundle: FrontendBundle; lo
             />
           </div>
         </Details>
-      ) : null}
+      </OptionalDataset> : null}
 
       {gpr_timeline.top_shocks.length > 0 ? (
         <Details summary="Details: largest GPR jumps within panel coverage">

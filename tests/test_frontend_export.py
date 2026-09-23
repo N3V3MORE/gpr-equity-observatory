@@ -1,6 +1,8 @@
 import json
+import math
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -166,7 +168,119 @@ def test_write_frontend_payloads_writes_json_files(tmp_path):
     for name in expected_files:
         path = target / name
         assert path.exists(), f"{name} was not written"
-        json.loads(path.read_text(encoding="utf-8"))
+        _strict_json(path.read_text(encoding="utf-8"))
+
+
+def _strict_json(text: str):
+    def reject_constant(value: str):
+        raise ValueError(f"Nonstandard JSON token: {value}")
+
+    return json.loads(text, parse_constant=reject_constant)
+
+
+@pytest.mark.parametrize("token", ["NaN", "Infinity", "-Infinity"])
+def test_strict_json_decoder_rejects_nonstandard_tokens(token):
+    with pytest.raises(ValueError, match="Nonstandard JSON token"):
+        _strict_json(f'{{"value": {token}}}')
+
+
+@pytest.mark.parametrize("missing", [
+    None, float("nan"), np.float32("nan"), np.float64("nan"), pd.NA, pd.NaT, np.datetime64("NaT"),
+])
+def test_writer_preserves_nested_missing_values_as_null_without_mutation(tmp_path, missing):
+    row = {"missing": missing}
+    rows = [row, [missing]]
+    payloads = {"example": {"rows": rows}}
+
+    export.write_frontend_payloads(payloads, tmp_path)
+
+    assert _strict_json((tmp_path / "example.json").read_text(encoding="utf-8")) == {
+        "rows": [{"missing": None}, [None]],
+    }
+    assert payloads["example"]["rows"] is rows
+    assert rows[0] is row
+    assert row["missing"] is missing
+    assert rows[1][0] is missing
+
+
+def test_writer_preserves_finite_scalars_types_and_existing_date_format(tmp_path):
+    values = [
+        0, -2, 2**63, 0.0, -0.0, 1.125, -2.5, True, False, "0", "NaN", "Infinity", "",
+        np.int32(-3), np.int64(4), np.uint64(2**63), np.float32(1.25), np.float64(-1.5),
+        np.float32(0), np.float64(-0.0), np.bool_(True), np.bool_(False),
+        pd.Timestamp("2024-01-02T03:04:05"), np.datetime64("2024-01-03"),
+    ]
+    originals = values.copy()
+    payloads = {"example": {"values": values, "tuple": (np.int64(0), False)}}
+
+    export.write_frontend_payloads(payloads, tmp_path)
+
+    result = _strict_json((tmp_path / "example.json").read_text(encoding="utf-8"))
+    expected = [
+        0, -2, 2**63, 0.0, -0.0, 1.125, -2.5, True, False, "0", "NaN", "Infinity", "",
+        -3, 4, 2**63, 1.25, -1.5, 0.0, -0.0, True, False, "2024-01-02", "2024-01-03",
+    ]
+    assert result["values"] == expected
+    assert [type(value) for value in result["values"]] == [type(value) for value in expected]
+    assert math.copysign(1, result["values"][4]) == -1
+    assert math.copysign(1, result["values"][19]) == -1
+    assert result["tuple"] == [0, False]
+    assert payloads["example"]["values"] is values
+    assert all(value is original for value, original in zip(values, originals, strict=True))
+    assert isinstance(payloads["example"]["tuple"], tuple)
+
+
+@pytest.mark.parametrize("infinity", [
+    float("inf"), float("-inf"), np.float32("inf"), np.float32("-inf"),
+    np.float64("inf"), np.float64("-inf"),
+])
+def test_writer_rejects_unexpected_nested_infinity_with_payload_and_path(tmp_path, infinity):
+    row = {"estimate": infinity}
+    payloads = {"regression": {"controlled": [{"estimate": 0}, row]}}
+    target = tmp_path / "not_created"
+
+    with pytest.raises(ValueError) as error:
+        export.write_frontend_payloads(payloads, target)
+
+    assert "Unexpected infinite number" in str(error.value)
+    assert "regression['controlled'][1]['estimate']" in str(error.value)
+    assert row["estimate"] is infinity
+    assert payloads["regression"]["controlled"][1] is row
+    assert not target.exists()
+
+
+@pytest.mark.parametrize("invalid", [float("inf"), object()])
+def test_later_serialization_failure_leaves_all_existing_files_unchanged(tmp_path, invalid):
+    original = {"first.json": b"existing first\r\n", "later.json": b"existing later\n"}
+    for name, content in original.items():
+        (tmp_path / name).write_bytes(content)
+    payloads = {"first": {"estimate": 0.5}, "later": {"rows": [invalid]}}
+
+    with pytest.raises((ValueError, TypeError), match=r"later\['rows'\]\[0\]"):
+        export.write_frontend_payloads(payloads, tmp_path)
+
+    assert {path.name: path.read_bytes() for path in tmp_path.iterdir()} == original
+    assert payloads["first"] == {"estimate": 0.5}
+    assert payloads["later"]["rows"][0] is invalid
+
+
+@pytest.mark.parametrize(("field", "standard_error"), [
+    ("t_stat", 0.1), ("average_abnormal_return", 0.0),
+])
+def test_event_export_only_allows_existing_undefined_zero_se_t_stat(tmp_path, field, standard_error):
+    _write_minimal_processed(tmp_path)
+    source = tmp_path / OUTPUT_SPECS["abnormal_event_study"].path.relative_to(export.PROJECT_ROOT)
+    abnormal = pd.read_csv(source)
+    abnormal.loc[0, "std_error"] = standard_error
+    abnormal.loc[0, field] = float("inf")
+    abnormal.to_csv(source, index=False)
+
+    payloads = export.build_frontend_payloads(root=tmp_path)
+
+    assert math.isinf(payloads["event_study"][0][field])
+    with pytest.raises(ValueError) as error:
+        export.write_frontend_payloads(payloads, tmp_path / "not_created")
+    assert f"event_study[0]['{field}']" in str(error.value)
 
 
 def test_build_frontend_payloads_handles_missing_data(tmp_path):
@@ -261,7 +375,8 @@ def test_recorded_event_dates_must_match_the_gpr_selection(tmp_path):
         export.build_frontend_payloads(root=tmp_path)
 
 
-def test_event_inference_and_accumulation_are_exported_without_changing_estimates(tmp_path):
+@pytest.mark.parametrize("undefined_t_stat", [float("inf"), float("-inf")])
+def test_event_inference_and_accumulation_are_exported_without_changing_estimates(tmp_path, undefined_t_stat):
     _write_minimal_processed(tmp_path)
     abnormal = pd.DataFrame([
         {
@@ -273,7 +388,7 @@ def test_event_inference_and_accumulation_are_exported_without_changing_estimate
         for day, average, cumulative, observations, events, error, t_stat, p_value in [
             (-5, -0.001, -0.003, 9, 2, 0.001, -3.0, 0.05),
             (0, 0.002, 0.005, 10, 3, 0.002, 2.5, 0.10),
-            (5, 0.003, 0.009, 10, 3, 0.0, float("inf"), float("nan")),
+            (5, 0.003, 0.009, 10, 3, 0.0, undefined_t_stat, float("nan")),
         ]
     ])
     raw = pd.DataFrame([
@@ -325,6 +440,8 @@ def test_event_inference_and_accumulation_are_exported_without_changing_estimate
     # A zero SE and missing p-value must not introduce nonstandard JSON Infinity/NaN.
     json.dumps(payloads["event_study"], allow_nan=False)
     json.dumps(reader, allow_nan=False)
+    target = export.write_frontend_payloads(payloads, tmp_path / "exported")
+    assert _strict_json((target / "event_study.json").read_text(encoding="utf-8")) == payloads["event_study"]
 
 
 def test_empirical_takeaways_follow_snapshot_coefficients_and_country_count(tmp_path):

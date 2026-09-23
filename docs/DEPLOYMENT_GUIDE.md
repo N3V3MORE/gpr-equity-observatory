@@ -102,10 +102,10 @@ npm ci --strict-peer-deps
 npm run snapshot:prepare -- --source <existingPythonExportDir> --id <snapshot_id>
 ```
 
-Preparation selects the eight required public datasets and manifest, creates
+Preparation selects the seven required public datasets and manifest, creates
 matching result CSVs, and writes `publication/snapshots/<snapshot_id>/` plus
 `publication/<snapshot_id>.review-draft.json`. It refuses existing destinations.
-Optional Prediction Lab, monthly, and diagnostic payloads are not selected.
+The local evidence map, Prediction Lab, monthly, and diagnostic payloads are not selected.
 Preparation is a presentation/export operation; it does not estimate results,
 obtain source data, or approve publication.
 
